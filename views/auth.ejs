@@ -19,7 +19,7 @@
         <button class="big-btn" type="submit"><%= mode === 'kayit' ? 'Üye ol →' : 'Giriş yap →' %></button>
         <% if (mode === 'kayit') { %>
           <a href="/giris?sonra=<%= encodeURIComponent(sonra) %>">Zaten üyeyim</a>
-        <% } else { %>
+        <% } else if (signupsOpen) { %>
           <a href="/kayit?sonra=<%= encodeURIComponent(sonra) %>">Hesabım yok</a>
         <% } %>
       </div>

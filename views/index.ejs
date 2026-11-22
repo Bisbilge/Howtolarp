@@ -9,9 +9,11 @@
       <span class="hero-persona" data-personas="<%= JSON.stringify(personas) %>"><%= personas[0] || 'Zeki biri' %></span>
       <span class="hero-line"><s>olma.</s> <mark>öyle görün.</mark></span>
     </h1>
-    <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. Rehberleri üyeler yazıyor. Sıra sende.</p>
+    <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. <%= signupsOpen ? 'Rehberleri üyeler yazıyor. Sıra sende.' : 'Bir rol seç, çantanı hazırla, sahneye çık.' %></p>
     <div class="hero-actions">
-      <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Rehberini yaz →</a>
+      <% if (user) { %><a class="big-btn" href="/yaz">Rehberini yaz →</a>
+      <% } else if (signupsOpen) { %><a class="big-btn" href="/kayit">Rehberini yaz →</a>
+      <% } else { %><a class="big-btn" href="#rehberler">Rehberlere göz at ↓</a><% } %>
       <a class="ghost-btn" href="/rastgele">Bana rastgele bir rol ver ↻</a>
     </div>
   </div>
@@ -60,7 +62,8 @@
     <div class="void">
       <p class="void-big">Burada kimse yok.</p>
       <p>Bu larpın rehberi henüz yazılmamış. Demek ki uzmanı sensin.</p>
-      <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">İlk rehberi yaz →</a>
+      <% if (user || signupsOpen) { %><a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">İlk rehberi yaz →</a>
+      <% } else { %><a class="big-btn" href="/">Tüm rehberler →</a><% } %>
     </div>
   <% } %>
 </section>

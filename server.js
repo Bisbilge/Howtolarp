@@ -6,6 +6,8 @@ const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
 const SESSION_DAYS = 30;
+// Üye kaydı: SIGNUPS_OPEN=1 olmadıkça kapalı. Mevcut hesaplar /giris'ten girmeye devam eder.
+const SIGNUPS_OPEN = process.env.SIGNUPS_OPEN === '1';
 const AUTO_HIDE_AT = 3; // bu kadar farklı kişi bildirirse rehber incelemeye kadar gizlenir
 
 // Yöneticiler: virgülle ayrılmış kullanıcı adları (ör. ADMIN_USERNAMES=ali,ayse)
@@ -43,7 +45,7 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website',
+    description: null, ogType: 'website', signupsOpen: SIGNUPS_OPEN,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
   });
   res.set('X-Content-Type-Options', 'nosniff');
@@ -83,6 +85,14 @@ app.use(async (req, res, next) => {
     res.cookie('csrf', csrf, cookieOpts(SESSION_DAYS * 864e5));
   }
   res.locals.csrf = csrf;
+
+  // Ziyaretçi kimliği: hesapsız beğeniler için
+  let vid = req.cookies.vid;
+  if (!vid || !/^[a-f0-9]{32}$/.test(vid)) {
+    vid = crypto.randomBytes(16).toString('hex');
+    res.cookie('vid', vid, cookieOpts(365 * 864e5));
+  }
+  req.visitor = vid;
 
   if (req.method === 'POST') {
     const sent = String(req.body?._csrf || '');
@@ -156,13 +166,15 @@ function tooManyAttempts(ip) {
 // ---------- Rehber sorguları ----------
 const VISIBLE = 'g.hidden = 0 AND u.banned = 0';
 const GUIDE_SELECT = `SELECT g.*, u.username, u.banned,
-  (SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id) AS like_count
+  ((SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id)
+    + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count
   FROM guides g JOIN users u ON u.id = g.user_id`;
 
 const findGuide = (slug) => db.get(`${GUIDE_SELECT} WHERE g.slug = ?`, [slug]);
 
 async function deleteGuide(id) {
   await db.run('DELETE FROM likes WHERE guide_id = ?', [id]);
+  await db.run('DELETE FROM anon_likes WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM reports WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM guides WHERE id = ?', [id]);
 }
@@ -245,7 +257,9 @@ app.get('/rehber/:slug', async (req, res) => {
 
   const none = Promise.resolve(null);
   const [likedRow, reportedRow, reportCount, more] = await Promise.all([
-    req.user ? db.get('SELECT 1 AS x FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
+    req.user
+      ? db.get('SELECT 1 AS x FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id])
+      : db.get('SELECT 1 AS x FROM anon_likes WHERE visitor = ? AND guide_id = ?', [req.visitor, guide.id]),
     req.user ? db.get('SELECT 1 AS x FROM reports WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
     isAdmin ? db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id]) : none,
     db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} AND g.category = ? AND g.id != ?
@@ -307,11 +321,12 @@ app.post('/rehber/:slug/sil', requireUser, async (req, res) => {
   res.redirect(req.user.id === guide.user_id ? `/u/${encodeURIComponent(req.user.username)}` : '/yonetim');
 });
 
-app.post('/rehber/:slug/larpladim', requireUser, async (req, res) => {
+app.post('/rehber/:slug/larpladim', async (req, res) => {
   const guide = await findGuide(req.params.slug);
   if (!guide || guide.hidden || guide.banned) return notFound(req, res);
-  const del = await db.run('DELETE FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]);
-  if (del.rowsAffected === 0) await db.run('INSERT INTO likes (user_id, guide_id) VALUES (?, ?)', [req.user.id, guide.id]);
+  const [table, col, who] = req.user ? ['likes', 'user_id', req.user.id] : ['anon_likes', 'visitor', req.visitor];
+  const del = await db.run(`DELETE FROM ${table} WHERE ${col} = ? AND guide_id = ?`, [who, guide.id]);
+  if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id) VALUES (?, ?)`, [who, guide.id]);
   res.redirect(`/rehber/${guide.slug}#larpladim`);
 });
 
@@ -362,7 +377,7 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
     ORDER BY g.updated_at DESC`);
   const banned = await db.all('SELECT id, username, created_at FROM users WHERE banned = 1 ORDER BY username');
   const totals = await db.get(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM guides) AS guides,
-    (SELECT COUNT(*) FROM likes) AS likes`);
+    (SELECT COUNT(*) FROM likes) + (SELECT COUNT(*) FROM anon_likes) AS likes`);
 
   res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, isAdminName });
 });
@@ -407,12 +422,21 @@ app.post('/yonetim/kullanici/:id/:action', requireAdmin, async (req, res) => {
 });
 
 // ---------- Üyelik ----------
+function signupsClosed(req, res) {
+  res.status(403).render('error', {
+    title: 'Kayıtlar kapalı',
+    message: 'Üyelik şimdilik kapalı. Rehberleri okumaya ve larplamaya devam edebilirsin.',
+  });
+}
+
 app.get('/kayit', (req, res) => {
+  if (!SIGNUPS_OPEN) return signupsClosed(req, res);
   if (req.user) return res.redirect('/');
   res.render('auth', { title: 'Üye ol', mode: 'kayit', error: null, username: '', sonra: safeNext(req.query.sonra) });
 });
 
 app.post('/kayit', async (req, res) => {
+  if (!SIGNUPS_OPEN) return signupsClosed(req, res);
   const username = String(req.body.username || '').trim();
   const password = String(req.body.password || '');
   const sonra = safeNext(req.body.sonra);

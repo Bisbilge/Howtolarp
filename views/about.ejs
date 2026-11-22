@@ -23,7 +23,8 @@
       <li>Gerçek, isimle belirtilen kişileri hedef alma.</li>
       <li>Dolandırıcılık, sahte belge ya da birine zarar verecek talimat yazma.</li>
     </ul>
-    <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz →</a>
+    <% if (user || signupsOpen) { %><a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz →</a>
+    <% } else { %><a class="big-btn" href="/rastgele">Rastgele bir rol ver ↻</a><% } %>
   </div>
 </section>
 <%- include('partials/foot') %>

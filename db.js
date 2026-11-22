@@ -84,6 +84,12 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
   // Hangi örnek rehberlerin eklendiğini tutar: silinen örnekler geri gelmez
   `CREATE TABLE IF NOT EXISTS seeded (title TEXT PRIMARY KEY)`,
+  // Hesabı olmayan ziyaretçilerin beğenileri (tarayıcı çereziyle)
+  `CREATE TABLE IF NOT EXISTS anon_likes (
+    visitor  TEXT NOT NULL,
+    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
+    PRIMARY KEY (visitor, guide_id)
+  )`,
 ];
 
 // Önceki sürümle oluşturulmuş veritabanlarına eksik sütunları ekle

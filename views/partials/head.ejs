@@ -55,8 +55,10 @@
       </form>
       <a href="/yaz" class="nav-cta">+ Rehber yaz</a>
     <% } else { %>
-      <a href="/giris" class="<%= path === '/giris' ? 'on' : '' %>">Giriş</a>
-      <a href="/kayit" class="nav-cta">Üye ol</a>
+      <% if (signupsOpen) { %>
+        <a href="/giris" class="<%= path === '/giris' ? 'on' : '' %>">Giriş</a>
+        <a href="/kayit" class="nav-cta">Üye ol</a>
+      <% } %>
     <% } %>
   </nav>
 </header>

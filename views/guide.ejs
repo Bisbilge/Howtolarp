@@ -97,17 +97,15 @@
       <p class="larp-count"><%= guide.like_count %></p>
       <p class="larp-label">kişi bu rehberle larpladı</p>
     </div>
-    <% if (user) { %>
+    <% if (!guide.hidden && !guide.banned) { %>
       <form method="post" action="/rehber/<%= guide.slug %>/larpladim">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <button class="big-btn <%= liked ? 'is-on' : '' %>" type="submit"><%= liked ? '✓ Larpladım' : 'Ben de larpladım' %></button>
       </form>
-    <% } else { %>
-      <a class="big-btn" href="/giris?sonra=<%= encodeURIComponent('/rehber/' + guide.slug) %>">Ben de larpladım</a>
     <% } %>
   </div>
 
-  <% if (!isOwner && !guide.hidden) { %>
+  <% if (!isOwner && !guide.hidden && (user || signupsOpen)) { %>
   <section class="report" id="bildir">
     <% if (justReported || reported) { %>
       <p class="report-done">✕ Bu rehberi bildirdin. Yöneticiler inceleyecek, teşekkürler.</p>
