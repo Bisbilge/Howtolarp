@@ -1,7 +1,7 @@
 const path = require('node:path');
 const crypto = require('node:crypto');
 const express = require('express');
-const { db, ensureReady, hashPassword, verifyPassword, slugify } = require('./db');
+const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = require('./db');
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -441,7 +441,11 @@ function notFound(req, res) {
 app.use(notFound);
 app.use((err, req, res, _next) => {
   console.error(err);
-  res.status(500).render('error', { title: 'Bir şey bozuldu', message: 'Sunucu tarafında bir hata oldu.' });
+  // Kurulum hatalarını (eksik ortam değişkeni vb.) açıkça göster; diğerlerini gizle
+  const message = err instanceof ConfigError
+    ? `Kurulum hatası: ${err.message}`
+    : 'Sunucu tarafında bir hata oldu.';
+  res.status(500).render('error', { title: 'Bir şey bozuldu', message });
 });
 
 module.exports = app;

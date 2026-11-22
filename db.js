@@ -1,24 +1,37 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { createClient } = require('@libsql/client');
 
 // Yerelde: dosya tabanlı SQLite. Canlıda (Vercel): Turso.
 //   TURSO_DATABASE_URL=libsql://...turso.io  TURSO_AUTH_TOKEN=...
+class ConfigError extends Error {}
+
 function makeClient() {
-  if (process.env.TURSO_DATABASE_URL) {
-    return createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
+  const url = String(process.env.TURSO_DATABASE_URL || '').trim();
+  const authToken = String(process.env.TURSO_AUTH_TOKEN || '').trim() || undefined;
+  if (url) {
+    if (!/^(libsql|https|wss?):\/\//.test(url)) {
+      throw new ConfigError('TURSO_DATABASE_URL "libsql://" ile başlamalı. Turso panelindeki veritabanı adresini olduğu gibi kopyala.');
+    }
+    if (!authToken) throw new ConfigError('TURSO_AUTH_TOKEN eksik. Turso panelinden "Create Token" ile bir anahtar oluşturup Vercel\'e ekle.');
+    // Uzak bağlantı için yerel (native) modül gerektirmeyen istemci
+    return require('@libsql/client/web').createClient({ url, authToken });
+  }
+  if (process.env.VERCEL) {
+    throw new ConfigError('TURSO_DATABASE_URL tanımlı değil. Vercel → Settings → Environment Variables\'a ekleyip yeniden deploy et.');
   }
   const file = process.env.DB_PATH || path.join(__dirname, 'data', 'howtolarp.db');
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  return createClient({ url: `file:${file}` });
+  return require('@libsql/client').createClient({ url: `file:${file}` });
 }
-const client = makeClient();
+
+let client;
+const getClient = () => (client ||= makeClient());
 
 const db = {
-  async get(sql, args = []) { return (await client.execute({ sql, args })).rows[0]; },
-  async all(sql, args = []) { return (await client.execute({ sql, args })).rows; },
-  async run(sql, args = []) { return client.execute({ sql, args }); },
+  async get(sql, args = []) { return (await getClient().execute({ sql, args })).rows[0]; },
+  async all(sql, args = []) { return (await getClient().execute({ sql, args })).rows; },
+  async run(sql, args = []) { return getClient().execute({ sql, args }); },
 };
 
 const SCHEMA = [
@@ -112,7 +125,7 @@ async function slugify(text) {
 
 // ---- Kurulum: şema, göç, örnek içerik ----
 async function setup() {
-  await client.batch(['PRAGMA foreign_keys = ON', ...SCHEMA], 'write');
+  await getClient().batch(['PRAGMA foreign_keys = ON', ...SCHEMA], 'write');
   for (const [table, col, def] of MIGRATIONS) {
     const cols = await db.all(`PRAGMA table_info(${table})`);
     if (!cols.some((c) => c.name === col)) await db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
@@ -139,4 +152,4 @@ async function setup() {
 let ready;
 const ensureReady = () => (ready ||= setup().catch((e) => { ready = null; throw e; }));
 
-module.exports = { db, client, ensureReady, hashPassword, verifyPassword, slugify };
+module.exports = { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify };
