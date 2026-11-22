@@ -22,7 +22,7 @@ module.exports = [
       'Aslında mesele bu değil.',
       'Bunu ilk kim söyledi, biliyor musun?',
       'Veri öyle demiyor ama.',
-      'Bu klasik bir ikinci dereceden etki.',
+      'Bu klasik bir second-order effect.',
     ],
     risks: [
       'Biri "Hangi veri?" diye sorarsa: "Linkini atarım" de ve asla atma.',
@@ -37,9 +37,9 @@ module.exports = [
     summary: 'Şirketin, ürünün ve gelirin olmasa da "erken aşamadayız" diyerek bir yıl idare edebilirsin.',
     kit: [
       'Logolu ama markası okunmayan bir kapüşonlu',
-      'LinkedIn başlığı: "Founder @ Gizli Mod"',
+      'LinkedIn başlığı: "Founder @ Stealth Mode"',
       'Laptopun kapağında en az dört çıkartma',
-      'Soğuk demleme kahve',
+      'Cold brew',
     ],
     steps: [
       'Ne iş yaptığın sorulduğunda "X için Uber gibi" de. X’i karşındaki kişiye göre değiştir.',
@@ -49,13 +49,13 @@ module.exports = [
     ],
     phrases: [
       'Şu an stealth moddayız.',
-      'Asıl problem dağıtım.',
+      'Asıl problem distribution.',
       'Product-market fit’e çok yakınız.',
-      'Biz aslında bir topluluk şirketiyiz.',
+      'Biz aslında community-led bir şirketiz.',
     ],
     risks: [
-      'Gerçek bir yatırımcının "Aylık gelir ne kadar?" sorusu.',
-      'Ürünün demosunu istemeleri. Hazırlık: "Kapalı beta, davetle giriliyor."',
+      'Gerçek bir yatırımcının "MRR ne kadar?" sorusu.',
+      'Ürünün demosunu istemeleri. Hazırlık: "Closed beta, davetle giriliyor."',
     ],
   },
   {
@@ -64,20 +64,20 @@ module.exports = [
     difficulty: 2,
     summary: 'Filtre kahveyi bir tadım ritüeline çevir. Asıl mesele kahve değil, yüz ifaden.',
     kit: [
-      'El değirmeni (görünür bir yerde dursun)',
-      'Kuğu boyunlu bir cezve-kettle',
-      'Etiketinde çiftlik adı yazan bir paket çekirdek',
+      'Bir el grinder\'ı (görünür bir yerde dursun)',
+      'Gooseneck bir kettle',
+      'Etiketinde çiftlik adı yazan single origin bir paket çekirdek',
     ],
     steps: [
       'İlk yudumdan önce kokla. Gözlerini kapat. Uzun süre kapalı tut.',
-      'Her kahvede bir meyve bul: "Hafif yaban mersini var." Kimse itiraz edemez.',
+      'Her kahvede bir tasting note bul: "Hafif yaban mersini var." Kimse itiraz edemez.',
       'Şekerli kahve içen birine bakma, sadece hafifçe iç çek.',
       'Kahvecide baristaya çekirdeğin hangi yükseltide yetiştiğini sor.',
     ],
     phrases: [
-      'Asiditesi çok güzel dengelenmiş.',
-      'Bu doğal işlem mi, yıkanmış mı?',
-      'Ben açık kavrum severim aslında.',
+      'Acidity çok güzel dengelenmiş.',
+      'Bu natural mı, washed mı?',
+      'Ben light roast severim aslında.',
     ],
     risks: [
       'Gerçek bir baristanın sana bir şey önermesi. Ne dese "tam düşündüğüm" de.',
@@ -88,11 +88,11 @@ module.exports = [
     title: 'Film Eleştirmeni Nasıl Larplanır?',
     category: 'Sanat & Estetik',
     difficulty: 3,
-    summary: 'Gişe filmlerini küçümse, kimsenin izlemediği üç saatlik siyah-beyaz bir filmi hayatının filmi ilan et.',
+    summary: 'Blockbuster\'ları küçümse, kimsenin izlemediği üç saatlik siyah-beyaz bir filmi hayatının filmi ilan et.',
     kit: [
-      'Film günlüğü uygulamasında 4 yıldızdan fazla vermediğin bir profil',
+      'Letterboxd\'da 4 yıldızdan fazla vermediğin bir profil',
       'Adını doğru telaffuz ettiğin üç yönetmen',
-      'Bir tote çanta',
+      'Bir tote bag',
     ],
     steps: [
       'Herkesin sevdiği bir filme "fena değil ama biraz fazla kolaydı" de.',
@@ -101,8 +101,8 @@ module.exports = [
       'Ayda bir kez yerli bir festival filmini öv. Adını kısaltarak söyle.',
     ],
     phrases: [
-      'Görüntü yönetmeni burada resmen şov yapmış.',
-      'Orijinal kurguyu izledin mi?',
+      'Cinematography burada resmen şov yapmış.',
+      'Director\'s cut\'ı izledin mi?',
       'Bu aslında bir türe veda filmi.',
     ],
     risks: [
@@ -111,7 +111,8 @@ module.exports = [
     ],
   },
   {
-    title: 'Sabah 5 Kulübü Üyesi Nasıl Larplanır?',
+    key: 'Sabah 5 Kulübü Üyesi Nasıl Larplanır?',
+    title: '5 AM Club Üyesi Nasıl Larplanır?',
     category: 'Spor & Sağlık',
     difficulty: 4,
     summary: 'Saat 11’de uyanıp 5’te kalkmış gibi görünmenin yolu: hikayeyi sabahtan değil, akşamdan kur.',
@@ -123,8 +124,8 @@ module.exports = [
     steps: [
       'Akşam 21:30’da "Ben yatıyorum, yarın erken kalkacağım" diye mesaj at.',
       'Gün içinde ara sıra "Bugün zaten 7 saattir ayaktayım" de. Hesabı kimse yapmaz.',
-      'Sabah rutinini sorduklarında "günlük, soğuk duş, meditasyon" sırasını ezberle.',
-      'Hafta sonu öğle yemeğine geç kalırsan "Uzun koşuya çıktım" de.',
+      'Sabah rutinini sorduklarında "journaling, cold shower, meditasyon" sırasını ezberle.',
+      'Hafta sonu öğle yemeğine geç kalırsan "Long run\'a çıktım" de.',
     ],
     phrases: [
       'Sabahın ilk saati benim için kutsal.',
@@ -153,7 +154,7 @@ module.exports = [
     phrases: [
       'Ben bunu söylemiştim aslında.',
       'Underground halini bilenler bilir.',
-      'Artık biraz ana akım oldu.',
+      'Artık biraz mainstream oldu.',
     ],
     risks: [
       'Biri gerçekten eski paylaşımını bulmaya kalkarsa.',
@@ -199,15 +200,15 @@ module.exports = [
       'Her konuşmaya uyan bir "Bunu yapay zeka ile 5 dakikada yaptım" anekdotu',
     ],
     steps: [
-      'Her soruya "Aslında bunu bir ajanla otomatikleştirebilirsin" diye cevap ver.',
-      'Yeni bir model çıktığında herkesten önce "oyunu değiştirdi" diye paylaş. Denemene gerek yok.',
+      'Her soruya "Aslında bunu bir agent\'la otomatize edebilirsin" diye cevap ver.',
+      'Yeni bir model çıktığında herkesten önce "game changer" diye paylaş. Denemene gerek yok.',
       'Toplantılarda "Bunun AI stratejisi ne?" diye sor ve not alır gibi yap.',
-      'Bir hata görünce "halüsinasyon" de. Kendi hataların için de kullanabilirsin.',
+      'Bir hata görünce "hallucination" de. Kendi hataların için de kullanabilirsin.',
     ],
     phrases: [
       'Bu iş 6 ay içinde tamamen değişecek.',
-      'Asıl fark promptta değil, bağlamda.',
-      'Biz bunu iç süreçlerde zaten kullanıyoruz.',
+      'Asıl fark promptta değil, context\'te.',
+      'Biz bunu internal workflow\'larda zaten kullanıyoruz.',
     ],
     risks: [
       'Gerçekten bir şey otomatikleştirmeni istemeleri.',
@@ -215,10 +216,11 @@ module.exports = [
     ],
   },
   {
-    title: 'Dijital Göçebe Nasıl Larplanır?',
+    key: 'Dijital Göçebe Nasıl Larplanır?',
+    title: 'Digital Nomad Nasıl Larplanır?',
     category: 'Yaşam Tarzı',
     difficulty: 3,
-    summary: 'Evden çalışmayı "lokasyon bağımsız yaşam" diye anlatmanın sanatı. Ev senin, kahveci de senin ofisin.',
+    summary: 'Evden remote çalışmayı "location independent" yaşam diye anlatmanın sanatı. Ev senin, kahveci de senin ofisin.',
     kit: [
       'Üzerinde çıkartmalar olan bir laptop',
       'Bir kere gidilmiş sahil kasabasından yüz tane fotoğraf',
@@ -227,7 +229,7 @@ module.exports = [
     steps: [
       'Nerede yaşadığın sorulduğunda "Şu an buradayım" de. "Şu an" kısmını vurgula.',
       'Toplantıya kahveciden bağlan ve arkadaki gürültü için özür dileme.',
-      'Her şehri "çok iyi bir dijital göçebe topluluğu var" diye değerlendir.',
+      'Her şehri "çok iyi bir nomad community\'si var" diye değerlendir.',
       'Sabit bir eve sahip olanlara hafif acıyarak bak.',
     ],
     phrases: [
@@ -244,7 +246,7 @@ module.exports = [
     title: 'Şarap Uzmanı Nasıl Larplanır?',
     category: 'Yaşam Tarzı',
     difficulty: 3,
-    summary: 'Kadehi çevir, kokla, bir süre sessiz kal. Şarap larpının yüzde doksanı yüz ifadesi, yüzde onu "tanen" kelimesi.',
+    summary: 'Kadehi çevir, kokla, bir süre sessiz kal. Şarap larpının yüzde doksanı yüz ifadesi, yüzde onu "tannin" kelimesi.',
     kit: [
       'Kadehi sapından tutma alışkanlığı',
       'Bir üzüm adı ve bir bölge adı (birbirine uyması şart değil)',
@@ -257,14 +259,14 @@ module.exports = [
       'Menüden şarap seçerken garsona bir soru sor, cevabı dinle, sonra ikinci en ucuzu seç.',
     ],
     phrases: [
-      'Tanenleri biraz sert ama zamanla açılır.',
+      'Tannin\'leri biraz sert ama zamanla açılır.',
       'Bu biraz daha nefes almalı.',
-      'Bitişi çok uzun.',
+      'Finish\'i çok uzun.',
       'Ben aslında yerli üzümlere inanıyorum.',
     ],
     risks: [
-      'Kör tadım. Asla katılma.',
-      'Gerçek bir sommelierin "Hangi yıl?" sorusu.',
+      'Blind tasting. Asla katılma.',
+      'Gerçek bir sommelier\'in "Hangi vintage?" sorusu.',
     ],
   },
   {
@@ -275,10 +277,10 @@ module.exports = [
     kit: [
       'Büyük boy bir su şişesi (her yere götür)',
       'Kulaklık, salon dışında da takılı',
-      'Protein tozu kavanozu, mutfakta görünür yerde',
+      'Whey protein kavanozu, mutfakta görünür yerde',
     ],
     steps: [
-      'Günleri bölgelere ayır: "Bugün bacak günü" de. Hangi gün olduğunu kimse kontrol etmez.',
+      'Günleri bölgelere ayır: "Bugün leg day" de. Hangi gün olduğunu kimse kontrol etmez.',
       'Yemek siparişi verirken "Bunun proteini ne kadar?" diye sor.',
       'Merdiven çıkarken hafifçe kaslarını hissediyormuş gibi yüzünü buruştur.',
       'Biri bir hareket yaptığında "Formun biraz bozuk" de ve uzaklaş.',
@@ -286,7 +288,7 @@ module.exports = [
     phrases: [
       'Bugün biraz yorgunum, dün ağır çalıştım.',
       'Ben artık kilodan çok forma bakıyorum.',
-      'Dinlenme de antrenmanın bir parçası.',
+      'Recovery de antrenmanın bir parçası.',
     ],
     risks: [
       'Birlikte salona gitmeyi teklif eden bir arkadaş.',
@@ -300,7 +302,7 @@ module.exports = [
     summary: 'Sevdiğin grup ünlü olduğu anda onları bırakmalısın. İyi müzik zevki, kimsenin bilmediği şeyleri bilmektir.',
     kit: [
       'Bir pikap (plak çalması şart değil)',
-      'Çalma listesinde ilk iki şarkısı bilinmeyen gruplar',
+      'Playlist\'inde kimsenin bilmediği gruplar',
       'Bir kez gidilmiş küçük bir konserin bilekliği',
     ],
     steps: [
@@ -310,9 +312,9 @@ module.exports = [
       'Yıl sonu dinleme istatistiklerini paylaşmadan önce bir hafta boyunca sadece obskür şeyler dinle.',
     ],
     phrases: [
-      'Bunlar biraz satıldı bence.',
+      'Bunlar biraz sell-out oldu bence.',
       'Canlıda çok daha iyiler.',
-      'Plakta dinleyince bambaşka.',
+      'Vinyl\'de dinleyince bambaşka.',
     ],
     risks: [
       'Biri dinleme geçmişine bakarsa.',
@@ -338,7 +340,7 @@ module.exports = [
     phrases: [
       'Bunu bir işaret olarak görüyorum.',
       'Ben artık egodan beslenmiyorum.',
-      'Enerjin bugün biraz farklı.',
+      'Vibe\'ın bugün biraz farklı.',
     ],
     risks: [
       'Trafikte biri önüne kırdığında verdiğin tepki.',
@@ -377,7 +379,7 @@ module.exports = [
     difficulty: 5,
     summary: 'Method oyunculuğu seviyesi. Her dilden beş kelime ve sağlam bir aksan, poliglot imajı için yeter de artar.',
     kit: [
-      'Dil uygulamasında uzun bir seri (her gün bir ders, iki dakika)',
+      'Dil uygulamasında uzun bir streak (her gün bir ders, iki dakika)',
       'Beş dilde "teşekkürler", "afiyet olsun" ve "ne güzel"',
       'Restoranlarda yemek adlarını orijinal telaffuzuyla söyleme cesareti',
     ],
@@ -411,16 +413,16 @@ module.exports = [
       'Hayattaki her karar için "Üç hamle sonrasını düşünmek lazım" de.',
       'Biri oynarken arkasından bak, çenene dokun, hiçbir şey söylemeden uzaklaş.',
       'Oyun teklif edilirse "Bugün kafam başka yerde" de.',
-      'Bir hata görünce "Klasik bir açılış tuzağı" diye mırıldan.',
+      'Bir hata görünce "Klasik bir opening trap" diye mırıldan.',
     ],
     phrases: [
       'Bu tam bir zorlayıcı hamle.',
       'Ben daha çok pozisyonel oynarım.',
-      'Oyun sonu tekniğin her şeyi belirler.',
+      'Endgame tekniğin her şeyi belirler.',
     ],
     risks: [
       'Gerçekten oynamak. Atın nasıl gittiğini unutmuş olabilirsin.',
-      'Çevrimiçi puanını soran biri.',
+      'Online ELO\'nu soran biri.',
     ],
   },
   {
@@ -463,7 +465,7 @@ module.exports = [
       'Misafir gelmeden önce her şeyi tek bir odaya taşı ve o odanın kapısını kapat.',
       'Alışverişte bir şeyi elinde tut, düşün, raf yerine sepete koy. Ama yavaşça.',
       'Her eşyaya "Bu bana mutluluk veriyor mu?" diye sesli sor. Cevap hep evet.',
-      'Kıyafetlerin hakkında "Ben kapsül gardırop yapıyorum" de.',
+      'Kıyafetlerin hakkında "Ben capsule wardrobe yapıyorum" de.',
     ],
     phrases: [
       'Ben artık daha azıyla yaşıyorum.',
@@ -479,31 +481,31 @@ module.exports = [
     title: 'Star Wars Fanı Nasıl Larplanır?',
     category: 'Sanat & Estetik',
     difficulty: 4,
-    summary: 'Filmlerin hepsini izlemene gerek yok. Hangi sırayla izlenmesi gerektiği konusunda kesin bir fikrin olması yeter.',
+    summary: 'Filmlerin hepsini izlemene gerek yok. Hangi sırayla izlenmesi gerektiği konusunda kesin bir fikrin olması yeter (cevap: machete order).',
     kit: [
-      'Masanda bir oyuncak ışın kılıcı (ışığı yansın, çalışması şart değil)',
+      'Masanda bir oyuncak lightsaber (ışığı yansın, çalışması şart değil)',
       'Bir galaksi haritası posteri ya da tişörtü',
-      '4 Mayıs için önceden hazırlanmış bir paylaşım',
+      'May the 4th için önceden hazırlanmış bir paylaşım',
       'Ezberlenmiş üç gezegen adı',
     ],
     steps: [
       'Filmler sorulduğunda "Hangi sırayla izledin?" diye karşı soru sor. Cevap ne olursa olsun hafifçe kaşını kaldır.',
-      'Orijinal üçlemeyi öv, yeni filmler açılınca derin bir nefes al ve "Karışık duygular" de.',
+      'Original Trilogy\'yi öv, sequel\'lar açılınca derin bir nefes al ve "Karışık duygular" de.',
       'Bir yan karakterin adını söyle ve "Asıl hikaye onunki aslında" diye ekle. Kimse kim olduğunu soramaz.',
-      'Her ihanet hikayesinde, gerçek hayatta bile, "Karanlık tarafa geçti" de.',
+      'Her ihanet hikayesinde, gerçek hayatta bile, "Dark Side\'a geçti" de.',
       'Herhangi bir uzay filmi konuşulurken "Güzel ama onlardan esinlendiği belli" diye sohbeti kendi alanına çek.',
-      '4 Mayıs\'ta sabah 9\'dan önce paylaşımını yap. Geç kalan sahte fan sayılır.',
+      'May the 4th\'te sabah 9\'dan önce paylaşımını yap. Geç kalan sahte fan sayılır.',
     ],
     phrases: [
-      'Ben orijinal üçlemeyle büyüdüm.',
-      'Kanon ile efsaneleri karıştırmamak lazım.',
-      'Asıl tartışma hâlâ o barda ilk kimin ateş ettiği.',
-      'Güç seninle olsun.',
+      'Ben Original Trilogy ile büyüdüm.',
+      'Canon ile Legends\'ı karıştırmamak lazım.',
+      'Han shot first. Bu tartışmaya kapalı.',
+      'May the Force be with you.',
     ],
     risks: [
       'Biri dizilerin hangisinin hangi filmden önce geçtiğini sorarsa.',
       'Gerçek bir fanın "En sevdiğin Jedi kim ve neden?" sorusu. "Neden" kısmına hazırlıklı ol.',
-      'Işın kılıcının renklerinin ne anlama geldiğini sormaları.',
+      'Lightsaber renklerinin ne anlama geldiğini sormaları.',
       'Bir kutlamaya kostümsüz gitmek.',
     ],
   },
@@ -512,17 +514,17 @@ module.exports = [
     title: 'Taktik Dehası Futbol Yorumcusu Nasıl Larplanır?',
     category: 'Spor & Sağlık',
     difficulty: 2,
-    summary: 'Maçın skorunu değil, "geçiş oyununu" konuş. Futbol larpında gol görmek amatörlüktür; asıl usta boşlukları görür.',
+    summary: 'Maçın skorunu değil, "transition oyununu" konuş. Futbol larpında gol görmek amatörlüktür; asıl usta boşlukları görür.',
     kit: [
       'Bir peçete ve dört renkli kalem (diziliş çizmek için)',
-      'Ezberlenmiş dört kelime: pres, half-space, geçiş, blok',
+      'Ezberlenmiş dört kelime: gegenpressing, half-space, transition, low block',
       'Maç sırasında açık bir istatistik uygulaması',
     ],
     steps: [
       'Gol olduğunda sevinme. "Bu golün hikayesi 20 saniye önce başladı" de.',
       'Herkes forvete kızarken sen orta sahanın pozisyon hatasını göster.',
       'Teknik direktör değişikliği yapınca "Bunu ben 60. dakikada söylemiştim" de. Söylememiş olsan da.',
-      'Her maç sonunda "Gol beklentisine göre aslında berabere bitmesi gerekiyordu" de.',
+      'Her maç sonunda "xG\'ye göre aslında berabere bitmesi gerekiyordu" de.',
       'Maçı izlememişsen ilk 10 dakikanın özetini oku ve "İlk yarı çok kontrollüydü" de.',
     ],
     phrases: [
@@ -578,7 +580,7 @@ module.exports = [
       'Yemek gelince hemen yeme. Önce fotoğraf, sonra kısa bir sessizlik.',
       'İlk lokmayı aldıktan sonra gözlerini kapat ve başını hafifçe salla.',
       'Her yemekte bir şeyin "biraz fazla" olduğunu söyle: tuz, asit ya da ego.',
-      'Menüden en tuhaf görüneni seç ve "Şefin imza tabağı bu" de.',
+      'Menüden en tuhaf görüneni seç ve "Şefin signature tabağı bu" de.',
       'Evde makarna yaparken bile "emülsiyon" kelimesini kullan.',
     ],
     phrases: [
@@ -596,7 +598,7 @@ module.exports = [
     title: 'Stil Sahibi Biri Nasıl Larplanır?',
     category: 'Sanat & Estetik',
     difficulty: 3,
-    summary: 'Aynı siyah tişörtü her gün giy ve buna "imza parça" de. Stil, kararsızlığı bir tercihmiş gibi sunmaktır.',
+    summary: 'Aynı siyah tişörtü her gün giy ve buna "signature parça" de. Stil, kararsızlığı bir tercihmiş gibi sunmaktır.',
     kit: [
       'Bir adet oversize ceket (her şeyi kurtarır)',
       'Tek renk bir gardırop',
@@ -619,12 +621,13 @@ module.exports = [
     ],
   },
   {
-    title: 'LinkedIn Düşünce Lideri Nasıl Larplanır?',
+    key: 'LinkedIn Düşünce Lideri Nasıl Larplanır?',
+    title: 'LinkedIn Thought Leader Nasıl Larplanır?',
     category: 'Kariyer & İş',
     difficulty: 1,
     summary: 'Sıradan bir günü ders çıkarılacak bir hikayeye çevir. Kahve aldın mı? Liderlik hakkında bir şey öğrendin demektir.',
     kit: [
-      'Her paylaşımın sonuna eklenecek bir "Siz ne düşünüyorsunuz?"',
+      'Her paylaşımın sonuna eklenecek bir "Agree?"',
       'Kısa cümleler.',
       'Alt alta.',
       'Duygusal bir kapanış.',
@@ -632,8 +635,8 @@ module.exports = [
     steps: [
       'Bugün yaşadığın herhangi bir olayı al. Başına "Dün bir şey oldu ve beni çok düşündürdü" yaz.',
       'Hikayeyi her cümle ayrı satırda olacak şekilde anlat.',
-      'Sonuna liderlik, empati ya da büyüme ile ilgili bir ders ekle.',
-      'Paylaşımı "Bu konuda ne düşünüyorsunuz?" diye bitir ve yorumlara kalp at.',
+      'Sonuna leadership, empati ya da growth mindset ile ilgili bir ders ekle.',
+      'Paylaşımı "Agree?" diye bitir ve yorumlara kalp at.',
       'Bir iş reddini "Hayatımın en değerli hayırı" diye anlat.',
     ],
     phrases: [
@@ -651,7 +654,7 @@ module.exports = [
     title: 'Profesyonel Oyuncu Nasıl Larplanır?',
     category: 'İnternet Kültürü',
     difficulty: 3,
-    summary: 'Kaybettiğin her maçın sebebi bağlantın, takım arkadaşların ya da klavyendir. Asla sen değilsin.',
+    summary: 'Kaybettiğin her maçın sebebi ping, takım arkadaşların ya da klavyendir. Asla sen değilsin.',
     kit: [
       'Işıkları renk değiştiren bir klavye',
       'Kulak üstü dev bir kulaklık',
@@ -660,13 +663,13 @@ module.exports = [
     steps: [
       'Kazandığın bir maçın ekran görüntüsünü al, kaybettiklerini hiç anma.',
       'Biri oynarken izle ve "Oradan değil, yan taraftan dönecektin" de.',
-      'Rütbeni soran olursa "Şu an düşük ama ana hesabım başka" de.',
-      'Bir oyunu bırakmanın nedenini "meta bozuldu" diye açıkla.',
+      'Rank\'ini soran olursa "Bu smurf hesabım, main\'im başka" de.',
+      'Bir oyunu bırakmanın nedenini "meta bozuldu" diye açıkla. Kaybedince "Takımı carry edemedim" de.',
     ],
     phrases: [
       'Takım oynamadı.',
-      'Bu karakter şu an çok güçlü, ondan kaybettik.',
-      'Ben rekabetçiyi bıraktım, artık keyfine oynuyorum.',
+      'Bu karakter şu an OP, ondan kaybettik.',
+      'Ben ranked\'ı bıraktım, artık casual oynuyorum.',
       'Mouse\'um bugün garip.',
     ],
     risks: [
@@ -678,25 +681,25 @@ module.exports = [
     title: 'Anime Hayranı Nasıl Larplanır?',
     category: 'İnternet Kültürü',
     difficulty: 3,
-    summary: 'Animeyi izlemek yetmez; "mangası daha iyi" demelisin. Gerçek hayran her zaman kaynağa bir adım daha yakındır.',
+    summary: 'Animeyi izlemek yetmez; "manga daha iyi" demelisin. Gerçek hayran her zaman source material\'a bir adım daha yakındır.',
     kit: [
       'Masanda küçük bir figür',
       'Ezberlenmiş üç Japonca kelime',
-      'Hangi sezonun kötü olduğu hakkında kesin bir fikir',
+      'Hangi arc\'ın kötü olduğu hakkında kesin bir fikir',
     ],
     steps: [
       'Popüler bir seriden bahsedilince "Mangasını okudun mu? Orada her şey farklı" de.',
-      'Dublajlı izleyen birine sakin ama hayal kırıklığına uğramış bir bakış at.',
-      'Her hikayede "dolgu bölümleri" olduğunu söyle ve hangilerinin atlanması gerektiğini bil.',
+      'Dub izleyen birine sakin ama hayal kırıklığına uğramış bir bakış at. Sen her zaman sub izlersin.',
+      'Her seride filler bölümler olduğunu söyle ve hangilerinin skip\'lenmesi gerektiğini bil.',
       'Bir karakterin adını orijinal telaffuzuyla söyle. Yanlış olsa bile emin söyle.',
     ],
     phrases: [
       'Stüdyo değişince her şey bozuldu.',
-      'Açılış şarkısını asla atlamam.',
-      'Bu karakterin gelişimi çok iyi yazılmış.',
+      'Opening\'i asla skip\'lemem.',
+      'Bu karakterin character development\'ı çok iyi yazılmış.',
     ],
     risks: [
-      'Gerçek bir hayranın "En sevdiğin yay hangisi?" sorusu.',
+      'Gerçek bir hayranın "En sevdiğin arc hangisi?" sorusu.',
       'Mangayı hiç açmadığının anlaşılması.',
     ],
   },
@@ -730,7 +733,7 @@ module.exports = [
     title: 'Maratoncu Nasıl Larplanır?',
     category: 'Spor & Sağlık',
     difficulty: 4,
-    summary: 'Bir kez 10 kilometre koştuysan artık maratoncusun. Gerisi saat, tayt ve "tempom" kelimesi.',
+    summary: 'Bir kez 10 kilometre koştuysan artık maratoncusun. Gerisi saat, tayt ve "pace" kelimesi.',
     kit: [
       'GPS\'li bir saat',
       'Koşu ayakkabısı (sadece kafeye gidiyor olsan da)',
@@ -740,10 +743,10 @@ module.exports = [
       'Her konuşmada en az bir kez "Bu sabah koşudaydım" de.',
       'Ayakkabıların hakkında konuşurken "kilometre" ile ömürlerini anlat.',
       'Bir yürüyüşte "Burası koşu için mükemmel bir rota" de.',
-      'Davetlere "Yarın uzun koşum var, erken yatıyorum" diyerek kibarca hayır de.',
+      'Davetlere "Yarın long run\'ım var, erken yatıyorum" diyerek kibarca hayır de.',
     ],
     phrases: [
-      'Tempom bugün biraz düşüktü.',
+      'Pace\'im bugün biraz düşüktü.',
       'Koşu benim meditasyonum.',
       'Asıl zor olan son beş kilometre.',
     ],
@@ -770,7 +773,7 @@ module.exports = [
     ],
     phrases: [
       'Filmde her kare bir karar.',
-      'Bu greni dijitalde yakalayamazsın.',
+      'Bu grain\'i dijitalde yakalayamazsın.',
       'Ben kendi filmimi kendim banyo ediyorum.',
     ],
     risks: [
@@ -805,31 +808,32 @@ module.exports = [
     ],
   },
   {
-    title: 'Kıdemli Yazılımcı Nasıl Larplanır?',
+    key: 'Kıdemli Yazılımcı Nasıl Larplanır?',
+    title: 'Senior Yazılımcı Nasıl Larplanır?',
     category: 'Kariyer & İş',
     difficulty: 4,
-    summary: 'Her soruya "Duruma göre değişir" de. Kıdem, kesin cevap vermekten kaçınma sanatıdır.',
+    summary: 'Her soruya "It depends" de. Seniority, kesin cevap vermekten kaçınma sanatıdır.',
     kit: [
-      'Siyah arka planlı bir ekran',
+      'Dark mode bir IDE',
       'Mekanik klavye (sesi olmazsa olmaz)',
       'Her teknolojiyi küçümseyen bir "Ben bunu eskiden yazıyordum" anekdotu',
     ],
     steps: [
-      'Bir teknik soru gelince "Duruma göre değişir" de ve bir süre düşünür gibi yap.',
-      'Yeni bir kütüphane konuşulunca "Hype geçince görürüz" de.',
-      'Toplantılarda tahtaya kutular ve oklar çiz. Kutulara ne yazdığın önemli değil.',
+      'Bir teknik soru gelince "It depends" de ve bir süre düşünür gibi yap.',
+      'Yeni bir framework konuşulunca "Hype geçince görürüz" de.',
+      'Toplantılarda whiteboard\'a kutular ve oklar çiz. Kutulara ne yazdığın önemli değil.',
       'Bir hata çıkınca "Bu tam bir edge case" de ve konuyu kapat.',
-      'Cuma günü yayına alma teklifine dehşetle bak.',
+      'Cuma günü deploy teklifine dehşetle bak.',
     ],
     phrases: [
-      'Bu ölçeklenmez.',
-      'Basit tut.',
-      'Benim makinemde çalışıyor.',
-      'Bunu yeniden yazmamız lazım.',
+      'Bu scale etmez.',
+      'KISS. Basit tut.',
+      'Works on my machine.',
+      'Bunu baştan rewrite etmemiz lazım.',
     ],
     risks: [
-      'Canlı bir kodlama mülakatı.',
-      'Stajyerin sorduğu "Bu kod neden çalışıyor?" sorusu.',
+      'Live coding mülakatı.',
+      'Junior\'ın sorduğu "Bu kod neden çalışıyor?" sorusu.',
     ],
   },
   {
@@ -940,7 +944,7 @@ module.exports = [
     title: 'Podcast\'i Olan Biri Nasıl Larplanır?',
     category: 'İnternet Kültürü',
     difficulty: 1,
-    summary: 'İki bölüm kaydettin, ikisi de yayında değil. Önemli değil: artık bir "içerik üreticisisin".',
+    summary: 'İki bölüm kaydettin, ikisi de yayında değil. Önemli değil: artık bir content creator\'sın.',
     kit: [
       'Masada büyük bir mikrofon (bağlı olmasa da)',
       'Bir podcast adı ve logo',
@@ -954,7 +958,7 @@ module.exports = [
     ],
     phrases: [
       'Bu çok iyi bir bölüm konusu olur.',
-      'Ben uzun formatlı içerikten yanayım.',
+      'Ben long-form içerikten yanayım.',
       'Algoritma pek desteklemiyor açıkçası.',
     ],
     risks: [
@@ -980,8 +984,9 @@ module.exports = [
     ],
     phrases: [
       'Bu tamamen çocuklukla ilgili.',
+      'Bu düpedüz gaslighting.',
       'Bunu bir uzmanla konuşmanı öneririm. (Senden başka bir uzmanla.)',
-      'O tam bir kaçıngan.',
+      'O tam bir avoidant.',
     ],
     risks: [
       'Kendi davranışların analiz edilmeye başlandığında.',
@@ -994,12 +999,12 @@ module.exports = [
     difficulty: 4,
     summary: 'Faturalarını zamanında öde, bir kere bitki çayı iç ve bundan herkese bahset. Yetişkinlik büyük ölçüde gösteridir.',
     kit: [
-      'Buzdolabında hazırlanmış yemek kutuları (fotoğraf için)',
+      'Buzdolabında meal prep kutuları (fotoğraf için)',
       'Bir ajanda ve bir "bütçe tablosu"',
       'Lavanta kokulu bir mum',
     ],
     steps: [
-      'Pazar akşamları "Haftanın hazırlığını yapıyorum" diye paylaş.',
+      'Pazar akşamları "Meal prep günü" diye paylaş.',
       'Bir arkadaş harcama yapınca "Bunu bütçeye koydun mu?" diye sor.',
       'Erken yatmanı bir başarı gibi anlat.',
       'Evine gelen misafire hemen kahve ya da çay ikram et; kendini bir ev sahibi gibi hissettir.',

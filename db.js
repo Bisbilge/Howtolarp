@@ -96,6 +96,8 @@ const SCHEMA = [
 const MIGRATIONS = [
   ['users', 'banned', 'INTEGER NOT NULL DEFAULT 0'],
   ['guides', 'hidden', 'INTEGER NOT NULL DEFAULT 0'],
+  ['seeded', 'guide_id', 'INTEGER'],
+  ['seeded', 'hash', 'TEXT'],
 ];
 
 // ---- Şifreler (scrypt, ek bağımlılık yok) ----
@@ -142,12 +144,20 @@ async function setup() {
   await seedGuides();
 }
 
-// Örnek rehberleri ekle. Yeni eklenen örnekler bir sonraki yüklemede canlıya da düşer.
+// Örnek rehberler. seed-guides.js'te:
+//  - yeni eklenen rehber bir sonraki yüklemede siteye eklenir,
+//  - metni değişen rehber sitede de güncellenir (başlığı değişirse eski başlık `key` olarak yazılır),
+//  - siteden silinen örnek geri gelmez.
+const seedHash = (g) => crypto.createHash('sha1')
+  .update(JSON.stringify([g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks]))
+  .digest('hex');
+
 async function seedGuides() {
   const seeds = require('./seed-guides');
-  const done = new Set((await db.all('SELECT title FROM seeded')).map((r) => r.title));
-  const pending = seeds.filter((g) => !done.has(g.title));
-  if (!pending.length) return;
+  const rows = new Map((await db.all('SELECT title, guide_id, hash FROM seeded')).map((r) => [r.title, r]));
+  const work = seeds.map((g) => ({ g, key: g.key || g.title, hash: seedHash(g) }))
+    .filter(({ key, hash }) => rows.get(key)?.hash !== hash);
+  if (!work.length) return;
 
   // Editör hesabı: rastgele şifre, giriş için kullanılmıyor.
   let editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
@@ -155,16 +165,28 @@ async function seedGuides() {
     editor = await db.get('INSERT INTO users (username, password_hash, bio) VALUES (?, ?, ?) RETURNING id',
       ['editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.']);
   }
+  const fields = (g) => [g.title, g.category, g.difficulty, g.summary,
+    g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')];
+  const findOld = async (key, g) => (await db.get(
+    'SELECT id FROM guides WHERE user_id = ? AND title IN (?, ?) ORDER BY id LIMIT 1', [editor.id, key, g.title]))?.id;
+
   // Listedeki sıra korunsun: sondaki örnek en yeni görünsün
-  for (const g of pending) {
-    const exists = await db.get('SELECT 1 FROM guides WHERE user_id = ? AND title = ?', [editor.id, g.title]);
-    if (!exists) {
-      await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [await slugify(g.title), editor.id, g.title, g.category, g.difficulty, g.summary,
-          g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')]);
+  for (const { g, key, hash } of work) {
+    const row = rows.get(key);
+    let id = row ? (row.guide_id ?? await findOld(key, g)) : await findOld(key, g);
+
+    if (id) {
+      // Var olan örneği güncelle (yalnızca hâlâ editörün rehberiyse)
+      await db.run(`UPDATE guides SET title = ?, category = ?, difficulty = ?, summary = ?, kit = ?, steps = ?,
+        phrases = ?, risks = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?`, [...fields(g), id, editor.id]);
+    } else if (!row) {
+      // Hiç eklenmemiş: yeni rehber
+      id = (await db.get(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [await slugify(g.title), editor.id, ...fields(g)])).id;
     }
-    await db.run('INSERT OR IGNORE INTO seeded (title) VALUES (?)', [g.title]);
+    // row var ama rehber bulunamadı: sitede silinmiş, geri getirme
+    await db.run(`INSERT INTO seeded (title, guide_id, hash) VALUES (?, ?, ?)
+      ON CONFLICT(title) DO UPDATE SET guide_id = excluded.guide_id, hash = excluded.hash`, [key, id ?? null, hash]);
   }
 }
 

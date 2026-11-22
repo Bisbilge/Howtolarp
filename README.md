@@ -28,7 +28,7 @@ ADMIN_USERNAMES=kullaniciadin npm start   # http://localhost:3000
 
 Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 
-**Örnek rehberler:** `seed-guides.js` dosyasına eklenen her yeni rehber, bir sonraki yüklemede (canlıda da) otomatik olarak siteye eklenir. Daha önce eklenmiş ya da sonradan silinmiş örnekler tekrar eklenmez.
+**Örnek rehberler:** `seed-guides.js` dosyasına eklenen yeni rehber bir sonraki yüklemede (canlıda da) siteye eklenir; metni değiştirilen rehber sitede de güncellenir. Başlığı değiştirirken eski başlığı `key` alanına yaz ki aynı rehber güncellensin. Siteden silinen örnekler geri gelmez.
 
 ## Ortam değişkenleri
 
