@@ -6,8 +6,8 @@ const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
 const SESSION_DAYS = 30;
-// Üye kaydı: SIGNUPS_OPEN=1 olmadıkça kapalı. Mevcut hesaplar /giris'ten girmeye devam eder.
-const SIGNUPS_OPEN = process.env.SIGNUPS_OPEN === '1';
+// Üye kaydı açık; SIGNUPS_OPEN=0 ile geçici olarak kapatılabilir (mevcut hesaplar /giris'ten girmeye devam eder).
+const SIGNUPS_OPEN = process.env.SIGNUPS_OPEN !== '0';
 const AUTO_HIDE_AT = 3; // bu kadar farklı kişi bildirirse rehber incelemeye kadar gizlenir
 
 // Yöneticiler: virgülle ayrılmış kullanıcı adları (ör. ADMIN_USERNAMES=ali,ayse)
@@ -105,9 +105,9 @@ app.use(async (req, res, next) => {
   req.user = null;
   const token = req.cookies.sid;
   if (token) {
-    const row = await db.get(`SELECT u.id, u.username, u.bio FROM sessions s
+    const row = await db.get(`SELECT u.id, u.username FROM sessions s
       JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ? AND u.banned = 0`, [token, Date.now()]);
-    if (row) req.user = { id: row.id, username: row.username, bio: row.bio, isAdmin: isAdminName(row.username) };
+    if (row) req.user = { id: row.id, username: row.username, isAdmin: isAdminName(row.username) };
   }
   if (req.user?.isAdmin) {
     res.locals.openReports = (await db.get(
@@ -318,7 +318,7 @@ app.post('/rehber/:slug/sil', requireUser, async (req, res) => {
   const guide = await loadOwned(req, res);
   if (!guide) return;
   await deleteGuide(guide.id);
-  res.redirect(req.user.id === guide.user_id ? `/u/${encodeURIComponent(req.user.username)}` : '/yonetim');
+  res.redirect(req.user.id === guide.user_id ? '/rehberlerim' : '/yonetim');
 });
 
 app.post('/rehber/:slug/larpladim', async (req, res) => {
@@ -345,20 +345,14 @@ app.post('/rehber/:slug/bildir', requireUser, async (req, res) => {
   res.redirect(n >= AUTO_HIDE_AT ? '/?bildirildi=1' : `/rehber/${guide.slug}?bildirildi=1#bildir`);
 });
 
-app.get('/u/:username', async (req, res) => {
-  const profile = await db.get('SELECT id, username, bio, banned, created_at FROM users WHERE username = ?', [req.params.username]);
-  if (!profile || (profile.banned && !req.user?.isAdmin)) return notFound(req, res);
-  const isMe = req.user?.id === profile.id;
-  const guides = await db.all(`${GUIDE_SELECT} WHERE g.user_id = ? ${isMe || req.user?.isAdmin ? '' : 'AND g.hidden = 0'}
-    ORDER BY g.created_at DESC`, [profile.id]);
-  const likesReceived = guides.reduce((n, g) => n + Number(g.like_count), 0);
-  res.render('profile', { title: '@' + profile.username, description: profile.bio || `@${profile.username} adlı larpçının rehberleri.`, profile, guides, likesReceived, isMe });
-});
+// Sosyal katman yok: herkese açık profil sayfası tutmuyoruz.
+// Eski /u/... bağlantıları ana sayfaya düşer.
+app.get('/u/:username', (req, res) => res.redirect(301, '/'));
 
-app.post('/profil', requireUser, async (req, res) => {
-  const bio = String(req.body.bio || '').trim().slice(0, 280);
-  await db.run('UPDATE users SET bio = ? WHERE id = ?', [bio, req.user.id]);
-  res.redirect(`/u/${encodeURIComponent(req.user.username)}`);
+// Üyenin kendi rehberleri: sadece kendisi görür
+app.get('/rehberlerim', requireUser, async (req, res) => {
+  const guides = await db.all(`${GUIDE_SELECT} WHERE g.user_id = ? ORDER BY g.created_at DESC`, [req.user.id]);
+  res.render('mine', { title: 'Rehberlerim', guides });
 });
 
 // ---------- Yönetim ----------

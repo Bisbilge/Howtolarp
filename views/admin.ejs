@@ -18,7 +18,7 @@
         <div>
           <a class="case-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
           <p class="case-meta">
-            <a href="/u/<%= encodeURIComponent(g.username) %>" class="handle">@<%= g.username %></a>
+            <span class="handle">@<%= g.username %></span>
             · <b><%= g.report_count %></b> bildirim
             <% if (g.hidden) { %>· <span class="flag">Gizlendi</span><% } %>
           </p>
@@ -63,7 +63,7 @@
   <ul class="adm-list">
     <% banned.forEach(u => { %>
       <li>
-        <a href="/u/<%= encodeURIComponent(u.username) %>" class="handle">@<%= u.username %></a>
+        <b class="handle">@<%= u.username %></b>
         <span class="adm-list-actions">
           <form method="post" action="/yonetim/kullanici/<%= u.id %>/kaldir" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Engeli kaldır</button></form>
         </span>

@@ -48,7 +48,7 @@
       <% if (user.isAdmin) { %>
         <a href="/yonetim" class="<%= path === '/yonetim' ? 'on' : '' %>">Yönetim<% if (openReports) { %> <span class="badge"><%= openReports %></span><% } %></a>
       <% } %>
-      <a href="/u/<%= encodeURIComponent(user.username) %>" class="<%= path.toLowerCase() === ('/u/' + user.username).toLowerCase() ? 'on' : '' %>"><span class="handle">@<%= user.username %></span></a>
+      <a href="/rehberlerim" class="<%= path === '/rehberlerim' ? 'on' : '' %>" title="Giriş yapan: @<%= user.username %>">Rehberlerim</a>
       <form method="post" action="/cikis" class="inline">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <button type="submit" class="nav-btn">Çık</button>

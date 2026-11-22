@@ -278,22 +278,13 @@ input, select, textarea { font: inherit; color: var(--ink); background: var(--bg
 .rules li { margin-bottom: 8px; }
 .rules li::marker { content: '✕  '; color: var(--pink); font-weight: 700; }
 
-/* ---------- Profile ---------- */
-.profile { padding: clamp(32px, 5vw, 64px) var(--gut) 0; }
-.profile-id { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; }
-.avatar { width: clamp(100px, 14vw, 160px); aspect-ratio: 1; background: var(--lime); color: var(--on-acc); border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); display: grid; place-items: center; font: 400 clamp(64px, 9vw, 104px)/1 var(--display); transform: rotate(-3deg); }
-.profile .page-h { margin-bottom: 8px; }
-.profile .kicker { margin-bottom: 8px; }
-.bio { font-size: 19px; max-width: 640px; margin: 0; }
+/* ---------- İstatistik şeridi (yönetim, rehberlerim) ---------- */
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 40px 0 0; border-block: 3px solid var(--rule); }
 .stats div { padding: 16px 16px 16px 0; }
 .stats div + div { border-left: 1px solid var(--hair); padding-left: 16px; }
 .stats dt { font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--mute); }
 .stats dd { margin: 4px 0 0; font: 400 clamp(36px, 5vw, 56px)/1 var(--display); }
 .stats .stats-date { font-size: clamp(18px, 2.2vw, 26px); line-height: 1.2; text-transform: uppercase; }
-.bio-edit { padding: 20px 0; border-bottom: 1px solid var(--hair); }
-.bio-edit summary { cursor: pointer; font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .05em; }
-.bio-edit .form { max-width: 620px; margin-top: 16px; gap: 16px; }
 
 /* ---------- Footer ---------- */
 .footer { background: var(--ink); color: var(--bg); overflow: hidden; }
@@ -329,7 +320,7 @@ input, select, textarea { font: inherit; color: var(--ink); background: var(--bg
   .risks li { padding: 44px 14px 14px; }
   .risks li::before { width: auto; right: 0; bottom: auto; height: 30px; border-right: 0; border-bottom: 2.5px solid var(--ink); justify-content: start; padding-left: 14px; }
   .stats { grid-template-columns: 1fr 1fr; }
-  .stats div:last-child { grid-column: 1 / -1; border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); }
+  .stats div:nth-child(3) { grid-column: 1 / -1; border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); }
   .big-btn { font-size: 19px; }
   .idcard-body { grid-template-columns: 68px 1fr; }
 }
@@ -413,3 +404,26 @@ button.bubble:active { transform: scale(.97); }
 .pager a { text-decoration: none; border: 2.5px solid var(--ink); padding: 10px 14px; }
 .pager a:hover { background: var(--lime); color: var(--on-acc); }
 .pager-no { color: var(--mute); }
+
+/* ---------- Rehberlerim ---------- */
+.mine { padding: clamp(32px, 5vw, 56px) var(--gut) 72px; max-width: 1100px; }
+.mine-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; flex-wrap: wrap; }
+.mine-head .page-h { margin-bottom: 0; }
+.mine .stats { margin: 28px 0 0; }
+.mine-list { list-style: none; margin: 0; padding: 0; }
+.mine-list li { display: grid; grid-template-columns: 1fr auto; gap: 8px 24px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--hair); }
+.mine-title { font: 400 clamp(22px, 2.6vw, 30px)/1.05 var(--display); text-transform: uppercase; text-decoration: none; }
+.mine-title:hover { color: var(--pink); }
+.mine-meta { margin: 6px 0 0; font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; color: var(--mute); }
+.mine-meta .row-cat { margin-right: 6px; }
+.mine-meta .flag { font-size: 11px; vertical-align: 1px; }
+.mine-note { margin: 12px 0 20px; font-size: 14px; color: var(--mute); }
+.mine-actions { display: flex; gap: 6px; }
+.mine-actions a, .mine-actions button {
+  font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; text-decoration: none;
+  background: transparent; color: var(--ink); border: 2px solid var(--ink); padding: 6px 10px;
+}
+.mine-actions a:hover, .mine-actions button:hover { background: var(--lime); color: var(--on-acc); border-color: var(--lime); }
+.mine-actions button { color: var(--pink); border-color: var(--pink); }
+.mine-actions button:hover { background: var(--pink); color: var(--on-acc); border-color: var(--pink); }
+@media (max-width: 560px) { .mine-list li { grid-template-columns: 1fr; } }

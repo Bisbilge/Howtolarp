@@ -49,7 +49,7 @@
           <dl>
             <dt>Rol</dt><dd class="idcard-role"><%= persona(guide.title) %></dd>
             <dt>Zorluk</dt><dd><%- include('partials/meter', { level: guide.difficulty }) %> <%= DIFFICULTY_LABELS[guide.difficulty] %></dd>
-            <dt>Yazan</dt><dd><a href="/u/<%= encodeURIComponent(guide.username) %>" class="handle">@<%= guide.username %></a></dd>
+            <dt>Yazan</dt><dd class="handle">@<%= guide.username %></dd>
             <dt>Tarih</dt><dd><%= formatDate(guide.created_at) %></dd>
           </dl>
         </div>

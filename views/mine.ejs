@@ -1,0 +1,47 @@
+<%- include('partials/head') %>
+<section class="mine">
+  <div class="mine-head">
+    <div>
+      <p class="kicker">Sahne arkası · <span class="handle">@<%= user.username %></span></p>
+      <h1 class="page-h">Rehberlerim</h1>
+    </div>
+    <a class="big-btn" href="/yaz">+ Yeni rehber</a>
+  </div>
+  <dl class="stats">
+    <div><dt>Rehber</dt><dd><%= guides.length %></dd></div>
+    <div><dt>Larplanma</dt><dd><%= guides.reduce((n, g) => n + Number(g.like_count), 0) %></dd></div>
+    <div><dt>Yayında</dt><dd><%= guides.filter(g => !g.hidden).length %></dd></div>
+  </dl>
+  <p class="mine-note">Bu sayfayı sadece sen görürsün. Rehberlerinde adın görünür ama herkese açık bir profilin yok.</p>
+
+  <% if (guides.length) { %>
+    <ul class="mine-list">
+      <% guides.forEach(g => { %>
+        <li>
+          <div>
+            <a class="mine-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+            <p class="mine-meta">
+              <span class="row-cat"><%= g.category %></span>
+              <%= formatDate(g.created_at) %> · <%= g.like_count %> larpladı
+              <% if (g.hidden) { %> · <span class="flag">İnceleniyor</span><% } %>
+            </p>
+          </div>
+          <div class="mine-actions">
+            <a href="/rehber/<%= g.slug %>/duzenle">Düzenle</a>
+            <form method="post" action="/rehber/<%= g.slug %>/sil" class="inline" onsubmit="return confirm('Bu rehber kalıcı olarak silinsin mi?')">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button type="submit">Sil</button>
+            </form>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <div class="void">
+      <p class="void-big">Boş sahne.</p>
+      <p>Henüz rehber yazmadın. Bildiğin bir larp mutlaka vardır.</p>
+      <a class="big-btn" href="/yaz">İlk rehberini yaz →</a>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/foot') %>

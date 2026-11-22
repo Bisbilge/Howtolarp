@@ -9,7 +9,8 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 - Rehber yazma, düzenleme, silme (yalnızca yazarı ya da yönetici)
 - Her rehberde 4 bölüm: Çantada olacaklar, Sahne talimatı, Replikler, Nerede yakalanırsın
 - Kategori, larp zorluğu (1-5), arama, "yeni / çok larplanan" sıralaması
-- Kullanıcı profilleri (`/u/kullaniciadi`)
+- Sosyal katman yok: herkese açık profil, takip ya da arkadaşlık bulunmaz. Rehberde yazarın adı görünür;
+  üye kendi rehberlerini sadece kendisinin gördüğü **Rehberlerim** (`/rehberlerim`) sayfasından yönetir.
 - **Moderasyon:** üyeler rehberleri gerekçesiyle bildirir; 3 farklı kişi bildirince rehber otomatik gizlenir.
   Yöneticiler `/yonetim` panelinden bildirimleri inceler; rehberi yayında tutar, gizler, siler ya da yazarı engeller.
 - "Rastgele rol" (`/rastgele`), paylaşma butonu, repliğe dokununca kopyalama, sayfalama
@@ -34,7 +35,7 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 
 | Değişken | Açıklama |
 | --- | --- |
-| `SIGNUPS_OPEN` | `1` yapılırsa üye kaydı açılır. Varsayılan: kapalı (mevcut hesaplar `/giris`'ten girmeye devam eder, ziyaretçiler hesapsız "Larpladım" diyebilir). |
+| `SIGNUPS_OPEN` | Üye kaydı varsayılan olarak açıktır. `0` yapılırsa geçici olarak kapanır (mevcut hesaplar `/giris`'ten girmeye devam eder). Ziyaretçiler her durumda hesapsız "Larpladım" diyebilir. |
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |
