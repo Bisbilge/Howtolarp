@@ -1,23 +1,29 @@
 <%- include('partials/head') %>
-<section class="wrap narrow prose">
-  <p class="eyebrow">Sözlük</p>
-  <h1 class="page-title">Larp nedir?</h1>
-  <p class="lead"><strong>Larp</strong> (İngilizce <em>live action role-playing</em>), aslında kostüm giyip canlı rol yapma oyunlarının adı. İnternet argosunda ise anlamı kaydı: <strong>olmadığın biri gibi davranmak</strong>.</p>
-  <p>Hiç okumadığın kitabı okumuş gibi konuşmak, şirketin yokken "founder" yazmak, hazır kahve içip çekirdek kökeni sormak... Hepsi larp.</p>
-  <h2>Bu site ne?</h2>
-  <p>How to LARP, bu rollerin nasıl oynandığını anlatan topluluk rehberlerinden oluşur. Her rehberde dört bölüm var:</p>
-  <ol>
-    <li><strong>Gerekenler:</strong> Rolün aksesuarları ve hazırlıkları.</li>
-    <li><strong>Adım adım:</strong> Sahnede ne yapacağın.</li>
-    <li><strong>Söylenecek cümleler:</strong> Ezberlenecek replikler.</li>
-    <li><strong>İfşa olma riskleri:</strong> Nerede yakalanırsın.</li>
-  </ol>
-  <h2>Kurallar</h2>
-  <ul>
-    <li>Rehberler mizah içindir. Rolleri ti'ye al, insanları değil.</li>
-    <li>Gerçek, isimle belirtilen kişileri hedef alma.</li>
-    <li>Dolandırıcılık, sahte kimlik ya da birini zarara uğratacak talimatlar yazma.</li>
-  </ul>
-  <p><a class="btn btn-accent" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz</a></p>
+<section class="page page-about">
+  <aside class="page-side">
+    <h1 class="page-h page-h-xl">larp</h1>
+    <p class="phon">/larp/ · fiil, argo</p>
+  </aside>
+  <div class="page-main dict">
+    <ol class="defs">
+      <li><b>Asıl anlamı.</b> <i>Live action role-playing:</i> kostüm giyip canlı olarak rol yapılan oyun.</li>
+      <li><b>İnternetteki anlamı.</b> Olmadığın biri gibi davranmak. <span class="ex">"Hiç okumadığı kitap hakkında yorum yapıyor, resmen entelektüel larplıyor."</span></li>
+      <li><b>Bu sitedeki anlamı.</b> Bir rolün nasıl oynandığını adım adım anlatan topluluk rehberi.</li>
+    </ol>
+    <h2 class="sub-h">Bir rehberde ne olur?</h2>
+    <dl class="parts">
+      <div><dt>A</dt><dd><b>Çantada olacaklar:</b> rolün aksesuarları, hazırlıklar.</dd></div>
+      <div><dt>B</dt><dd><b>Sahne talimatı:</b> adım adım ne yapacağın.</dd></div>
+      <div><dt>C</dt><dd><b>Replikler:</b> ezberlenecek cümleler.</dd></div>
+      <div><dt>D</dt><dd><b>Nerede yakalanırsın:</b> ifşa olma riskleri.</dd></div>
+    </dl>
+    <h2 class="sub-h">Kurallar</h2>
+    <ul class="rules">
+      <li>Rehberler mizah içindir. Rolleri ti'ye al, insanları değil.</li>
+      <li>Gerçek, isimle belirtilen kişileri hedef alma.</li>
+      <li>Dolandırıcılık, sahte belge ya da birine zarar verecek talimat yazma.</li>
+    </ul>
+    <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz →</a>
+  </div>
 </section>
 <%- include('partials/foot') %>

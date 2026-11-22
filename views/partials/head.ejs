@@ -3,34 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title ? title + ' · How to LARP' : 'How to LARP: Olmadığın biri gibi davranma rehberleri' %></title>
+  <title><%= title ? title + ' / HOW TO LARP' : 'HOW TO LARP / Olma. Öyle görün.' %></title>
   <meta name="description" content="Zeki biri, startup kurucusu, kahve uzmanı... Olmadığın biri gibi nasıl davranılır? Üyelerin yazdığı larp rehberleri.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,700&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
   <link rel="stylesheet" href="/style.css">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap header-row">
-    <a class="logo" href="/" aria-label="How to LARP ana sayfa">
-      <span class="logo-small">how to</span><span class="logo-big">LARP</span>
-    </a>
-    <nav class="nav">
-      <a href="/hakkinda" class="<%= path === '/hakkinda' ? 'active' : '' %>">Larp nedir?</a>
-      <% if (user) { %>
-        <a href="/u/<%= encodeURIComponent(user.username) %>" class="<%= path === '/u/' + user.username ? 'active' : '' %>">@<%= user.username %></a>
-        <form method="post" action="/cikis" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrf %>">
-          <button type="submit" class="link-btn">Çıkış</button>
-        </form>
-        <a href="/yaz" class="btn btn-accent">Rehber yaz</a>
-      <% } else { %>
-        <a href="/giris" class="<%= path === '/giris' ? 'active' : '' %>">Giriş</a>
-        <a href="/kayit" class="btn btn-accent">Üye ol</a>
-      <% } %>
-    </nav>
+<% if (ticker.length) { %>
+<div class="ticker" aria-label="Son rehberler">
+  <div class="ticker-track">
+    <% for (let k = 0; k < 2; k++) { %>
+      <div class="ticker-group" <%- k ? 'aria-hidden="true"' : '' %>>
+        <span class="ticker-label">ŞU AN LARPLANIYOR</span>
+        <% ticker.forEach(t => { %><a href="/rehber/<%= t.slug %>" <%- k ? 'tabindex="-1"' : '' %>><%= persona(t.title) %></a><span class="ticker-sep">✕</span><% }) %>
+      </div>
+    <% } %>
   </div>
+</div>
+<% } %>
+<header class="masthead">
+  <a class="wordmark" href="/" aria-label="How to LARP ana sayfa">HOW TO <span>LARP</span></a>
+  <nav class="nav">
+    <a href="/hakkinda" class="<%= path === '/hakkinda' ? 'on' : '' %>">Larp ne?</a>
+    <% if (user) { %>
+      <a href="/u/<%= encodeURIComponent(user.username) %>" class="<%= path.toLowerCase() === ('/u/' + user.username).toLowerCase() ? 'on' : '' %>"><span class="handle">@<%= user.username %></span></a>
+      <form method="post" action="/cikis" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button type="submit" class="nav-btn">Çık</button>
+      </form>
+      <a href="/yaz" class="nav-cta">+ Rehber yaz</a>
+    <% } else { %>
+      <a href="/giris" class="<%= path === '/giris' ? 'on' : '' %>">Giriş</a>
+      <a href="/kayit" class="nav-cta">Üye ol</a>
+    <% } %>
+  </nav>
 </header>
 <main>

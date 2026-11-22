@@ -1,0 +1,14 @@
+<li class="row">
+  <a href="/rehber/<%= g.slug %>">
+    <span class="row-no"><%= String(n).padStart(2, '0') %></span>
+    <span class="row-main">
+      <span class="row-title"><%= g.title %></span>
+      <span class="row-sum"><%= g.summary %></span>
+    </span>
+    <span class="row-meta">
+      <span class="row-cat"><%= g.category %></span>
+      <%- include('meter', { level: g.difficulty }) %>
+      <span class="row-by"><span class="handle">@<%= g.username %></span> · <b><%= g.like_count %></b> larpladı</span>
+    </span>
+  </a>
+</li>

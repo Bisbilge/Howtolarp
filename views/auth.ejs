@@ -1,24 +1,29 @@
 <%- include('partials/head') %>
-<section class="wrap auth">
-  <div class="auth-card">
-    <h1 class="page-title"><%= mode === 'kayit' ? 'Larpçılar arasına katıl' : 'Tekrar hoş geldin' %></h1>
-    <p class="muted"><%= mode === 'kayit' ? 'Üye ol, kendi rehberlerini yaz, beğendiğin rehberleri larpla.' : 'Giriş yap ve kaldığın rolden devam et.' %></p>
+<section class="page page-auth">
+  <aside class="page-side">
+    <h1 class="page-h page-h-xl"><%- mode === 'kayit' ? 'Yeni bir<br><span class="hl">kimlik</span><br>oluştur' : 'Tekrar<br><span class="hl">sahneye</span>' %></h1>
+  </aside>
+  <div class="page-main">
+    <p class="lede"><%= mode === 'kayit' ? 'Üye ol, kendi rehberlerini yaz, işe yarayanları larpla.' : 'Kaldığın rolden devam et.' %></p>
     <% if (error) { %><div class="alert"><%= error %></div><% } %>
     <form method="post" action="/<%= mode %>" class="form">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <input type="hidden" name="sonra" value="<%= sonra %>">
-      <label>Kullanıcı adı
-        <input name="username" required autocomplete="username" value="<%= username %>" <%- mode === 'kayit' ? 'pattern="[a-zA-Z0-9_.]{3,24}" title="3-24 karakter: harf, rakam, nokta, alt çizgi"' : '' %>>
+      <label class="f"><span class="f-l">Kullanıcı adı</span>
+        <input class="f-big" name="username" required autocomplete="username" value="<%= username %>" <%- mode === 'kayit' ? 'pattern="[a-zA-Z0-9_.]{3,24}" title="3-24 karakter: harf, rakam, nokta, alt çizgi"' : '' %>>
       </label>
-      <label>Şifre
-        <input name="password" type="password" required <%- mode === 'kayit' ? 'minlength="8" autocomplete="new-password"' : 'autocomplete="current-password"' %>>
+      <label class="f"><span class="f-l">Şifre <% if (mode === 'kayit') { %><em>en az 8 karakter</em><% } %></span>
+        <input class="f-big" name="password" type="password" required <%- mode === 'kayit' ? 'minlength="8" autocomplete="new-password"' : 'autocomplete="current-password"' %>>
       </label>
-      <button class="btn btn-accent btn-lg" type="submit"><%= mode === 'kayit' ? 'Üye ol' : 'Giriş yap' %></button>
+      <div class="f-actions">
+        <button class="big-btn" type="submit"><%= mode === 'kayit' ? 'Üye ol →' : 'Giriş yap →' %></button>
+        <% if (mode === 'kayit') { %>
+          <a href="/giris?sonra=<%= encodeURIComponent(sonra) %>">Zaten üyeyim</a>
+        <% } else { %>
+          <a href="/kayit?sonra=<%= encodeURIComponent(sonra) %>">Hesabım yok</a>
+        <% } %>
+      </div>
     </form>
-    <p class="muted switch">
-      <% if (mode === 'kayit') { %>Zaten üye misin? <a href="/giris?sonra=<%= encodeURIComponent(sonra) %>">Giriş yap</a>
-      <% } else { %>Hesabın yok mu? <a href="/kayit?sonra=<%= encodeURIComponent(sonra) %>">Üye ol</a><% } %>
-    </p>
   </div>
 </section>
 <%- include('partials/foot') %>

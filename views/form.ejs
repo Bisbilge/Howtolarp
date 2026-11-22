@@ -1,57 +1,60 @@
 <%- include('partials/head') %>
-<section class="wrap narrow">
-  <h1 class="page-title"><%= editing ? 'Rehberi düzenle' : 'Yeni larp rehberi' %></h1>
-  <p class="muted">Her satır bir madde olarak gösterilir. Kısa ve net yaz; okuyan kişi bu rehberle sahneye çıkacak.</p>
+<section class="page page-form">
+  <aside class="page-side">
+    <h1 class="page-h"><%= editing ? 'Rolü revize et' : 'Yeni rol yaz' %></h1>
+    <p>Her satır ayrı bir madde olur. Kısa yaz, net yaz: okuyan kişi bu metinle sahneye çıkacak.</p>
+    <p class="tip">İpucu: Başlığı "<b>X Nasıl Larplanır?</b>" diye bitirirsen rol kartında sadece "X" görünür.</p>
+  </aside>
+  <div class="page-main">
+    <% if (errors.length) { %>
+      <div class="alert"><b>Sahneye çıkamazsın:</b><ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
+    <% } %>
+    <form method="post" action="<%= editing ? '/rehber/' + editing.slug + '/duzenle' : '/yaz' %>" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
 
-  <% if (errors.length) { %>
-    <div class="alert"><ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
-  <% } %>
-
-  <form method="post" action="<%= editing ? '/rehber/' + editing.slug + '/duzenle' : '/yaz' %>" class="form">
-    <input type="hidden" name="_csrf" value="<%= csrf %>">
-
-    <label>Başlık
-      <input name="title" required minlength="5" maxlength="120" value="<%= g.title || '' %>" placeholder="Zeki Biri Gibi Nasıl Larplanır?">
-    </label>
-
-    <div class="row">
-      <label>Kategori
-        <select name="category" required>
-          <option value="">Seç</option>
-          <% CATEGORIES.forEach(c => { %><option <%= g.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
-        </select>
+      <label class="f"><span class="f-l">01 / Başlık</span>
+        <input class="f-big" name="title" required minlength="5" maxlength="120" value="<%= g.title || '' %>" placeholder="Zeki Biri Gibi Nasıl Larplanır?">
       </label>
-      <label>Larp zorluğu
-        <select name="difficulty" required>
-          <% for (let i = 1; i <= 5; i++) { %><option value="<%= i %>" <%= Number(g.difficulty) === i ? 'selected' : '' %>><%= i %> · <%= DIFFICULTY_LABELS[i] %></option><% } %>
-        </select>
+
+      <div class="f-pair">
+        <label class="f"><span class="f-l">02 / Kategori</span>
+          <select name="category" required>
+            <option value="">Seç</option>
+            <% CATEGORIES.forEach(c => { %><option <%= g.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+          </select>
+        </label>
+        <label class="f"><span class="f-l">03 / Larp zorluğu</span>
+          <select name="difficulty" required>
+            <% for (let i = 1; i <= 5; i++) { %><option value="<%= i %>" <%= Number(g.difficulty) === i ? 'selected' : '' %>><%= i %> · <%= DIFFICULTY_LABELS[i] %></option><% } %>
+          </select>
+        </label>
+      </div>
+
+      <label class="f"><span class="f-l">04 / Özet</span>
+        <textarea name="summary" required minlength="20" maxlength="400" rows="3" placeholder="Bu rol kimin için, ana fikri ne?"><%= g.summary || '' %></textarea>
       </label>
-    </div>
 
-    <label>Özet
-      <textarea name="summary" required minlength="20" maxlength="400" rows="3" placeholder="Bu larp kimin için, ana fikri ne? Bir iki cümle."><%= g.summary || '' %></textarea>
-    </label>
+      <label class="f"><span class="f-l">05 / Çantada olacaklar <em>isteğe bağlı</em></span>
+        <textarea name="kit" rows="4" placeholder="Numarasız gözlük&#10;Kapağı yıpranmış bir kitap"><%= g.kit || '' %></textarea>
+      </label>
 
-    <label>Gerekenler <span class="hint">İsteğe bağlı · her satır bir eşya ya da hazırlık</span>
-      <textarea name="kit" rows="4" placeholder="Numarasız gözlük&#10;Kapağı yıpranmış bir kitap"><%= g.kit || '' %></textarea>
-    </label>
+      <label class="f"><span class="f-l">06 / Sahne talimatı <em>en az 2 satır</em></span>
+        <textarea name="steps" required rows="7" placeholder="Bir soru sorulduğunda üç saniye bekle.&#10;Her konuyu 'sistem' kavramına bağla."><%= g.steps || '' %></textarea>
+      </label>
 
-    <label>Adımlar <span class="hint">En az 2 · her satır bir adım</span>
-      <textarea name="steps" required rows="7" placeholder="Bir soru sorulduğunda üç saniye bekle.&#10;Her konuyu 'sistem' kavramına bağla."><%= g.steps || '' %></textarea>
-    </label>
+      <label class="f"><span class="f-l">07 / Replikler <em>isteğe bağlı</em></span>
+        <textarea name="phrases" rows="4" placeholder="Aslında mesele bu değil."><%= g.phrases || '' %></textarea>
+      </label>
 
-    <label>Söylenecek cümleler <span class="hint">İsteğe bağlı · her satır bir replik</span>
-      <textarea name="phrases" rows="4" placeholder="Aslında mesele bu değil."><%= g.phrases || '' %></textarea>
-    </label>
+      <label class="f"><span class="f-l">08 / Nerede yakalanırsın <em>isteğe bağlı</em></span>
+        <textarea name="risks" rows="4" placeholder="Gerçek bir uzmanla aynı masaya düşmek."><%= g.risks || '' %></textarea>
+      </label>
 
-    <label>İfşa olma riskleri <span class="hint">İsteğe bağlı · nerede yakalanırsın?</span>
-      <textarea name="risks" rows="4" placeholder="Gerçek bir uzmanla aynı masaya düşmek."><%= g.risks || '' %></textarea>
-    </label>
-
-    <div class="form-actions">
-      <button class="btn btn-accent btn-lg" type="submit"><%= editing ? 'Kaydet' : 'Yayınla' %></button>
-      <a class="btn" href="<%= editing ? '/rehber/' + editing.slug : '/' %>">Vazgeç</a>
-    </div>
-  </form>
+      <div class="f-actions">
+        <button class="big-btn" type="submit"><%= editing ? 'Kaydet →' : 'Yayınla →' %></button>
+        <a href="<%= editing ? '/rehber/' + editing.slug : '/' %>">Vazgeç</a>
+      </div>
+    </form>
+  </div>
 </section>
 <%- include('partials/foot') %>

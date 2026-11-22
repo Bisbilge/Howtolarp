@@ -1,49 +1,66 @@
 <%- include('partials/head') %>
 <section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">Olmadığın biri gibi davranmanın rehberi</p>
-    <h1 class="hero-title">
-      <span class="rotator" aria-hidden="true">
-        <span>Zeki biri</span><span>Startup kurucusu</span><span>Kahve uzmanı</span><span>Film eleştirmeni</span><span>Zeki biri</span>
-      </span>
-      <span class="sr-only">Her şey</span>
-      <em>nasıl larplanır?</em>
+  <div class="hero-text">
+    <p class="kicker">Sayı <%= String(stats.guides).padStart(3, '0') %> · <%= stats.users %> larpçı · Ücretsiz, tabii ki</p>
+    <h1 class="hero-h">
+      <span class="hero-persona" data-personas="<%= JSON.stringify(personas) %>"><%= personas[0] || 'Zeki biri' %></span>
+      <span class="hero-line"><s>olma.</s> <mark>öyle görün.</mark></span>
     </h1>
-    <p class="hero-sub">Topluluğun yazdığı adım adım rehberler: ne alınır, ne denir, nerede ifşa olunur. Sen de bildiğin bir larpı yaz, yayınla.</p>
-    <div class="hero-actions">
-      <a class="btn btn-accent btn-lg" href="<%= user ? '/yaz' : '/kayit' %>">Kendi rehberini yaz</a>
-      <span class="muted"><%= stats.guides %> rehber · <%= stats.users %> larpçı</span>
-    </div>
+    <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. Rehberleri üyeler yazıyor. Sıra sende.</p>
+    <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Rehberini yaz →</a>
+  </div>
+  <div class="sticker" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <defs><path id="circ" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
+      <circle cx="100" cy="100" r="98" class="sticker-bg"/>
+      <g class="spin"><text><textPath href="#circ" textLength="486" lengthAdjust="spacing">%100 SAHTE ✕ %100 İKNA EDİCİ ✕ %100 SAHTE ✕ %100 İKNA EDİCİ ✕</textPath></text></g>
+      <text x="100" y="98" text-anchor="middle" class="sticker-big"><%= stats.guides %></text>
+      <text x="100" y="124" text-anchor="middle" class="sticker-small">REHBER</text>
+    </svg>
   </div>
 </section>
 
-<section class="wrap">
-  <form class="filters" method="get" action="/">
-    <input type="search" name="q" value="<%= q %>" placeholder="Ne larplamak istiyorsun? (örn. zeki, kahve)" aria-label="Rehberlerde ara">
-    <select name="sirala" aria-label="Sıralama" onchange="this.form.submit()">
-      <option value="yeni" <%= sirala === 'yeni' ? 'selected' : '' %>>En yeni</option>
-      <option value="populer" <%= sirala === 'populer' ? 'selected' : '' %>>En çok larplanan</option>
-    </select>
-    <% if (kategori) { %><input type="hidden" name="kategori" value="<%= kategori %>"><% } %>
-    <button class="btn" type="submit">Ara</button>
-  </form>
-
-  <div class="chips">
-    <a class="chip <%= !kategori ? 'active' : '' %>" href="/?<%= new URLSearchParams({ q, sirala }) %>">Hepsi</a>
-    <% CATEGORIES.forEach(c => { %>
-      <a class="chip <%= kategori === c ? 'active' : '' %>" href="/?<%= new URLSearchParams({ q, sirala, kategori: c }) %>"><%= c %></a>
-    <% }) %>
+<section class="index" id="rehberler">
+  <div class="index-head">
+    <h2 class="index-title">Rehber endeksi</h2>
+    <form class="search" method="get" action="/#rehberler">
+      <input type="search" name="q" value="<%= q %>" placeholder="Ne larplıyoruz bugün?" aria-label="Rehberlerde ara">
+      <% if (kategori) { %><input type="hidden" name="kategori" value="<%= kategori %>"><% } %>
+      <input type="hidden" name="sirala" value="<%= sirala %>">
+      <button type="submit">Ara</button>
+    </form>
+  </div>
+  <div class="filters">
+    <div class="cats">
+      <a class="<%= !kategori ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, sirala }) %>#rehberler">Hepsi</a>
+      <% CATEGORIES.forEach(c => { %><a class="<%= kategori === c ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, sirala, kategori: c }) %>#rehberler"><%= c %></a><% }) %>
+    </div>
+    <div class="sort">
+      <a class="<%= sirala === 'yeni' ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, kategori, sirala: 'yeni' }) %>#rehberler">Yeni</a>
+      <a class="<%= sirala === 'populer' ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, kategori, sirala: 'populer' }) %>#rehberler">Çok larplanan</a>
+    </div>
   </div>
 
   <% if (guides.length) { %>
-    <div class="grid">
-      <% guides.forEach(g => { %><%- include('partials/card', { g }) %><% }) %>
-    </div>
+    <ol class="rows"><% guides.forEach((g, i) => { %><%- include('partials/row', { g, n: i + 1 }) %><% }) %></ol>
   <% } else { %>
-    <div class="empty">
-      <p>Bunun için henüz rehber yok. Demek ki bu larpın uzmanı sensin.</p>
-      <a class="btn btn-accent" href="<%= user ? '/yaz' : '/kayit' %>">İlk rehberi sen yaz</a>
+    <div class="void">
+      <p class="void-big">Burada kimse yok.</p>
+      <p>Bu larpın rehberi henüz yazılmamış. Demek ki uzmanı sensin.</p>
+      <a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">İlk rehberi yaz →</a>
     </div>
   <% } %>
 </section>
+<script>
+  (function () {
+    var el = document.querySelector('.hero-persona');
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var list = JSON.parse(el.dataset.personas || '[]'), i = 0;
+    if (list.length < 2) return;
+    setInterval(function () {
+      el.classList.add('flip');
+      setTimeout(function () { i = (i + 1) % list.length; el.textContent = list[i]; el.classList.remove('flip'); }, 180);
+    }, 2400);
+  })();
+</script>
 <%- include('partials/foot') %>

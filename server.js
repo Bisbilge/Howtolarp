@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: false, limit: '64kb' }));
 
 app.use((req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
-  Object.assign(res.locals, { user: null, csrf: '', path: req.path, title: null });
+  Object.assign(res.locals, { user: null, csrf: '', path: req.path, title: null, ticker: [], persona });
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
   res.set('Referrer-Policy', 'same-origin');
@@ -86,11 +86,19 @@ app.use((req, res, next) => {
   res.locals.path = req.path;
   res.locals.CATEGORIES = CATEGORIES;
   res.locals.DIFFICULTY_LABELS = DIFFICULTY_LABELS;
+  res.locals.persona = persona;
+  res.locals.ticker = db.prepare('SELECT slug, title FROM guides ORDER BY created_at DESC, id DESC LIMIT 10').all();
   res.locals.lines = (text) => String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
   res.locals.formatDate = (s) => new Date(s.replace(' ', 'T') + 'Z')
     .toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
   next();
 });
+
+// "Zeki Biri Gibi Nasıl Larplanır?" -> "Zeki Biri"
+function persona(title) {
+  const p = String(title).replace(/\s*(gibi\s+)?nas[ıi]l\s+larplan[ıi]r\s*\??\s*$/i, '').trim();
+  return p || String(title);
+}
 
 function startSession(res, userId) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -173,7 +181,9 @@ app.get('/', (req, res) => {
   const stats = db.prepare(`SELECT (SELECT COUNT(*) FROM guides) AS guides,
     (SELECT COUNT(*) FROM users) AS users`).get();
 
-  res.render('index', { title: null, guides, q, kategori, sirala, stats });
+  const personas = db.prepare(`${GUIDE_SELECT} ORDER BY like_count DESC, g.created_at DESC LIMIT 6`).all()
+    .map((g) => persona(g.title));
+  res.render('index', { title: null, guides, q, kategori, sirala, stats, personas });
 });
 
 app.get('/rehber/:slug', (req, res) => {

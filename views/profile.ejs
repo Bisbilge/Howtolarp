@@ -1,31 +1,38 @@
 <%- include('partials/head') %>
-<section class="wrap">
-  <header class="profile-head">
+<section class="profile">
+  <div class="profile-id">
     <div class="avatar" aria-hidden="true"><%= profile.username[0].toUpperCase() %></div>
     <div>
-      <h1 class="page-title">@<%= profile.username %></h1>
-      <p class="muted"><%= guides.length %> rehber · rehberleri <%= likesReceived %> kez larplandı · <%= formatDate(profile.created_at) %> tarihinden beri üye</p>
+      <p class="kicker">Larpçı dosyası</p>
+      <h1 class="page-h handle">@<%= profile.username %></h1>
       <% if (profile.bio) { %><p class="bio"><%= profile.bio %></p><% } %>
     </div>
-  </header>
-
+  </div>
+  <dl class="stats">
+    <div><dt>Rehber</dt><dd><%= guides.length %></dd></div>
+    <div><dt>Larplanma</dt><dd><%= likesReceived %></dd></div>
+    <div><dt>Üyelik</dt><dd class="stats-date"><%= formatDate(profile.created_at) %></dd></div>
+  </dl>
   <% if (isMe) { %>
     <details class="bio-edit">
       <summary>Profil yazını düzenle</summary>
       <form method="post" action="/profil" class="form">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <textarea name="bio" maxlength="280" rows="3" placeholder="Hangi rolleri larplıyorsun?"><%= profile.bio %></textarea>
-        <button class="btn btn-sm" type="submit">Kaydet</button>
+        <div class="f-actions"><button class="big-btn small" type="submit">Kaydet</button></div>
       </form>
     </details>
   <% } %>
-
+</section>
+<section class="index">
+  <h2 class="index-title">Yazdığı rehberler</h2>
   <% if (guides.length) { %>
-    <div class="grid"><% guides.forEach(g => { %><%- include('partials/card', { g }) %><% }) %></div>
+    <ol class="rows"><% guides.forEach((g, i) => { %><%- include('partials/row', { g, n: i + 1 }) %><% }) %></ol>
   <% } else { %>
-    <div class="empty">
+    <div class="void">
+      <p class="void-big">Boş dosya.</p>
       <p><%= isMe ? 'Henüz rehber yazmadın.' : 'Bu larpçı henüz rehber yazmamış.' %></p>
-      <% if (isMe) { %><a class="btn btn-accent" href="/yaz">İlk rehberini yaz</a><% } %>
+      <% if (isMe) { %><a class="big-btn" href="/yaz">İlk rehberini yaz →</a><% } %>
     </div>
   <% } %>
 </section>

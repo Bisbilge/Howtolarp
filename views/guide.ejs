@@ -1,77 +1,91 @@
 <%- include('partials/head') %>
-<article class="wrap guide">
-  <header class="guide-head">
-    <div class="card-top">
-      <a class="tag" href="/?kategori=<%= encodeURIComponent(guide.category) %>"><%= guide.category %></a>
-      <span class="difficulty">
-        <span class="dots" aria-hidden="true"><% for (let i = 1; i <= 5; i++) { %><i class="<%= i <= guide.difficulty ? 'on' : '' %>"></i><% } %></span>
-        Larp zorluğu: <strong><%= DIFFICULTY_LABELS[guide.difficulty] %></strong>
-      </span>
-    </div>
-    <h1 class="guide-title"><%= guide.title %></h1>
-    <p class="guide-summary"><%= guide.summary %></p>
-    <p class="byline">
-      Yazan <a href="/u/<%= encodeURIComponent(guide.username) %>">@<%= guide.username %></a>
-      · <%= formatDate(guide.created_at) %>
-      <% if (guide.updated_at !== guide.created_at) { %>· güncellendi<% } %>
-    </p>
-    <% if (isOwner) { %>
-      <div class="owner-actions">
-        <a class="btn btn-sm" href="/rehber/<%= guide.slug %>/duzenle">Düzenle</a>
-        <form method="post" action="/rehber/<%= guide.slug %>/sil" class="inline" onsubmit="return confirm('Bu rehber kalıcı olarak silinsin mi?')">
-          <input type="hidden" name="_csrf" value="<%= csrf %>">
-          <button class="btn btn-sm btn-danger" type="submit">Sil</button>
-        </form>
+<article class="guide">
+  <header class="g-head">
+    <p class="crumbs"><a href="/">Endeks</a> / <a href="/?kategori=<%= encodeURIComponent(guide.category) %>#rehberler"><%= guide.category %></a> / Rehber #<%= String(guide.id).padStart(3, '0') %></p>
+    <div class="g-head-grid">
+      <div>
+        <h1 class="g-title"><%= guide.title %></h1>
+        <p class="g-sum"><%= guide.summary %></p>
+        <% if (isOwner) { %>
+          <div class="owner">
+            <a href="/rehber/<%= guide.slug %>/duzenle">Düzenle</a>
+            <form method="post" action="/rehber/<%= guide.slug %>/sil" class="inline" onsubmit="return confirm('Bu rehber kalıcı olarak silinsin mi?')">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button type="submit">Sil</button>
+            </form>
+          </div>
+        <% } %>
       </div>
-    <% } %>
+
+      <div class="idcard" aria-label="Rol kartı">
+        <div class="idcard-top"><span>Rol kartı</span><span>No. <%= String(guide.id).padStart(5, '0') %></span></div>
+        <div class="idcard-body">
+          <div class="idcard-photo" aria-hidden="true"><span>?</span></div>
+          <dl>
+            <dt>Rol</dt><dd class="idcard-role"><%= persona(guide.title) %></dd>
+            <dt>Zorluk</dt><dd><%- include('partials/meter', { level: guide.difficulty }) %> <%= DIFFICULTY_LABELS[guide.difficulty] %></dd>
+            <dt>Yazan</dt><dd><a href="/u/<%= encodeURIComponent(guide.username) %>" class="handle">@<%= guide.username %></a></dd>
+            <dt>Tarih</dt><dd><%= formatDate(guide.created_at) %></dd>
+          </dl>
+        </div>
+        <div class="barcode" aria-hidden="true"></div>
+        <div class="stamp" aria-hidden="true">Onaylı<br>larp</div>
+      </div>
+    </div>
   </header>
 
-  <div class="guide-body">
+  <div class="g-body">
     <% if (lines(guide.kit).length) { %>
-      <section class="block block-kit">
-        <h2><span class="num">01</span> Gerekenler</h2>
-        <ul class="checklist"><% lines(guide.kit).forEach(l => { %><li><%= l %></li><% }) %></ul>
+      <section class="sec">
+        <h2 class="sec-h"><span>A</span> Çantada olacaklar</h2>
+        <ul class="kit">
+          <% lines(guide.kit).forEach((l, i) => { %>
+            <li><label><input type="checkbox"><span><%= l %></span></label></li>
+          <% }) %>
+        </ul>
       </section>
     <% } %>
 
-    <section class="block">
-      <h2><span class="num">02</span> Adım adım</h2>
-      <ol class="steps"><% lines(guide.steps).forEach(l => { %><li><%= l %></li><% }) %></ol>
+    <section class="sec">
+      <h2 class="sec-h"><span>B</span> Sahne talimatı</h2>
+      <ol class="steps"><% lines(guide.steps).forEach((l, i) => { %><li><span class="step-no"><%= i + 1 %></span><p><%= l %></p></li><% }) %></ol>
     </section>
 
     <% if (lines(guide.phrases).length) { %>
-      <section class="block">
-        <h2><span class="num">03</span> Söylenecek cümleler</h2>
-        <div class="quotes"><% lines(guide.phrases).forEach(l => { %><blockquote>“<%= l.replace(/^["“”']+|["“”']+$/g, '') %>”</blockquote><% }) %></div>
+      <section class="sec">
+        <h2 class="sec-h"><span>C</span> Replikler</h2>
+        <div class="bubbles"><% lines(guide.phrases).forEach(l => { %><p class="bubble"><%= l.replace(/^["“”']+|["“”']+$/g, '') %></p><% }) %></div>
       </section>
     <% } %>
 
     <% if (lines(guide.risks).length) { %>
-      <section class="block block-risk">
-        <h2><span class="num">04</span> İfşa olma riskleri</h2>
-        <ul class="risks"><% lines(guide.risks).forEach(l => { %><li><%= l %></li><% }) %></ul>
+      <section class="sec sec-risk">
+        <div class="tape" aria-hidden="true"><span>İfşa riski ✕ İfşa riski ✕ İfşa riski ✕ İfşa riski ✕ İfşa riski ✕ İfşa riski ✕ İfşa riski ✕ İfşa riski</span></div>
+        <h2 class="sec-h"><span>D</span> Nerede yakalanırsın</h2>
+        <ol class="risks"><% lines(guide.risks).forEach(l => { %><li><%= l %></li><% }) %></ol>
       </section>
     <% } %>
   </div>
 
-  <div class="like-box" id="larpladim">
+  <div class="larp-box" id="larpladim">
+    <div>
+      <p class="larp-count"><%= guide.like_count %></p>
+      <p class="larp-label">kişi bu rehberle larpladı</p>
+    </div>
     <% if (user) { %>
       <form method="post" action="/rehber/<%= guide.slug %>/larpladim">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <button class="btn btn-lg <%= liked ? 'btn-liked' : 'btn-accent' %>" type="submit">
-          <%= liked ? '✓ Larpladım' : 'Larpladım' %>
-        </button>
+        <button class="big-btn <%= liked ? 'is-on' : '' %>" type="submit"><%= liked ? '✓ Larpladım' : 'Ben de larpladım' %></button>
       </form>
     <% } else { %>
-      <a class="btn btn-lg btn-accent" href="/giris?sonra=<%= encodeURIComponent('/rehber/' + guide.slug) %>">Larpladım</a>
+      <a class="big-btn" href="/giris?sonra=<%= encodeURIComponent('/rehber/' + guide.slug) %>">Ben de larpladım</a>
     <% } %>
-    <p class="muted"><%= guide.like_count %> kişi bu rehberle larpladı.</p>
   </div>
 
   <% if (more.length) { %>
-    <section class="more">
-      <h2 class="section-title">Aynı kategoride</h2>
-      <div class="grid"><% more.forEach(g => { %><%- include('partials/card', { g }) %><% }) %></div>
+    <section class="index more">
+      <h2 class="index-title">Aynı kategoriden</h2>
+      <ol class="rows"><% more.forEach((g, i) => { %><%- include('partials/row', { g, n: i + 1 }) %><% }) %></ol>
     </section>
   <% } %>
 </article>
