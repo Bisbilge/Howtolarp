@@ -41,7 +41,11 @@ app.use(express.urlencoded({ extended: false, limit: '64kb' }));
 
 app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
-  Object.assign(res.locals, { user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0 });
+  Object.assign(res.locals, {
+    user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
+    description: null, ogType: 'website',
+    baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
+  });
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
   res.set('Referrer-Policy', 'same-origin');
@@ -187,10 +191,13 @@ function validateGuide(body) {
 }
 
 // ---------- Sayfalar ----------
+const PAGE_SIZE = 30;
+
 app.get('/', async (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 80);
   const kategori = CATEGORIES.includes(req.query.kategori) ? req.query.kategori : '';
   const sirala = req.query.sirala === 'populer' ? 'populer' : 'yeni';
+  const sayfa = Math.min(Math.max(parseInt(req.query.sayfa, 10) || 1, 1), 500);
 
   const where = [VISIBLE];
   const params = [];
@@ -202,16 +209,32 @@ app.get('/', async (req, res) => {
     where.push('g.category = ?');
     params.push(kategori);
   }
-  const order = sirala === 'populer' ? 'like_count DESC, g.created_at DESC' : 'g.created_at DESC, g.id DESC';
-  const guides = await db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT 60`, params);
+  const order = sirala === 'populer' ? 'like_count DESC, g.created_at DESC, g.id DESC' : 'g.created_at DESC, g.id DESC';
+  const offset = (sayfa - 1) * PAGE_SIZE;
 
-  const stats = await db.get(`SELECT
-    (SELECT COUNT(*) FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}) AS guides,
-    (SELECT COUNT(*) FROM users WHERE banned = 0) AS users`);
-  const personas = (await db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} ORDER BY like_count DESC, g.created_at DESC LIMIT 6`))
-    .map((g) => persona(g.title));
+  const [rows, stats, top] = await Promise.all([
+    db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`,
+      [...params, PAGE_SIZE + 1, offset]),
+    db.get(`SELECT
+      (SELECT COUNT(*) FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}) AS guides,
+      (SELECT COUNT(*) FROM users WHERE banned = 0) AS users`),
+    db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} ORDER BY like_count DESC, g.created_at DESC LIMIT 8`),
+  ]);
+  const hasMore = rows.length > PAGE_SIZE;
+  const guides = rows.slice(0, PAGE_SIZE);
+  const personas = top.map((g) => persona(g.title));
 
-  res.render('index', { title: null, guides, q, kategori, sirala, stats, personas, justReported: req.query.bildirildi === '1' });
+  res.render('index', {
+    title: null, guides, q, kategori, sirala, stats, personas, sayfa, hasMore, offset,
+    justReported: req.query.bildirildi === '1',
+  });
+});
+
+app.get('/rastgele', async (req, res) => {
+  const g = await db.get(`SELECT g.slug FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} ORDER BY RANDOM() LIMIT 1`);
+  res.set('Cache-Control', 'no-store');
+  res.redirect(g ? `/rehber/${g.slug}` : '/');
 });
 
 app.get('/rehber/:slug', async (req, res) => {
@@ -220,20 +243,19 @@ app.get('/rehber/:slug', async (req, res) => {
   const isAdmin = !!req.user?.isAdmin;
   if (!guide || ((guide.hidden || guide.banned) && !isOwner && !isAdmin)) return notFound(req, res);
 
-  const liked = req.user
-    ? !!(await db.get('SELECT 1 FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]))
-    : false;
-  const reported = req.user
-    ? !!(await db.get('SELECT 1 FROM reports WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]))
-    : false;
-  const guideReports = isAdmin
-    ? (await db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id])).n
-    : 0;
-  const more = await db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} AND g.category = ? AND g.id != ?
-    ORDER BY g.created_at DESC LIMIT 3`, [guide.category, guide.id]);
+  const none = Promise.resolve(null);
+  const [likedRow, reportedRow, reportCount, more] = await Promise.all([
+    req.user ? db.get('SELECT 1 AS x FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
+    req.user ? db.get('SELECT 1 AS x FROM reports WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
+    isAdmin ? db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id]) : none,
+    db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} AND g.category = ? AND g.id != ?
+      ORDER BY RANDOM() LIMIT 3`, [guide.category, guide.id]),
+  ]);
 
   res.render('guide', {
-    title: guide.title, guide, liked, reported, more, isOwner, guideReports,
+    title: guide.title, description: guide.summary, ogType: 'article',
+    guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,
+    guideReports: reportCount ? reportCount.n : 0,
     justReported: req.query.bildirildi === '1',
   });
 });
@@ -315,7 +337,7 @@ app.get('/u/:username', async (req, res) => {
   const guides = await db.all(`${GUIDE_SELECT} WHERE g.user_id = ? ${isMe || req.user?.isAdmin ? '' : 'AND g.hidden = 0'}
     ORDER BY g.created_at DESC`, [profile.id]);
   const likesReceived = guides.reduce((n, g) => n + Number(g.like_count), 0);
-  res.render('profile', { title: profile.username, profile, guides, likesReceived, isMe });
+  res.render('profile', { title: '@' + profile.username, description: profile.bio || `@${profile.username} adlı larpçının rehberleri.`, profile, guides, likesReceived, isMe });
 });
 
 app.post('/profil', requireUser, async (req, res) => {
@@ -432,7 +454,22 @@ app.post('/cikis', async (req, res) => {
   res.redirect('/');
 });
 
-app.get('/hakkinda', (req, res) => res.render('about', { title: 'Larp nedir?' }));
+app.get('/hakkinda', (req, res) => res.render('about', {
+  title: 'Larp nedir?', description: 'Larp ne demek? İnternet argosunda olmadığın biri gibi davranmak. How to LARP sözlüğü ve kuralları.',
+}));
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(`User-agent: *\nDisallow: /yonetim\nDisallow: /yaz\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
+  const base = res.locals.baseUrl;
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`,
+    ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
+});
 
 // ---------- Hatalar ----------
 function notFound(req, res) {

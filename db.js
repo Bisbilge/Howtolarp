@@ -82,6 +82,8 @@ const SCHEMA = [
     UNIQUE (guide_id, user_id)
   )`,
   `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
+  // Hangi örnek rehberlerin eklendiğini tutar: silinen örnekler geri gelmez
+  `CREATE TABLE IF NOT EXISTS seeded (title TEXT PRIMARY KEY)`,
 ];
 
 // Önceki sürümle oluşturulmuş veritabanlarına eksik sütunları ekle
@@ -131,8 +133,15 @@ async function setup() {
     if (!cols.some((c) => c.name === col)) await db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
   }
 
-  const { n } = await db.get('SELECT COUNT(*) AS n FROM guides');
-  if (n > 0) return;
+  await seedGuides();
+}
+
+// Örnek rehberleri ekle. Yeni eklenen örnekler bir sonraki yüklemede canlıya da düşer.
+async function seedGuides() {
+  const seeds = require('./seed-guides');
+  const done = new Set((await db.all('SELECT title FROM seeded')).map((r) => r.title));
+  const pending = seeds.filter((g) => !done.has(g.title));
+  if (!pending.length) return;
 
   // Editör hesabı: rastgele şifre, giriş için kullanılmıyor.
   let editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
@@ -140,11 +149,16 @@ async function setup() {
     editor = await db.get('INSERT INTO users (username, password_hash, bio) VALUES (?, ?, ?) RETURNING id',
       ['editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.']);
   }
-  for (const g of require('./seed-guides')) {
-    await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [await slugify(g.title), editor.id, g.title, g.category, g.difficulty, g.summary,
-        g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')]);
+  // Listedeki sıra korunsun: sondaki örnek en yeni görünsün
+  for (const g of pending) {
+    const exists = await db.get('SELECT 1 FROM guides WHERE user_id = ? AND title = ?', [editor.id, g.title]);
+    if (!exists) {
+      await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [await slugify(g.title), editor.id, g.title, g.category, g.difficulty, g.summary,
+          g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')]);
+    }
+    await db.run('INSERT OR IGNORE INTO seeded (title) VALUES (?)', [g.title]);
   }
 }
 

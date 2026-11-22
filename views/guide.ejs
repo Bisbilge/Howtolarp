@@ -27,6 +27,10 @@
       <div>
         <h1 class="g-title"><%= guide.title %></h1>
         <p class="g-sum"><%= guide.summary %></p>
+        <div class="g-tools">
+          <button type="button" class="ghost-btn" data-share data-title="<%= guide.title %>">Paylaş ↗</button>
+          <a class="ghost-btn" href="/rastgele">Başka bir rol ↻</a>
+        </div>
         <% if (isOwner) { %>
           <div class="owner">
             <a href="/rehber/<%= guide.slug %>/duzenle">Düzenle</a>
@@ -74,8 +78,8 @@
 
     <% if (lines(guide.phrases).length) { %>
       <section class="sec">
-        <h2 class="sec-h"><span>C</span> Replikler</h2>
-        <div class="bubbles"><% lines(guide.phrases).forEach(l => { %><p class="bubble"><%= l.replace(/^["“”']+|["“”']+$/g, '') %></p><% }) %></div>
+        <h2 class="sec-h"><span>C</span> Replikler <small>dokun, kopyala</small></h2>
+        <div class="bubbles"><% lines(guide.phrases).forEach(l => { %><button type="button" class="bubble" data-copy title="Kopyalamak için dokun"><%= l.replace(/^["“”']+|["“”']+$/g, '') %></button><% }) %></div>
       </section>
     <% } %>
 
@@ -137,4 +141,27 @@
     </section>
   <% } %>
 </article>
+<div class="toast" role="status" aria-live="polite" hidden></div>
+<script>
+  (function () {
+    var toast = document.querySelector('.toast'), t;
+    function say(msg) {
+      toast.textContent = msg; toast.hidden = false;
+      clearTimeout(t); t = setTimeout(function () { toast.hidden = true; }, 1800);
+    }
+    function copy(text, msg) {
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { say(msg); }, function () { say('Kopyalanamadı'); });
+      else say('Kopyalanamadı');
+    }
+    document.querySelectorAll('[data-copy]').forEach(function (b) {
+      b.addEventListener('click', function () { copy(b.textContent.trim(), 'Replik kopyalandı. Sahneye hazırsın.'); });
+    });
+    var share = document.querySelector('[data-share]');
+    if (share) share.addEventListener('click', function () {
+      var data = { title: share.dataset.title, url: location.href.split('?')[0].split('#')[0] };
+      if (navigator.share) navigator.share(data).catch(function () {});
+      else copy(data.url, 'Bağlantı kopyalandı.');
+    });
+  })();
+</script>
 <%- include('partials/foot') %>

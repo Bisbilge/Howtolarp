@@ -12,6 +12,8 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 - Kullanıcı profilleri (`/u/kullaniciadi`)
 - **Moderasyon:** üyeler rehberleri gerekçesiyle bildirir; 3 farklı kişi bildirince rehber otomatik gizlenir.
   Yöneticiler `/yonetim` panelinden bildirimleri inceler; rehberi yayında tutar, gizler, siler ya da yazarı engeller.
+- "Rastgele rol" (`/rastgele`), paylaşma butonu, repliğe dokununca kopyalama, sayfalama
+- Paylaşım önizlemesi (Open Graph görseli ve etiketleri), `sitemap.xml`, `robots.txt`
 - CSRF koruması, giriş denemesi sınırı, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu
 
@@ -24,7 +26,9 @@ npm install
 ADMIN_USERNAMES=kullaniciadin npm start   # http://localhost:3000
 ```
 
-Yerelde veritabanı `data/howtolarp.db` dosyasıdır; ilk açılışta 6 örnek rehber eklenir.
+Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
+
+**Örnek rehberler:** `seed-guides.js` dosyasına eklenen her yeni rehber, bir sonraki yüklemede (canlıda da) otomatik olarak siteye eklenir. Daha önce eklenmiş ya da sonradan silinmiş örnekler tekrar eklenmez.
 
 ## Ortam değişkenleri
 
@@ -33,6 +37,7 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır; ilk açılışta 6 örnek 
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |
+| `SITE_URL` | İsteğe bağlı. Kendi alan adını bağladığında (ör. `https://howtolarp.com`) paylaşım linkleri ve site haritası bu adresi kullanır. |
 | `DB_PATH` | Yerel veritabanı dosyası (varsayılan `data/howtolarp.db`) |
 | `NODE_ENV` | `production` olunca çerezler yalnızca HTTPS'te gönderilir (Vercel bunu kendisi ayarlar) |
 

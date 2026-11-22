@@ -387,3 +387,29 @@ input, select, textarea { font: inherit; color: var(--ink); background: var(--bg
 .adm-list li > a { font-weight: 700; }
 .adm-list-actions { display: flex; gap: 6px; margin-left: auto; }
 .muted { color: var(--mute); }
+
+/* ---------- Küçük iyileştirmeler ---------- */
+.skip { position: absolute; left: -9999px; top: 8px; z-index: 100; background: var(--lime); color: var(--on-acc); padding: 10px 14px; font: 700 13px var(--mono); text-transform: uppercase; }
+.skip:focus { left: 8px; }
+.hero-actions { display: flex; align-items: center; gap: 20px 28px; flex-wrap: wrap; }
+.ghost-btn {
+  display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; cursor: pointer;
+  color: var(--ink); font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .05em;
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; text-decoration-color: var(--pink);
+}
+.ghost-btn:hover { color: var(--pink); }
+.g-tools { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 24px; }
+.sec-h small { display: block; font: 700 11px var(--mono); letter-spacing: .08em; color: var(--mute); margin-top: 10px; }
+button.bubble { border: 0; text-align: left; cursor: copy; transition: transform .15s; }
+button.bubble:hover { transform: rotate(0) scale(1.03); }
+button.bubble:active { transform: scale(.97); }
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) rotate(-1deg); z-index: 50;
+  background: var(--lime); color: var(--on-acc); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink);
+  padding: 12px 18px; font: 400 20px/1 var(--display); text-transform: uppercase; max-width: calc(100vw - 32px); text-align: center;
+}
+.toast[hidden] { display: none; }
+.pager { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 0; font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .05em; }
+.pager a { text-decoration: none; border: 2.5px solid var(--ink); padding: 10px 14px; }
+.pager a:hover { background: var(--lime); color: var(--on-acc); }
+.pager-no { color: var(--mute); }
