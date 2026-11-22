@@ -1,0 +1,49 @@
+<%- include('partials/head') %>
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Olmadığın biri gibi davranmanın rehberi</p>
+    <h1 class="hero-title">
+      <span class="rotator" aria-hidden="true">
+        <span>Zeki biri</span><span>Startup kurucusu</span><span>Kahve uzmanı</span><span>Film eleştirmeni</span><span>Zeki biri</span>
+      </span>
+      <span class="sr-only">Her şey</span>
+      <em>nasıl larplanır?</em>
+    </h1>
+    <p class="hero-sub">Topluluğun yazdığı adım adım rehberler: ne alınır, ne denir, nerede ifşa olunur. Sen de bildiğin bir larpı yaz, yayınla.</p>
+    <div class="hero-actions">
+      <a class="btn btn-accent btn-lg" href="<%= user ? '/yaz' : '/kayit' %>">Kendi rehberini yaz</a>
+      <span class="muted"><%= stats.guides %> rehber · <%= stats.users %> larpçı</span>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <form class="filters" method="get" action="/">
+    <input type="search" name="q" value="<%= q %>" placeholder="Ne larplamak istiyorsun? (örn. zeki, kahve)" aria-label="Rehberlerde ara">
+    <select name="sirala" aria-label="Sıralama" onchange="this.form.submit()">
+      <option value="yeni" <%= sirala === 'yeni' ? 'selected' : '' %>>En yeni</option>
+      <option value="populer" <%= sirala === 'populer' ? 'selected' : '' %>>En çok larplanan</option>
+    </select>
+    <% if (kategori) { %><input type="hidden" name="kategori" value="<%= kategori %>"><% } %>
+    <button class="btn" type="submit">Ara</button>
+  </form>
+
+  <div class="chips">
+    <a class="chip <%= !kategori ? 'active' : '' %>" href="/?<%= new URLSearchParams({ q, sirala }) %>">Hepsi</a>
+    <% CATEGORIES.forEach(c => { %>
+      <a class="chip <%= kategori === c ? 'active' : '' %>" href="/?<%= new URLSearchParams({ q, sirala, kategori: c }) %>"><%= c %></a>
+    <% }) %>
+  </div>
+
+  <% if (guides.length) { %>
+    <div class="grid">
+      <% guides.forEach(g => { %><%- include('partials/card', { g }) %><% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty">
+      <p>Bunun için henüz rehber yok. Demek ki bu larpın uzmanı sensin.</p>
+      <a class="btn btn-accent" href="<%= user ? '/yaz' : '/kayit' %>">İlk rehberi sen yaz</a>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/foot') %>

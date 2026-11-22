@@ -1,0 +1,24 @@
+<%- include('partials/head') %>
+<section class="wrap auth">
+  <div class="auth-card">
+    <h1 class="page-title"><%= mode === 'kayit' ? 'Larpçılar arasına katıl' : 'Tekrar hoş geldin' %></h1>
+    <p class="muted"><%= mode === 'kayit' ? 'Üye ol, kendi rehberlerini yaz, beğendiğin rehberleri larpla.' : 'Giriş yap ve kaldığın rolden devam et.' %></p>
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+    <form method="post" action="/<%= mode %>" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input type="hidden" name="sonra" value="<%= sonra %>">
+      <label>Kullanıcı adı
+        <input name="username" required autocomplete="username" value="<%= username %>" <%- mode === 'kayit' ? 'pattern="[a-zA-Z0-9_.]{3,24}" title="3-24 karakter: harf, rakam, nokta, alt çizgi"' : '' %>>
+      </label>
+      <label>Şifre
+        <input name="password" type="password" required <%- mode === 'kayit' ? 'minlength="8" autocomplete="new-password"' : 'autocomplete="current-password"' %>>
+      </label>
+      <button class="btn btn-accent btn-lg" type="submit"><%= mode === 'kayit' ? 'Üye ol' : 'Giriş yap' %></button>
+    </form>
+    <p class="muted switch">
+      <% if (mode === 'kayit') { %>Zaten üye misin? <a href="/giris?sonra=<%= encodeURIComponent(sonra) %>">Giriş yap</a>
+      <% } else { %>Hesabın yok mu? <a href="/kayit?sonra=<%= encodeURIComponent(sonra) %>">Üye ol</a><% } %>
+    </p>
+  </div>
+</section>
+<%- include('partials/foot') %>

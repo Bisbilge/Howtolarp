@@ -1,0 +1,17 @@
+{
+  "name": "howtolarp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "How to LARP: olmadığın biri gibi davranma rehberleri. Üyeler kendi rehberlerini yazıp yayınlar.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}

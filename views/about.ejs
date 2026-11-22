@@ -1,0 +1,23 @@
+<%- include('partials/head') %>
+<section class="wrap narrow prose">
+  <p class="eyebrow">Sözlük</p>
+  <h1 class="page-title">Larp nedir?</h1>
+  <p class="lead"><strong>Larp</strong> (İngilizce <em>live action role-playing</em>), aslında kostüm giyip canlı rol yapma oyunlarının adı. İnternet argosunda ise anlamı kaydı: <strong>olmadığın biri gibi davranmak</strong>.</p>
+  <p>Hiç okumadığın kitabı okumuş gibi konuşmak, şirketin yokken "founder" yazmak, hazır kahve içip çekirdek kökeni sormak... Hepsi larp.</p>
+  <h2>Bu site ne?</h2>
+  <p>How to LARP, bu rollerin nasıl oynandığını anlatan topluluk rehberlerinden oluşur. Her rehberde dört bölüm var:</p>
+  <ol>
+    <li><strong>Gerekenler:</strong> Rolün aksesuarları ve hazırlıkları.</li>
+    <li><strong>Adım adım:</strong> Sahnede ne yapacağın.</li>
+    <li><strong>Söylenecek cümleler:</strong> Ezberlenecek replikler.</li>
+    <li><strong>İfşa olma riskleri:</strong> Nerede yakalanırsın.</li>
+  </ol>
+  <h2>Kurallar</h2>
+  <ul>
+    <li>Rehberler mizah içindir. Rolleri ti'ye al, insanları değil.</li>
+    <li>Gerçek, isimle belirtilen kişileri hedef alma.</li>
+    <li>Dolandırıcılık, sahte kimlik ya da birini zarara uğratacak talimatlar yazma.</li>
+  </ul>
+  <p><a class="btn btn-accent" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz</a></p>
+</section>
+<%- include('partials/foot') %>
