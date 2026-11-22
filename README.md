@@ -34,6 +34,7 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 
 | Değişken | Açıklama |
 | --- | --- |
+| `SIGNUPS_OPEN` | `1` yapılırsa üye kaydı açılır. Varsayılan: kapalı (mevcut hesaplar `/giris`'ten girmeye devam eder, ziyaretçiler hesapsız "Larpladım" diyebilir). |
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |
