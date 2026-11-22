@@ -1,4 +1,7 @@
 <%- include('partials/head') %>
+<% if (profile.banned) { %>
+  <div class="notice notice-warn" role="status"><b>Bu hesap engelli.</b> Sadece yöneticiler görebilir.</div>
+<% } %>
 <section class="profile">
   <div class="profile-id">
     <div class="avatar" aria-hidden="true"><%= profile.username[0].toUpperCase() %></div>

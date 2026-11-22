@@ -29,6 +29,9 @@
   <nav class="nav">
     <a href="/hakkinda" class="<%= path === '/hakkinda' ? 'on' : '' %>">Larp ne?</a>
     <% if (user) { %>
+      <% if (user.isAdmin) { %>
+        <a href="/yonetim" class="<%= path === '/yonetim' ? 'on' : '' %>">Yönetim<% if (openReports) { %> <span class="badge"><%= openReports %></span><% } %></a>
+      <% } %>
       <a href="/u/<%= encodeURIComponent(user.username) %>" class="<%= path.toLowerCase() === ('/u/' + user.username).toLowerCase() ? 'on' : '' %>"><span class="handle">@<%= user.username %></span></a>
       <form method="post" action="/cikis" class="inline">
         <input type="hidden" name="_csrf" value="<%= csrf %>">

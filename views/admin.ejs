@@ -1,0 +1,74 @@
+<%- include('partials/head') %>
+<section class="admin">
+  <p class="kicker">Sahne arkası</p>
+  <h1 class="page-h">Yönetim</h1>
+  <dl class="stats">
+    <div><dt>Açık bildirim</dt><dd><%= reported.length %></dd></div>
+    <div><dt>Rehber</dt><dd><%= totals.guides %></dd></div>
+    <div><dt>Üye</dt><dd><%= totals.users %></dd></div>
+  </dl>
+
+  <h2 class="adm-h">Bildirilen rehberler</h2>
+  <% if (!reported.length) { %>
+    <p class="adm-empty">Bekleyen bildirim yok. Herkes rolünü düzgün oynuyor.</p>
+  <% } %>
+  <% reported.forEach(g => { %>
+    <article class="case">
+      <header class="case-head">
+        <div>
+          <a class="case-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+          <p class="case-meta">
+            <a href="/u/<%= encodeURIComponent(g.username) %>" class="handle">@<%= g.username %></a>
+            · <b><%= g.report_count %></b> bildirim
+            <% if (g.hidden) { %>· <span class="flag">Gizlendi</span><% } %>
+          </p>
+        </div>
+        <div class="case-actions">
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Sorun yok, yayında kalsın</button></form>
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/gizle" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Gizle</button></form>
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
+          <% if (!isAdminName(g.username)) { %>
+            <form method="post" action="/yonetim/kullanici/<%= g.user_id %>/engelle" class="inline" onsubmit="return confirm('@<%= g.username %> engellensin mi? Tüm rehberleri gizlenir ve oturumu kapanır.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Yazarı engelle</button></form>
+          <% } %>
+        </div>
+      </header>
+      <ul class="case-reports">
+        <% g.reports.forEach(r => { %>
+          <li>
+            <span class="case-reason"><%= REPORT_REASONS[r.reason] || r.reason %></span>
+            <span class="case-by"><span class="handle">@<%= r.username %></span> · <%= formatDate(r.created_at) %></span>
+            <% if (r.note) { %><q><%= r.note %></q><% } %>
+          </li>
+        <% }) %>
+      </ul>
+    </article>
+  <% }) %>
+
+  <h2 class="adm-h">Gizli rehberler</h2>
+  <% if (!hidden.length) { %><p class="adm-empty">Gizlenmiş rehber yok.</p><% } %>
+  <ul class="adm-list">
+    <% hidden.forEach(g => { %>
+      <li>
+        <a href="/rehber/<%= g.slug %>"><%= g.title %></a> <span class="handle muted">@<%= g.username %></span>
+        <span class="adm-list-actions">
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Yayına al</button></form>
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+
+  <h2 class="adm-h">Engelli kullanıcılar</h2>
+  <% if (!banned.length) { %><p class="adm-empty">Engelli kullanıcı yok.</p><% } %>
+  <ul class="adm-list">
+    <% banned.forEach(u => { %>
+      <li>
+        <a href="/u/<%= encodeURIComponent(u.username) %>" class="handle">@<%= u.username %></a>
+        <span class="adm-list-actions">
+          <form method="post" action="/yonetim/kullanici/<%= u.id %>/kaldir" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Engeli kaldır</button></form>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('partials/foot') %>

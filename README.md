@@ -6,41 +6,57 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 ## Özellikler
 
 - Üyelik: kayıt, giriş, çıkış (şifreler scrypt ile saklanır, oturumlar veritabanında)
-- Rehber yazma, düzenleme, silme (yalnızca yazarı)
-- Her rehberde 4 bölüm: Gerekenler, Adım adım, Söylenecek cümleler, İfşa olma riskleri
-- Kategori, larp zorluğu (1-5), arama, "en yeni / en çok larplanan" sıralaması
-- Kullanıcı profilleri (`/u/kullaniciadi`) ve profil yazısı
+- Rehber yazma, düzenleme, silme (yalnızca yazarı ya da yönetici)
+- Her rehberde 4 bölüm: Çantada olacaklar, Sahne talimatı, Replikler, Nerede yakalanırsın
+- Kategori, larp zorluğu (1-5), arama, "yeni / çok larplanan" sıralaması
+- Kullanıcı profilleri (`/u/kullaniciadi`)
+- **Moderasyon:** üyeler rehberleri gerekçesiyle bildirir; 3 farklı kişi bildirince rehber otomatik gizlenir.
+  Yöneticiler `/yonetim` panelinden bildirimleri inceler; rehberi yayında tutar, gizler, siler ya da yazarı engeller.
 - CSRF koruması, giriş denemesi sınırı, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu
 
-## Çalıştırma
+## Yerelde çalıştırma
 
-Node.js 22.13 veya üstü gerekir (yerleşik `node:sqlite` kullanılıyor, ek veritabanı kurulumu yok).
+Node.js 20 veya üstü gerekir.
 
 ```bash
 npm install
-npm start          # http://localhost:3000
+ADMIN_USERNAMES=kullaniciadin npm start   # http://localhost:3000
 ```
 
-İlk açılışta `data/howtolarp.db` oluşturulur ve 6 örnek rehber eklenir.
+Yerelde veritabanı `data/howtolarp.db` dosyasıdır; ilk açılışta 6 örnek rehber eklenir.
 
-| Ortam değişkeni | Varsayılan | Açıklama |
-| --- | --- | --- |
-| `PORT` | `3000` | Sunucu portu |
-| `DB_PATH` | `data/howtolarp.db` | SQLite dosyası |
-| `NODE_ENV` | | `production` olunca çerezler `Secure` olur (HTTPS gerekir) |
+## Ortam değişkenleri
 
-## Yayına alma
+| Değişken | Açıklama |
+| --- | --- |
+| `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
+| `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
+| `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |
+| `DB_PATH` | Yerel veritabanı dosyası (varsayılan `data/howtolarp.db`) |
+| `NODE_ENV` | `production` olunca çerezler yalnızca HTTPS'te gönderilir (Vercel bunu kendisi ayarlar) |
 
-Kalıcı diski olan herhangi bir Node.js sunucusunda çalışır (Render, Railway, Fly.io, bir VPS).
-`DB_PATH`'i kalıcı bir diske yönlendir; aksi halde yeniden başlatmada veriler silinir.
+## Vercel'de yayına alma
+
+Vercel'de kalıcı disk olmadığı için veritabanı olarak [Turso](https://turso.tech) (SQLite uyumlu, ücretsiz katmanı var) kullanılır.
+
+1. **Turso:** turso.tech'te hesap aç, yeni bir veritabanı oluştur (bölge olarak Frankfurt gibi yakın bir yer seç).
+   Veritabanı sayfasından **URL**'yi ve **Create Token** ile bir erişim anahtarı al.
+2. **Vercel:** vercel.com'da GitHub ile giriş yap, *Add New → Project* ile bu repoyu içe aktar.
+   Framework olarak *Other* kalsın, build ayarlarına dokunma.
+3. *Environment Variables* bölümüne şunları ekle:
+   `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `ADMIN_USERNAMES`
+4. *Deploy*. İlk istekte tablolar ve örnek rehberler otomatik oluşturulur.
+5. Siteye gidip `ADMIN_USERNAMES`'e yazdığın adla üye ol: menüde **Yönetim** linki görünür.
 
 ## Yapı
 
 ```
-server.js        Rotalar, oturum, CSRF
-db.js            Şema, şifre fonksiyonları, örnek veri yükleme
+server.js        Rotalar, oturum, CSRF, moderasyon
+db.js            Veritabanı bağlantısı (yerel dosya ya da Turso), şema, örnek veri
 seed-guides.js   Örnek rehberler
+api/index.js     Vercel giriş noktası
+vercel.json      Vercel yönlendirme ayarları
 views/           EJS şablonları
 public/          CSS ve favicon
 ```

@@ -1,4 +1,7 @@
 <%- include('partials/head') %>
+<% if (justReported) { %>
+  <div class="notice" role="status"><b>Bildirimin alındı.</b> Rehber, yöneticiler inceleyene kadar yayından kaldırıldı.</div>
+<% } %>
 <section class="hero">
   <div class="hero-text">
     <p class="kicker">Sayı <%= String(stats.guides).padStart(3, '0') %> · <%= stats.users %> larpçı · Ücretsiz, tabii ki</p>

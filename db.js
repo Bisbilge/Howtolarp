@@ -1,53 +1,81 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { DatabaseSync } = require('node:sqlite');
+const { createClient } = require('@libsql/client');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'howtolarp.db');
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+// Yerelde: dosya tabanlı SQLite. Canlıda (Vercel): Turso.
+//   TURSO_DATABASE_URL=libsql://...turso.io  TURSO_AUTH_TOKEN=...
+function makeClient() {
+  if (process.env.TURSO_DATABASE_URL) {
+    return createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
+  }
+  const file = process.env.DB_PATH || path.join(__dirname, 'data', 'howtolarp.db');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  return createClient({ url: `file:${file}` });
+}
+const client = makeClient();
 
-const db = new DatabaseSync(DB_PATH);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+const db = {
+  async get(sql, args = []) { return (await client.execute({ sql, args })).rows[0]; },
+  async all(sql, args = []) { return (await client.execute({ sql, args })).rows; },
+  async run(sql, args = []) { return client.execute({ sql, args }); },
+};
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  password_hash TEXT NOT NULL,
-  bio           TEXT NOT NULL DEFAULT '',
-  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
-);
+const SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    bio           TEXT NOT NULL DEFAULT '',
+    banned        INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE TABLE IF NOT EXISTS sessions (
+    token      TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS guides (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug       TEXT NOT NULL UNIQUE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title      TEXT NOT NULL,
+    category   TEXT NOT NULL,
+    difficulty INTEGER NOT NULL CHECK (difficulty BETWEEN 1 AND 5),
+    summary    TEXT NOT NULL,
+    kit        TEXT NOT NULL DEFAULT '',
+    steps      TEXT NOT NULL DEFAULT '',
+    phrases    TEXT NOT NULL DEFAULT '',
+    risks      TEXT NOT NULL DEFAULT '',
+    hidden     INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE INDEX IF NOT EXISTS guides_user ON guides(user_id)`,
+  `CREATE INDEX IF NOT EXISTS guides_created ON guides(created_at)`,
+  `CREATE TABLE IF NOT EXISTS likes (
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, guide_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS reports (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    guide_id    INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reason      TEXT NOT NULL,
+    note        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    resolved_at TEXT,
+    UNIQUE (guide_id, user_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
+];
 
-CREATE TABLE IF NOT EXISTS sessions (
-  token      TEXT PRIMARY KEY,
-  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS guides (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  slug       TEXT NOT NULL UNIQUE,
-  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  title      TEXT NOT NULL,
-  category   TEXT NOT NULL,
-  difficulty INTEGER NOT NULL CHECK (difficulty BETWEEN 1 AND 5),
-  summary    TEXT NOT NULL,
-  kit        TEXT NOT NULL DEFAULT '',
-  steps      TEXT NOT NULL DEFAULT '',
-  phrases    TEXT NOT NULL DEFAULT '',
-  risks      TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE INDEX IF NOT EXISTS guides_user ON guides(user_id);
-CREATE INDEX IF NOT EXISTS guides_created ON guides(created_at);
-
-CREATE TABLE IF NOT EXISTS likes (
-  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
-  PRIMARY KEY (user_id, guide_id)
-);
-`);
+// Önceki sürümle oluşturulmuş veritabanlarına eksik sütunları ekle
+const MIGRATIONS = [
+  ['users', 'banned', 'INTEGER NOT NULL DEFAULT 0'],
+  ['guides', 'hidden', 'INTEGER NOT NULL DEFAULT 0'],
+];
 
 // ---- Şifreler (scrypt, ek bağımlılık yok) ----
 function hashPassword(password) {
@@ -66,7 +94,7 @@ function verifyPassword(password, stored) {
 
 // ---- Slug ----
 const TR_MAP = { ç: 'c', ğ: 'g', ı: 'i', İ: 'i', ö: 'o', ş: 's', ü: 'u', Ç: 'c', Ğ: 'g', Ö: 'o', Ş: 's', Ü: 'u' };
-function slugify(text) {
+async function slugify(text) {
   const base = String(text)
     .replace(/[çğıİöşüÇĞÖŞÜ]/g, (c) => TR_MAP[c])
     .toLowerCase()
@@ -76,30 +104,39 @@ function slugify(text) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60) || 'rehber';
   let slug = base;
-  const exists = db.prepare('SELECT 1 FROM guides WHERE slug = ?');
-  while (exists.get(slug)) slug = `${base}-${crypto.randomBytes(2).toString('hex')}`;
+  while (await db.get('SELECT 1 FROM guides WHERE slug = ?', [slug])) {
+    slug = `${base}-${crypto.randomBytes(2).toString('hex')}`;
+  }
   return slug;
 }
 
-// ---- Örnek içerik (veritabanı boşsa) ----
-function seed() {
-  const count = db.prepare('SELECT COUNT(*) AS n FROM guides').get().n;
-  if (count > 0) return;
+// ---- Kurulum: şema, göç, örnek içerik ----
+async function setup() {
+  await client.batch(['PRAGMA foreign_keys = ON', ...SCHEMA], 'write');
+  for (const [table, col, def] of MIGRATIONS) {
+    const cols = await db.all(`PRAGMA table_info(${table})`);
+    if (!cols.some((c) => c.name === col)) await db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+  }
+
+  const { n } = await db.get('SELECT COUNT(*) AS n FROM guides');
+  if (n > 0) return;
 
   // Editör hesabı: rastgele şifre, giriş için kullanılmıyor.
-  const editor = db
-    .prepare('INSERT INTO users (username, password_hash, bio) VALUES (?, ?, ?) RETURNING id')
-    .get('editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.');
-
-  const insert = db.prepare(`INSERT INTO guides
-    (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-
+  let editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
+  if (!editor) {
+    editor = await db.get('INSERT INTO users (username, password_hash, bio) VALUES (?, ?, ?) RETURNING id',
+      ['editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.']);
+  }
   for (const g of require('./seed-guides')) {
-    insert.run(slugify(g.title), editor.id, g.title, g.category, g.difficulty, g.summary,
-      g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n'));
+    await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [await slugify(g.title), editor.id, g.title, g.category, g.difficulty, g.summary,
+        g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')]);
   }
 }
-seed();
 
-module.exports = { db, hashPassword, verifyPassword, slugify };
+// Her sunucu örneğinde bir kez çalışır; istekler bunu bekler.
+let ready;
+const ensureReady = () => (ready ||= setup().catch((e) => { ready = null; throw e; }));
+
+module.exports = { db, client, ensureReady, hashPassword, verifyPassword, slugify };

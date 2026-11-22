@@ -1,4 +1,25 @@
 <%- include('partials/head') %>
+<% if (guide.hidden || guide.banned) { %>
+  <div class="notice notice-warn" role="status">
+    <% if (guide.banned) { %><b>Yazarı engelli.</b> Bu rehber kimseye görünmüyor.
+    <% } else if (isOwner && !user.isAdmin) { %><b>Bu rehber şu an yayında değil.</b> Bildirimler nedeniyle gizlendi; yöneticiler inceliyor.
+    <% } else { %><b>Gizli rehber.</b> Sadece yazarı ve yöneticiler görebilir.<% } %>
+  </div>
+<% } %>
+<% if (user && user.isAdmin) { %>
+  <div class="adminbar">
+    <span><b>Yönetici</b> · <%= guideReports %> açık bildirim</span>
+    <div>
+      <% if (guide.hidden) { %>
+        <form method="post" action="/yonetim/rehber/<%= guide.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button>Yayına al</button></form>
+      <% } else { %>
+        <form method="post" action="/yonetim/rehber/<%= guide.id %>/gizle" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button>Gizle</button></form>
+      <% } %>
+      <form method="post" action="/yonetim/rehber/<%= guide.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
+      <a href="/yonetim">Panele git →</a>
+    </div>
+  </div>
+<% } %>
 <article class="guide">
   <header class="g-head">
     <p class="crumbs"><a href="/">Endeks</a> / <a href="/?kategori=<%= encodeURIComponent(guide.category) %>#rehberler"><%= guide.category %></a> / Rehber #<%= String(guide.id).padStart(3, '0') %></p>
@@ -81,6 +102,33 @@
       <a class="big-btn" href="/giris?sonra=<%= encodeURIComponent('/rehber/' + guide.slug) %>">Ben de larpladım</a>
     <% } %>
   </div>
+
+  <% if (!isOwner && !guide.hidden) { %>
+  <section class="report" id="bildir">
+    <% if (justReported || reported) { %>
+      <p class="report-done">✕ Bu rehberi bildirdin. Yöneticiler inceleyecek, teşekkürler.</p>
+    <% } else if (!user) { %>
+      <p>Bu rehberde kurallara aykırı bir şey mi var? <a href="/giris?sonra=<%= encodeURIComponent('/rehber/' + guide.slug + '#bildir') %>">Giriş yapıp bildir</a></p>
+    <% } else { %>
+      <details>
+        <summary>Bu rehberi bildir</summary>
+        <form method="post" action="/rehber/<%= guide.slug %>/bildir" class="report-form">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <fieldset>
+            <legend>Sorun ne?</legend>
+            <% Object.entries(REPORT_REASONS).forEach(([k, v], i) => { %>
+              <label class="radio"><input type="radio" name="reason" value="<%= k %>" <%= i === 0 ? 'required' : '' %>><span><%= v %></span></label>
+            <% }) %>
+          </fieldset>
+          <label class="f"><span class="f-l">Not <em>isteğe bağlı</em></span>
+            <textarea name="note" rows="2" maxlength="500" placeholder="Yöneticilere kısa bir açıklama"></textarea>
+          </label>
+          <div><button class="big-btn small" type="submit">Bildir</button></div>
+        </form>
+      </details>
+    <% } %>
+  </section>
+  <% } %>
 
   <% if (more.length) { %>
     <section class="index more">
