@@ -475,4 +475,36 @@ module.exports = [
       'Kargo takip uygulamandaki aktif sipariş sayısı.',
     ],
   },
+  {
+    title: 'Star Wars Fanı Nasıl Larplanır?',
+    category: 'Sanat & Estetik',
+    difficulty: 4,
+    summary: 'Filmlerin hepsini izlemene gerek yok. Hangi sırayla izlenmesi gerektiği konusunda kesin bir fikrin olması yeter.',
+    kit: [
+      'Masanda bir oyuncak ışın kılıcı (ışığı yansın, çalışması şart değil)',
+      'Bir galaksi haritası posteri ya da tişörtü',
+      '4 Mayıs için önceden hazırlanmış bir paylaşım',
+      'Ezberlenmiş üç gezegen adı',
+    ],
+    steps: [
+      'Filmler sorulduğunda "Hangi sırayla izledin?" diye karşı soru sor. Cevap ne olursa olsun hafifçe kaşını kaldır.',
+      'Orijinal üçlemeyi öv, yeni filmler açılınca derin bir nefes al ve "Karışık duygular" de.',
+      'Bir yan karakterin adını söyle ve "Asıl hikaye onunki aslında" diye ekle. Kimse kim olduğunu soramaz.',
+      'Her ihanet hikayesinde, gerçek hayatta bile, "Karanlık tarafa geçti" de.',
+      'Herhangi bir uzay filmi konuşulurken "Güzel ama onlardan esinlendiği belli" diye sohbeti kendi alanına çek.',
+      '4 Mayıs\'ta sabah 9\'dan önce paylaşımını yap. Geç kalan sahte fan sayılır.',
+    ],
+    phrases: [
+      'Ben orijinal üçlemeyle büyüdüm.',
+      'Kanon ile efsaneleri karıştırmamak lazım.',
+      'Asıl tartışma hâlâ o barda ilk kimin ateş ettiği.',
+      'Güç seninle olsun.',
+    ],
+    risks: [
+      'Biri dizilerin hangisinin hangi filmden önce geçtiğini sorarsa.',
+      'Gerçek bir fanın "En sevdiğin Jedi kim ve neden?" sorusu. "Neden" kısmına hazırlıklı ol.',
+      'Işın kılıcının renklerinin ne anlama geldiğini sormaları.',
+      'Bir kutlamaya kostümsüz gitmek.',
+    ],
+  },
 ];
