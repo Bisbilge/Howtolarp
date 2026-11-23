@@ -13,7 +13,8 @@
   <meta property="og:title" content="<%= metaTitle %>">
   <meta property="og:description" content="<%= metaDesc %>">
   <meta property="og:url" content="<%= baseUrl + path %>">
-  <meta property="og:image" content="<%= baseUrl %>/og.png">
+  <meta property="og:image" content="<%= ogImage || (baseUrl + '/og.png') %>">
+  <meta name="twitter:image" content="<%= ogImage || (baseUrl + '/og.png') %>">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="tr_TR">

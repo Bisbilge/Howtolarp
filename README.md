@@ -14,7 +14,9 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 - **Moderasyon:** üyeler rehberleri gerekçesiyle bildirir; 3 farklı kişi bildirince rehber otomatik gizlenir.
   Yöneticiler `/yonetim` panelinden bildirimleri inceler; rehberi yayında tutar, gizler, siler ya da yazarı engeller.
 - "Rastgele rol" (`/rastgele`), paylaşma butonu, repliğe dokununca kopyalama, sayfalama
-- Paylaşım önizlemesi (Open Graph görseli ve etiketleri), `sitemap.xml`, `robots.txt`
+- **Rehbere özel paylaşım önizlemesi:** her rehber linki WhatsApp/Twitter vb.'de kendi görseliyle görünür
+  (`/og/rehber/<slug>.png`, 1200×630, `og.js`: satori + resvg). Görsel CDN'de önbelleğe alınır, rehber düzenlenince yenilenir;
+  üretilemezse genel `og.png` kullanılır. `sitemap.xml`, `robots.txt`
 - **Spam koruması:**
   - Yeni üyelerin ilk rehberleri yönetici onayından sonra yayına girer; 2 rehberi onaylanan üye "güvenilir" olur.
     Güvenilir olmayan üyenin düzenlemesi yeniden onaya düşer.
@@ -79,6 +81,7 @@ Vercel'de kalıcı disk olmadığı için veritabanı olarak [Turso](https://tur
 server.js        Rotalar, oturum, CSRF, moderasyon
 db.js            Veritabanı bağlantısı (yerel dosya ya da Turso), şema, örnek veri
 seed-guides.js   Örnek rehberler
+og.js            Rehbere özel paylaşım görseli (assets/og-fonts yazı tipleriyle)
 api/index.js     Vercel giriş noktası
 vercel.json      Vercel yönlendirme ayarları
 views/           EJS şablonları

@@ -2,6 +2,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const express = require('express');
 const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = require('./db');
+const { renderGuideImage } = require('./og');
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -70,7 +71,7 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website', signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    description: null, ogType: 'website', ogImage: null, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
@@ -94,6 +95,29 @@ app.use(async (req, res, next) => {
   await ensureReady();
   next();
 });
+
+// ---------- Rehbere özel paylaşım görseli ----------
+// Çerez middleware'inden ÖNCE: yanıtta Set-Cookie olmasın ki Vercel CDN önbelleğe alabilsin.
+app.get('/og/rehber/:file', async (req, res) => {
+  const slug = String(req.params.file).replace(/\.png$/, '');
+  const guide = await db.get(`SELECT g.id, g.slug, g.title, g.category, g.difficulty, g.phrases, g.updated_at
+    FROM guides g JOIN users u ON u.id = g.user_id WHERE g.slug = ? AND ${VISIBLE}`, [slug]);
+  if (!guide) return res.redirect(302, '/og.png');
+  try {
+    const phrase = String(guide.phrases || '').split('\n').map((s) => s.trim().replace(/^["“”']+|["“”']+$/g, ''))
+      .filter((s) => s && s.length <= 60)[0] || '';
+    const png = await renderGuideImage({
+      persona: persona(guide.title), category: guide.category, difficulty: guide.difficulty, number: guide.id, phrase,
+    }, `${guide.slug}:${guide.updated_at}`);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400');
+    res.send(png);
+  } catch (err) {
+    console.error('og görseli üretilemedi', err);
+    res.redirect(302, '/og.png');
+  }
+});
+const ogVersion = (g) => crypto.createHash('sha1').update(String(g.updated_at)).digest('hex').slice(0, 8);
 
 // ---------- Çerezler, oturum, CSRF ----------
 function parseCookies(header = '') {
@@ -348,6 +372,8 @@ app.get('/rehber/:slug', async (req, res) => {
 
   res.render('guide', {
     title: guide.title, description: guide.summary, ogType: 'article',
+    ogImage: !guide.hidden && guide.approved && !guide.banned
+      ? `${res.locals.baseUrl}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}` : null,
     guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,
     guideReports: reportCount ? reportCount.n : 0,
     justReported: req.query.bildirildi === '1',

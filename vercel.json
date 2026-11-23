@@ -9,7 +9,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "{views/**,seed-guides.js}"
+      "includeFiles": "{views/**,seed-guides.js,og.js,assets/**,node_modules/@resvg/resvg-wasm/index_bg.wasm}"
     }
   }
 }
