@@ -97,6 +97,17 @@ const SCHEMA = [
   // Kötüye kullanım sınırları için olay kayıtları (anahtar: işlem + kişi/IP özeti)
   `CREATE TABLE IF NOT EXISTS hits (key TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at)`,
+  // "Yakalandım": rehberi deneyip ifşa olanlar (üye ve hesapsız ziyaretçi)
+  `CREATE TABLE IF NOT EXISTS caught (
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, guide_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS anon_caught (
+    visitor  TEXT NOT NULL,
+    guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
+    PRIMARY KEY (visitor, guide_id)
+  )`,
   // Hesabı olmayan ziyaretçilerin beğenileri (tarayıcı çereziyle)
   `CREATE TABLE IF NOT EXISTS anon_likes (
     visitor  TEXT NOT NULL,
@@ -109,6 +120,8 @@ const SCHEMA = [
 const INDEXES = [
   'CREATE INDEX IF NOT EXISTS likes_guide ON likes(guide_id)',
   'CREATE INDEX IF NOT EXISTS anon_likes_guide ON anon_likes(guide_id)',
+  'CREATE INDEX IF NOT EXISTS caught_guide ON caught(guide_id)',
+  'CREATE INDEX IF NOT EXISTS anon_caught_guide ON anon_caught(guide_id)',
   'CREATE INDEX IF NOT EXISTS guides_pending ON guides(approved) WHERE approved = 0',
   'CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id)',
 ];

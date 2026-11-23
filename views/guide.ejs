@@ -106,15 +106,27 @@
   </div>
 
   <div class="larp-box" id="larpladim">
-    <div>
-      <p class="larp-count"><%= guide.like_count %></p>
-      <p class="larp-label">kişi bu rehberle larpladı</p>
+    <div class="larp-stats">
+      <div>
+        <p class="larp-count"><%= guide.like_count %></p>
+        <p class="larp-label">kişi bu rehberle larpladı</p>
+      </div>
+      <div class="larp-caught">
+        <p class="larp-count"><%= guide.caught_count %></p>
+        <p class="larp-label">kişi yakalandı 😬</p>
+      </div>
     </div>
     <% if (!guide.hidden && !guide.banned && guide.approved) { %>
-      <form method="post" action="/rehber/<%= guide.slug %>/larpladim">
-        <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <button class="big-btn <%= liked ? 'is-on' : '' %>" type="submit"><%= liked ? '✓ Larpladım' : 'Ben de larpladım' %></button>
-      </form>
+      <div class="larp-actions">
+        <form method="post" action="/rehber/<%= guide.slug %>/larpladim">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="big-btn <%= liked ? 'is-on' : '' %>" type="submit"><%= liked ? '✓ Larpladım' : 'Ben de larpladım' %></button>
+        </form>
+        <form method="post" action="/rehber/<%= guide.slug %>/yakalandim">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="big-btn big-btn-pink <%= caught ? 'is-on' : '' %>" type="submit"><%= caught ? '✓ Yakalandım' : 'Yakalandım 😬' %></button>
+        </form>
+      </div>
     <% } %>
   </div>
 

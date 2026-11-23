@@ -265,7 +265,9 @@ async function isTrusted(user) {
 const VISIBLE = 'g.hidden = 0 AND g.approved = 1 AND u.banned = 0';
 const GUIDE_SELECT = `SELECT g.*, u.username, u.banned, u.role AS author_role,
   ((SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id)
-    + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count
+    + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count,
+  ((SELECT COUNT(*) FROM caught c WHERE c.guide_id = g.id)
+    + (SELECT COUNT(*) FROM anon_caught ac WHERE ac.guide_id = g.id)) AS caught_count
   FROM guides g JOIN users u ON u.id = g.user_id`;
 
 const findGuide = (slug) => db.get(`${GUIDE_SELECT} WHERE g.slug = ?`, [slug]);
@@ -289,6 +291,8 @@ async function deleteGuide(id) {
   await db.run('DELETE FROM share_queue WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM likes WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM anon_likes WHERE guide_id = ?', [id]);
+  await db.run('DELETE FROM caught WHERE guide_id = ?', [id]);
+  await db.run('DELETE FROM anon_caught WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM reports WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM guides WHERE id = ?', [id]);
 }
@@ -376,10 +380,13 @@ app.get('/rehber/:slug', async (req, res) => {
   if (!guide || ((guide.hidden || guide.banned || !guide.approved) && !isOwner && !isAdmin)) return notFound(req, res);
 
   const none = Promise.resolve(null);
-  const [likedRow, reportedRow, reportCount, more] = await Promise.all([
+  const [likedRow, caughtRow, reportedRow, reportCount, more] = await Promise.all([
     req.user
       ? db.get('SELECT 1 AS x FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id])
       : db.get('SELECT 1 AS x FROM anon_likes WHERE visitor = ? AND guide_id = ?', [req.visitor, guide.id]),
+    req.user
+      ? db.get('SELECT 1 AS x FROM caught WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id])
+      : db.get('SELECT 1 AS x FROM anon_caught WHERE visitor = ? AND guide_id = ?', [req.visitor, guide.id]),
     req.user ? db.get('SELECT 1 AS x FROM reports WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
     isAdmin ? db.get(`SELECT COUNT(*) AS n,
       (SELECT COUNT(*) FROM share_queue s WHERE s.guide_id = ? AND s.skipped = 0 AND (s.x_at IS NULL OR s.ig_at IS NULL)) AS queued
@@ -414,7 +421,7 @@ app.get('/rehber/:slug', async (req, res) => {
     title: guide.title, description: guide.summary, ogType: 'article', jsonLd,
     ogImage: !guide.hidden && guide.approved && !guide.banned
       ? `${res.locals.baseUrl}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}` : null,
-    guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,
+    guide, liked: !!likedRow, caught: !!caughtRow, reported: !!reportedRow, more, isOwner,
     guideReports: reportCount ? reportCount.n : 0,
     inShareQueue: reportCount ? Number(reportCount.queued) > 0 : false,
     justReported: req.query.bildirildi === '1',
@@ -488,10 +495,13 @@ app.post('/rehber/:slug/sil', requireUser, async (req, res) => {
   res.redirect(req.user.id === guide.user_id ? '/rehberlerim' : '/yonetim');
 });
 
-app.post('/rehber/:slug/larpladim', async (req, res) => {
+// "Larpladım" ve "Yakalandım": aynı kişi tekrar basarsa geri alınır
+const REACTIONS = { larpladim: ['likes', 'anon_likes'], yakalandim: ['caught', 'anon_caught'] };
+app.post(['/rehber/:slug/larpladim', '/rehber/:slug/yakalandim'], async (req, res) => {
   const guide = await findGuide(req.params.slug);
   if (!guide || guide.hidden || guide.banned || !guide.approved) return notFound(req, res);
-  const [table, col, who] = req.user ? ['likes', 'user_id', req.user.id] : ['anon_likes', 'visitor', req.visitor];
+  const [userTable, anonTable] = REACTIONS[req.path.endsWith('/yakalandim') ? 'yakalandim' : 'larpladim'];
+  const [table, col, who] = req.user ? [userTable, 'user_id', req.user.id] : [anonTable, 'visitor', req.visitor];
   const del = await db.run(`DELETE FROM ${table} WHERE ${col} = ? AND guide_id = ?`, [who, guide.id]);
   if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id) VALUES (?, ?)`, [who, guide.id]);
   res.redirect(`/rehber/${guide.slug}#larpladim`);
@@ -571,7 +581,7 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
 // ---------- Yedek (sadece baş yönetici) ----------
 // Oturumlar ve geçici sınır kayıtları hariç tüm tablolar tek JSON dosyası olarak iner.
 // Geri yükleme: node scripts/geri-yukle.js <dosya>  (README'ye bakın)
-const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'reports', 'seeded'];
+const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue'];
 app.get('/yonetim/yedek', requireAdmin, async (req, res) => {
   if (!req.user.isSuper) return notFound(req, res);
   const tables = {};

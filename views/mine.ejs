@@ -22,7 +22,7 @@
             <a class="mine-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
             <p class="mine-meta">
               <span class="row-cat"><%= g.category %></span>
-              <%= formatDate(g.created_at) %> · <%= g.like_count %> larpladı
+              <%= formatDate(g.created_at) %> · <%= g.like_count %> larpladı · <%= g.caught_count %> yakalandı
               <% if (!g.approved) { %> · <span class="flag flag-wait">Onay bekliyor</span><% } %>
               <% if (g.hidden) { %> · <span class="flag">İnceleniyor</span><% } %>
             </p>
