@@ -23,10 +23,12 @@
           <div class="cf-turnstile" data-sitekey="<%= turnstileKey %>" data-language="tr"></div>
           <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         <% } %>
+        <% if (adminCodeEnabled) { %>
         <details class="admin-code">
           <summary>Yönetici misin?</summary>
           <label class="f"><span class="f-l">Yönetici kodu</span><input name="admin_code" type="password" autocomplete="off"></label>
         </details>
+        <% } %>
       <% } %>
       <div class="f-actions">
         <button class="big-btn" type="submit"><%= mode === 'kayit' ? 'Üye ol →' : 'Giriş yap →' %></button>

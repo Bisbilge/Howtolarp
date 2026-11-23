@@ -63,6 +63,7 @@ app.use(async (req, res, next) => {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
     description: null, ogType: 'website', signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
+    adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
   });
   res.set('X-Content-Type-Options', 'nosniff');
