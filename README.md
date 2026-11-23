@@ -7,7 +7,7 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 
 - Üyelik: kayıt, giriş, çıkış (şifreler scrypt ile saklanır, oturumlar veritabanında)
 - Rehber yazma, düzenleme, silme (yalnızca yazarı ya da yönetici)
-- Her rehberde 4 bölüm: Çantada olacaklar, Sahne talimatı, Replikler, Nerede yakalanırsın
+- Her rehberde 4 bölüm: Hazırlık, Sahne talimatı, Replikler, Nerede yakalanırsın
 - Kategori, larp zorluğu (1-5), arama, "yeni / çok larplanan" sıralaması
 - Sosyal katman yok: herkese açık profil, takip ya da arkadaşlık bulunmaz. Rehberde yazarın adı görünür;
   üye kendi rehberlerini sadece kendisinin gördüğü **Rehberlerim** (`/rehberlerim`) sayfasından yönetir.

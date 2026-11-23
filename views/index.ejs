@@ -9,7 +9,7 @@
       <span class="hero-persona" data-personas="<%= JSON.stringify(personas) %>"><%= personas[0] || 'Zeki biri' %></span>
       <span class="hero-line"><s>olma.</s> <mark>öyle görün.</mark></span>
     </h1>
-    <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. <%= signupsOpen ? 'Rehberleri üyeler yazıyor. Sıra sende.' : 'Bir rol seç, çantanı hazırla, sahneye çık.' %></p>
+    <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. <%= signupsOpen ? 'Rehberleri üyeler yazıyor. Sıra sende.' : 'Bir rol seç, hazırlığını yap, sahneye çık.' %></p>
     <div class="hero-actions">
       <% if (user) { %><a class="big-btn" href="/yaz">Rehberini yaz →</a>
       <% } else if (signupsOpen) { %><a class="big-btn" href="/kayit">Rehberini yaz →</a>
