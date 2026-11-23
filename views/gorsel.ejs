@@ -29,14 +29,32 @@
       </div>
     </form>
     <% if (guide) { %>
-      <div class="f-actions">
-        <button class="big-btn" type="button" id="ig-download">PNG indir ↓</button>
+      <div class="f-actions ig-actions">
+        <% if (format === 'x') { %>
+          <a class="big-btn" href="<%= tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
+          <button class="ghost-btn" type="button" id="ig-download">PNG indir ↓</button>
+        <% } else { %>
+          <button class="big-btn" type="button" id="ig-share" hidden>Instagram'da paylaş ↗</button>
+          <button class="big-btn" type="button" id="ig-download">PNG indir ↓</button>
+        <% } %>
       </div>
+      <% if (format === 'x') { %>
+        <p class="ig-hint">Tweet'te rehberin linki var; Twitter önizleme görselini linkten kendisi ekler. Ayrıca görsel eklemek istersen PNG'yi indir.</p>
+      <% } else { %>
+        <p class="ig-hint" id="ig-share-hint" hidden>Görsel paylaşım menüsünde açılır, açıklama panoya kopyalanır: Instagram'ı seç, açıklama alanına yapıştır.</p>
+      <% } %>
+      <% const pf = format === 'x' ? 'x' : 'ig'; const done = share && (pf === 'x' ? share.x_at : share.ig_at); %>
+      <% if (done) { %>
+        <p class="share-done">✓ <%= pf === 'x' ? 'Twitter' : 'Instagram' %>'da paylaşıldı olarak işaretli</p>
+      <% } else { %>
+        <form method="post" action="/yonetim/paylasim/<%= guide.id %>/<%= pf %>" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input type="hidden" name="sonra" value="/yonetim#paylasilacaklar">
+          <button class="ghost-btn" type="submit"><%= pf === 'x' ? 'Twitter' : 'Instagram' %>'da paylaştım ✓</button>
+        </form>
+      <% } %>
       <p class="ig-caption-h f-l"><%= format === 'x' ? 'Önerilen tweet' : 'Önerilen açıklama' %></p>
-      <% const link = baseUrl + '/rehber/' + guide.slug;
-         const caption = format === 'x'
-           ? ('Yeni rehber: ' + guide.title + '\n\n' + (guide.summary.length > 150 ? guide.summary.slice(0, 147).trim() + '…' : guide.summary) + '\n\n' + link)
-           : ('Yeni rehber: ' + guide.title + '\n\n' + guide.summary + '\n\nRehberin tamamı ve daha fazlası: howtolarp.org (link profilde)\n\n#howtolarp #larp #mizah'); %>
+      <% const caption = format === 'x' ? texts.x : texts.ig; %>
       <textarea class="ig-caption" id="ig-caption" rows="7" readonly><%= caption %></textarea>
       <button class="ghost-btn" type="button" id="ig-copy">Metni kopyala</button>
     <% } %>
@@ -114,6 +132,34 @@
     }
     document.fonts.ready.then(function () { fitPersona(); H = card.offsetHeight; fit(); });
     window.addEventListener('resize', fit); fit();
+
+    // Telefonda: görseli dosya olarak paylaşım menüsüne ver (Instagram, WhatsApp...). Açıklama panoya kopyalanır.
+    var shareBtn = document.getElementById('ig-share'), blobPromise = null;
+    var fileName = 'howtolarp-<%= guide ? guide.slug : "" %>-<%= format %>.png';
+    function makeBlob() {
+      blobPromise = blobPromise || document.fonts.ready.then(function () {
+        return htmlToImage.toBlob(card, { pixelRatio: 1, width: W, height: card.offsetHeight, cacheBust: true });
+      });
+      return blobPromise;
+    }
+    if (shareBtn && navigator.canShare) {
+      try {
+        if (navigator.canShare({ files: [new File([new Blob(['x'])], 'a.png', { type: 'image/png' })] })) {
+          shareBtn.hidden = false; document.getElementById('ig-share-hint').hidden = false;
+          setTimeout(makeBlob, 800); // tıklamadan önce hazırla: paylaşım menüsü anında açılsın
+        }
+      } catch (e) {}
+    }
+    if (shareBtn) shareBtn.addEventListener('click', function () {
+      var text = document.getElementById('ig-caption').value;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+      makeBlob().then(function (blob) {
+        return navigator.share({ files: [new File([blob], fileName, { type: 'image/png' })], text: text });
+      }).catch(function (e) {
+        if (e && e.name === 'AbortError') return; // kullanıcı vazgeçti
+        alert('Paylaşım menüsü açılamadı. PNG indir düğmesiyle indirip Instagram\'dan paylaşabilirsin.');
+      });
+    });
 
     document.getElementById('ig-download').addEventListener('click', function () {
       var btn = this; btn.disabled = true; btn.textContent = 'Hazırlanıyor…';

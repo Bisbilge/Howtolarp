@@ -40,6 +40,39 @@
   </p>
   <% if (user.isSuper) { %><p class="adm-note">Yedek dosyasında hesap bilgileri de var. Kimseyle paylaşma, haftada bir indir.</p><% } %>
 
+
+  <h2 class="adm-h" id="paylasilacaklar">Paylaşılacaklar <small class="muted"><%= shares.length %> rehber</small></h2>
+  <% if (!shares.length) { %>
+    <p class="adm-empty">Paylaşılmayı bekleyen rehber yok. Yeni rehberler yayına girince buraya kendiliğinden düşer.</p>
+  <% } %>
+  <% shares.forEach(s => { %>
+    <article class="case share">
+      <header class="case-head">
+        <div>
+          <a class="case-title" href="/rehber/<%= s.slug %>"><%= s.title %></a>
+          <p class="case-meta"><%= s.category %> · sıraya girdi: <%= formatDate(s.queued_at) %></p>
+        </div>
+        <div class="case-actions"><form method="post" action="/yonetim/paylasim/<%= s.guide_id %>/atla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="">Atla</button></form></div>
+      </header>
+      <div class="share-rows">
+        <div class="share-row">
+          <span class="share-pf">Twitter / X</span>
+          <% if (s.x_at) { %><span class="share-done">✓ Paylaşıldı</span><% } else { %>
+            <a class="adm-btn adm-btn-ok" href="<%= s.tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
+            <form method="post" action="/yonetim/paylasim/<%= s.guide_id %>/x" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="">Paylaşıldı ✓</button></form>
+          <% } %>
+        </div>
+        <div class="share-row">
+          <span class="share-pf">Instagram</span>
+          <% if (s.ig_at) { %><span class="share-done">✓ Paylaşıldı</span><% } else { %>
+            <a class="adm-btn adm-btn-ok" href="/yonetim/gorsel?rehber=<%= s.slug %>&format=post">Görseli hazırla ↗</a>
+            <form method="post" action="/yonetim/paylasim/<%= s.guide_id %>/ig" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="">Paylaşıldı ✓</button></form>
+          <% } %>
+        </div>
+      </div>
+    </article>
+  <% }) %>
+
   <h2 class="adm-h">Onay bekleyenler</h2>
   <% if (!pending.length) { %>
     <p class="adm-empty">Onay bekleyen rehber yok.</p>

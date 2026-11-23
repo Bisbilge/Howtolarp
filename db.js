@@ -86,6 +86,14 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
   // Hangi örnek rehberlerin eklendiğini tutar: silinen örnekler geri gelmez
   `CREATE TABLE IF NOT EXISTS seeded (title TEXT PRIMARY KEY)`,
+  // Paylaşım sırası: yayına giren rehberler sosyal medyada paylaşılmak üzere buraya düşer
+  `CREATE TABLE IF NOT EXISTS share_queue (
+    guide_id  INTEGER PRIMARY KEY REFERENCES guides(id) ON DELETE CASCADE,
+    queued_at TEXT NOT NULL DEFAULT (datetime('now')),
+    x_at      TEXT,
+    ig_at     TEXT,
+    skipped   INTEGER NOT NULL DEFAULT 0
+  )`,
   // Kötüye kullanım sınırları için olay kayıtları (anahtar: işlem + kişi/IP özeti)
   `CREATE TABLE IF NOT EXISTS hits (key TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at)`,
@@ -202,6 +210,7 @@ async function seedGuides() {
       // Hiç eklenmemiş: yeni rehber
       id = (await db.get(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [await slugify(g.title), editor.id, ...fields(g)])).id;
+      if (rows.size > 0) await db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
     }
     // row var ama rehber bulunamadı: sitede silinmiş, geri getirme
     await db.run(`INSERT INTO seeded (title, guide_id, hash) VALUES (?, ?, ?)

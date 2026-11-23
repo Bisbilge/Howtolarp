@@ -27,7 +27,8 @@
       <% } %>
       <form method="post" action="/yonetim/rehber/<%= guide.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
       <a href="/rehber/<%= guide.slug %>/duzenle">Düzenle</a>
-      <% if (guide.approved && !guide.hidden && !guide.banned) { %><a href="/yonetim/gorsel?rehber=<%= guide.slug %>">Görsel oluştur ↗</a><% } %>
+      <% if (guide.approved && !guide.hidden && !guide.banned) { %><a href="/yonetim/gorsel?rehber=<%= guide.slug %>">Görsel oluştur ↗</a>
+        <% if (!inShareQueue) { %><form method="post" action="/yonetim/paylasim/<%= guide.id %>/ekle" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button>Paylaşım sırasına ekle</button></form><% } else { %><span class="adminbar-tag">Paylaşım sırasında</span><% } %><% } %>
       <a href="/yonetim">Panel →</a>
     </div>
   </div>

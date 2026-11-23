@@ -30,6 +30,10 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 - **Görsel oluşturucu** (`/yonetim/gorsel`, sadece yönetim): seçilen rehber için Instagram gönderi (1080×1350),
   Instagram hikaye (1080×1920) ya da Twitter/X (1600×900) görselini tarayıcıda oluşturup PNG indirir;
   platforma göre hazır açıklama/tweet metni verir. Rehber seçimi aramalı.
+- **Paylaşım sırası** (Yönetim → Paylaşılacaklar): yayına giren her rehber (onaylanan ya da güvenilir üyenin yazdığı)
+  sıraya kendiliğinden düşer. Twitter için hazır metinli "Tweet'i aç" (önizleme görseli linkten gelir), Instagram için
+  telefonda görseli paylaşım menüsüne veren "Instagram'da paylaş" düğmesi; paylaşılınca işaretlenir. Eski rehberler
+  rehber sayfasındaki yönetici şeridinden sıraya eklenebilir.
 - Yazı tipleri sitede barındırılır (`public/fonts`, OFL lisanslı); Google Fonts'a istek gitmez
 - CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu

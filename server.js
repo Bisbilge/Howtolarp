@@ -270,7 +270,23 @@ const GUIDE_SELECT = `SELECT g.*, u.username, u.banned, u.role AS author_role,
 
 const findGuide = (slug) => db.get(`${GUIDE_SELECT} WHERE g.slug = ?`, [slug]);
 
+// Yayına giren rehberi paylaşım sırasına ekle (zaten varsa dokunma)
+const queueShare = (id) => db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
+
+// Paylaşım metinleri: Twitter (kısa + link, önizleme görseli link kartından gelir) ve Instagram (link profilde)
+function shareTexts(guide, baseUrl) {
+  const link = `${baseUrl}/rehber/${guide.slug}`;
+  const short = guide.summary.length > 150 ? guide.summary.slice(0, 147).trim() + '…' : guide.summary;
+  return {
+    link,
+    x: `Yeni rehber: ${guide.title}\n\n${short}\n\n${link}`,
+    ig: `Yeni rehber: ${guide.title}\n\n${guide.summary}\n\nRehberin tamamı ve daha fazlası: howtolarp.org (link profilde)\n\n#howtolarp #larp #mizah`,
+  };
+}
+const tweetIntent = (text) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+
 async function deleteGuide(id) {
+  await db.run('DELETE FROM share_queue WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM likes WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM anon_likes WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM reports WHERE guide_id = ?', [id]);
@@ -365,7 +381,9 @@ app.get('/rehber/:slug', async (req, res) => {
       ? db.get('SELECT 1 AS x FROM likes WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id])
       : db.get('SELECT 1 AS x FROM anon_likes WHERE visitor = ? AND guide_id = ?', [req.visitor, guide.id]),
     req.user ? db.get('SELECT 1 AS x FROM reports WHERE user_id = ? AND guide_id = ?', [req.user.id, guide.id]) : none,
-    isAdmin ? db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id]) : none,
+    isAdmin ? db.get(`SELECT COUNT(*) AS n,
+      (SELECT COUNT(*) FROM share_queue s WHERE s.guide_id = ? AND s.skipped = 0 AND (s.x_at IS NULL OR s.ig_at IS NULL)) AS queued
+      FROM reports WHERE guide_id = ? AND resolved_at IS NULL`, [guide.id, guide.id]) : none,
     db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} AND g.category = ? AND g.id != ?
       ORDER BY RANDOM() LIMIT 3`, [guide.category, guide.id]),
   ]);
@@ -376,6 +394,7 @@ app.get('/rehber/:slug', async (req, res) => {
       ? `${res.locals.baseUrl}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}` : null,
     guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,
     guideReports: reportCount ? reportCount.n : 0,
+    inShareQueue: reportCount ? Number(reportCount.queued) > 0 : false,
     justReported: req.query.bildirildi === '1',
     justSubmitted: req.query.gonderildi === '1',
   });
@@ -406,6 +425,7 @@ app.post('/yaz', requireUser, async (req, res) => {
   await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks, approved)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [slug, req.user.id, g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, trusted ? 1 : 0]);
+  if (trusted) await queueShare((await db.get('SELECT id FROM guides WHERE slug = ?', [slug])).id);
   res.redirect(`/rehber/${slug}${trusted ? '' : '?gonderildi=1'}`);
 });
 
@@ -514,7 +534,16 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
       JOIN users u ON u.id = g.user_id ORDER BY g.created_at DESC LIMIT 2000`))
     .filter((g) => matches(q, g.title, g.category, g.username)).slice(0, 50) : null;
 
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found });
+  // Paylaşılacaklar: en az bir platformda paylaşılmamış, atlanmamış, yayında olan rehberler (eskiden yeniye)
+  const shares = (await db.all(`SELECT s.guide_id, s.x_at, s.ig_at, s.queued_at, g.slug, g.title, g.summary, g.category
+    FROM share_queue s JOIN guides g ON g.id = s.guide_id JOIN users u ON u.id = g.user_id
+    WHERE s.skipped = 0 AND (s.x_at IS NULL OR s.ig_at IS NULL) AND ${VISIBLE}
+    ORDER BY s.queued_at ASC LIMIT 50`)).map((r) => {
+    const t = shareTexts(r, res.locals.baseUrl);
+    return { ...r, tweetUrl: tweetIntent(t.x) };
+  });
+
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found, shares });
 });
 
 // ---------- Yedek (sadece baş yönetici) ----------
@@ -554,7 +583,33 @@ app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const slug = String(req.query.rehber || list[0]?.slug || all[0]?.slug || '');
   const guide = slug ? await findGuide(slug) : null;
   const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
-  res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q });
+  const texts = guide ? shareTexts(guide, res.locals.baseUrl) : null;
+  const share = guide ? await db.get('SELECT x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?', [guide.id]) : null;
+  res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share,
+    tweetUrl: texts ? tweetIntent(texts.x) : null });
+});
+
+// Paylaşım sırası işlemleri: x / ig (paylaşıldı), atla, ekle (sıraya al), geri (işaretleri kaldır)
+app.post('/yonetim/paylasim/:id/:action', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const sql = {
+    x: `INSERT INTO share_queue (guide_id, x_at) VALUES (?, datetime('now'))
+      ON CONFLICT(guide_id) DO UPDATE SET x_at = datetime('now')`,
+    ig: `INSERT INTO share_queue (guide_id, ig_at) VALUES (?, datetime('now'))
+      ON CONFLICT(guide_id) DO UPDATE SET ig_at = datetime('now')`,
+    atla: 'UPDATE share_queue SET skipped = 1 WHERE guide_id = ?',
+    geri: 'UPDATE share_queue SET x_at = NULL, ig_at = NULL, skipped = 0 WHERE guide_id = ?',
+  }[req.params.action];
+  if (req.params.action === 'ekle') {
+    await db.run(`INSERT INTO share_queue (guide_id) VALUES (?)
+      ON CONFLICT(guide_id) DO UPDATE SET x_at = NULL, ig_at = NULL, skipped = 0, queued_at = datetime('now')`, [id]);
+  } else if (sql) {
+    await db.run(sql, [id]);
+  } else {
+    return notFound(req, res);
+  }
+  const back = safeNext(req.body.sonra);
+  res.redirect(back === '/' ? '/yonetim#paylasilacaklar' : back);
 });
 
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
@@ -564,6 +619,7 @@ app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
   switch (req.params.action) {
     case 'onayla':
       await db.run('UPDATE guides SET approved = 1 WHERE id = ?', [id]);
+      await queueShare(id);
       break;
     case 'temiz': // bildirimleri kapat, yayına al
       await db.run(`UPDATE reports SET resolved_at = datetime('now') WHERE guide_id = ? AND resolved_at IS NULL`, [id]);
