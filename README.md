@@ -25,9 +25,9 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
   - "admin", "editor" gibi resmi görünen ve yönetici kullanıcı adları alınamaz.
 - Hesap ayarları (`/hesap`): şifre değiştirme, hesabı ve tüm içeriği silme
 - Kurallar ve gizlilik sayfası (`/kurallar`); kayıtta kabul onayı
-- **Instagram görsel üretici** (`/yonetim/instagram`, sadece yönetim): seçilen rehber için gönderi (1080×1350)
-  ya da hikaye (1080×1920) görselini tarayıcıda oluşturup PNG indirir; önerilen açıklamayı verir.
-  Profil resimleri: `public/brand/`
+- **Görsel oluşturucu** (`/yonetim/gorsel`, sadece yönetim): seçilen rehber için Instagram gönderi (1080×1350),
+  Instagram hikaye (1080×1920) ya da Twitter/X (1600×900) görselini tarayıcıda oluşturup PNG indirir;
+  platforma göre hazır açıklama/tweet metni verir. Rehber seçimi aramalı. Profil resimleri ve kapaklar: `public/brand/`
 - Yazı tipleri sitede barındırılır (`public/fonts`, OFL lisanslı); Google Fonts'a istek gitmez
 - CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu

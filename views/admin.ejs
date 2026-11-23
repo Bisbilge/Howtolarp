@@ -27,14 +27,14 @@
           </div>
           <span class="adm-list-actions">
             <a class="adm-btn" href="/rehber/<%= g.slug %>/duzenle">Düzenle</a>
-            <% if (g.approved && !g.hidden) { %><a class="adm-btn" href="/yonetim/instagram?rehber=<%= g.slug %>">Instagram</a><% } %>
+            <% if (g.approved && !g.hidden) { %><a class="adm-btn" href="/yonetim/gorsel?rehber=<%= g.slug %>">Görsel</a><% } %>
           </span>
         </li>
       <% }) %>
     </ul>
     <p><a class="ghost-btn" href="/yonetim">Aramayı temizle</a></p>
   <% } %>
-  <p class="adm-tools"><a class="ghost-btn" href="/yonetim/instagram">Instagram görseli hazırla ↗</a></p>
+  <p class="adm-tools"><a class="ghost-btn" href="/yonetim/gorsel">Görsel oluştur (Instagram, Twitter) ↗</a></p>
 
   <h2 class="adm-h">Onay bekleyenler</h2>
   <% if (!pending.length) { %>

@@ -497,16 +497,20 @@ const fold = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[çğıöş
   .normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
 const matches = (q, ...fields) => { const f = fold(q).trim(); return !f || fields.some((x) => fold(x).includes(f)); };
 
-// Instagram görsel üretici: seçilen rehber için gönderi (1080x1350) ya da hikaye (1080x1920)
-app.get('/yonetim/instagram', requireAdmin, async (req, res) => {
+// Görsel oluşturucu: Instagram gönderi (1080x1350), Instagram hikaye (1080x1920), Twitter/X (1600x900)
+const IMAGE_FORMATS = ['post', 'story', 'x'];
+// Eski adres yeni sayfaya yönlenir
+app.get('/yonetim/instagram', requireAdmin, (req, res) =>
+  res.redirect(301, '/yonetim/gorsel' + (req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '')));
+app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const all = await db.all(`SELECT g.slug, g.title, g.category, g.created_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC, g.id DESC LIMIT 2000`);
   const q = String(req.query.q || '').trim().slice(0, 80);
   const list = all.filter((g) => matches(q, g.title, g.category)).map((g) => ({ ...g, key: fold(`${g.title} ${g.category}`) }));
   const slug = String(req.query.rehber || list[0]?.slug || all[0]?.slug || '');
   const guide = slug ? await findGuide(slug) : null;
-  const format = req.query.format === 'story' ? 'story' : 'post';
-  res.render('instagram', { title: 'Instagram', list, guide, format, q });
+  const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
+  res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q });
 });
 
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
