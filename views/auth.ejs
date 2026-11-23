@@ -19,16 +19,16 @@
       <% if (mode === 'kayit') { %>
         <label class="check"><input type="checkbox" name="kabul" value="1" required>
           <span><a href="/kurallar" target="_blank">Kuralları ve gizlilik metnini</a> okudum, kabul ediyorum.</span></label>
-        <% if (turnstileKey) { %>
-          <div class="cf-turnstile" data-sitekey="<%= turnstileKey %>" data-language="tr"></div>
-          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-        <% } %>
         <% if (adminCodeEnabled) { %>
         <details class="admin-code">
           <summary>Editör kodun var mı?</summary>
           <label class="f"><span class="f-l">Editör kodu <em>davet edildiysen</em></span><input name="admin_code" type="password" autocomplete="off"></label>
         </details>
         <% } %>
+      <% } %>
+      <% if (turnstileKey) { %>
+        <div class="cf-turnstile" data-sitekey="<%= turnstileKey %>" data-language="tr"></div>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       <% } %>
       <div class="f-actions">
         <button class="big-btn" type="submit"><%= mode === 'kayit' ? 'Üye ol →' : 'Giriş yap →' %></button>

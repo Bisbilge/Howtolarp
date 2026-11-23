@@ -25,6 +25,10 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
   - "admin", "editor" gibi resmi görünen ve yönetici kullanıcı adları alınamaz.
 - Hesap ayarları (`/hesap`): şifre değiştirme, hesabı ve tüm içeriği silme
 - Kurallar ve gizlilik sayfası (`/kurallar`); kayıtta kabul onayı
+- **Instagram görsel üretici** (`/yonetim/instagram`, sadece yönetim): seçilen rehber için gönderi (1080×1350)
+  ya da hikaye (1080×1920) görselini tarayıcıda oluşturup PNG indirir; önerilen açıklamayı verir.
+  Profil resimleri: `public/brand/`
+- Yazı tipleri sitede barındırılır (`public/fonts`, OFL lisanslı); Google Fonts'a istek gitmez
 - CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu
 
@@ -48,7 +52,7 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 | `SIGNUPS_OPEN` | Üye kaydı varsayılan olarak açıktır. `0` yapılırsa geçici olarak kapanır (mevcut hesaplar `/giris`'ten girmeye devam eder). Ziyaretçiler her durumda hesapsız "Larpladım" diyebilir. |
 | `ADMIN_SIGNUP_CODE` | Editör davet kodu (en az 8 karakter). Kayıtta "Editör kodun var mı?" alanına ya da Hesap ayarlarına girilirse hesap **editör** olur: rehber onaylar, bildirimlere bakar, normal üyeleri engeller. Baş yöneticiler (`ADMIN_USERNAMES`) editörlerin yetkisini panelden alabilir. Kod sızarsa değiştirmen yeterli; yanlış denemeler günde 5 ile sınırlı. |
 | `CONTACT_EMAIL` | Gizlilik sayfasında gösterilecek iletişim adresi (önerilir). |
-| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | İsteğe bağlı. İkisi de girilirse kayıt formunda Cloudflare "robot değilim" kutusu çıkar. |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | İsteğe bağlı. İkisi de girilirse kayıt ve giriş formlarında Cloudflare "robot değilim" kutusu çıkar. Widget'ta tanımlı olmayan bir adresten (ör. `*.vercel.app`) giriş yapılamaz. |
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |

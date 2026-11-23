@@ -1,0 +1,107 @@
+<%- include('partials/head') %>
+<% const lines2 = (t) => String(t || '').split('\n').map(s => s.trim()).filter(Boolean);
+   const phrases = guide ? lines2(guide.phrases).slice(0, format === 'story' ? 3 : 2).map(l => l.replace(/^["“”']+|["“”']+$/g, '')) : []; %>
+<section class="ig-page">
+  <div class="ig-controls">
+    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
+    <h1 class="page-h">Instagram</h1>
+    <form method="get" action="/yonetim/instagram" class="form ig-form">
+      <label class="f"><span class="f-l">Rehber</span>
+        <select name="rehber" onchange="this.form.submit()">
+          <% list.forEach(g => { %><option value="<%= g.slug %>" <%= guide && guide.slug === g.slug ? 'selected' : '' %>><%= g.title %></option><% }) %>
+        </select>
+      </label>
+      <div class="ig-formats">
+        <label class="radio"><input type="radio" name="format" value="post" <%= format === 'post' ? 'checked' : '' %> onchange="this.form.submit()"><span>Gönderi (1080×1350)</span></label>
+        <label class="radio"><input type="radio" name="format" value="story" <%= format === 'story' ? 'checked' : '' %> onchange="this.form.submit()"><span>Hikaye (1080×1920)</span></label>
+      </div>
+    </form>
+    <% if (guide) { %>
+      <div class="f-actions">
+        <button class="big-btn" type="button" id="ig-download">PNG indir ↓</button>
+      </div>
+      <p class="ig-caption-h f-l">Önerilen açıklama</p>
+      <textarea class="ig-caption" id="ig-caption" rows="7" readonly><%= 'Yeni rehber: ' + guide.title + '\n\n' + guide.summary + '\n\nRehberin tamamı ve daha fazlası: howtolarp.org (link profilde)\n\n#howtolarp #larp #mizah' %></textarea>
+      <button class="ghost-btn" type="button" id="ig-copy">Açıklamayı kopyala</button>
+    <% } %>
+    <p class="ig-caption-h f-l">Profil resmi</p>
+    <div class="ig-logos">
+      <a href="/brand/profil-siyah.png" download><img src="/brand/profil-siyah.png" alt="Siyah zeminli logo" width="120" height="120"></a>
+      <a href="/brand/profil-yesil.png" download><img src="/brand/profil-yesil.png" alt="Yeşil zeminli logo" width="120" height="120"></a>
+    </div>
+  </div>
+
+  <% if (guide) { %>
+  <div class="ig-stage" data-format="<%= format %>">
+    <div class="ig-scale">
+      <div class="ig ig-<%= format %>" id="ig-card">
+        <div class="ig-top"><b>Yeni rehber</b><span>HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
+        <div class="ig-body">
+          <p class="ig-kicker"><%= guide.category %> · Zorluk <%= guide.difficulty %>/5 · <%= DIFFICULTY_LABELS[guide.difficulty] %></p>
+          <h2 class="ig-persona" id="ig-persona"><%= persona(guide.title) %></h2>
+          <p class="ig-line"><s>olma.</s> <mark>öyle görün.</mark></p>
+          <p class="ig-sum"><%= guide.summary %></p>
+          <div class="ig-bubbles">
+            <% phrases.forEach(p => { %><p class="ig-bubble"><%= p %></p><% }) %>
+          </div>
+        </div>
+        <div class="ig-foot">
+          <div class="ig-cta">Rehberin tamamı<br><b>howtolarp.org</b></div>
+          <div class="ig-mark">HOW TO <span>LARP</span></div>
+        </div>
+        <div class="ig-sticker"><span>#<%= String(guide.id).padStart(3, '0') %></span></div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</section>
+<script src="/vendor/html-to-image.js"></script>
+<script>
+  (function () {
+    var card = document.getElementById('ig-card');
+    if (!card) return;
+    var stage = document.querySelector('.ig-stage'), scaleEl = document.querySelector('.ig-scale');
+    var W = 1080, H = card.offsetHeight;
+    function fit() {
+      var s = Math.min(1, stage.clientWidth / W);
+      scaleEl.style.transform = 'scale(' + s + ')';
+      stage.style.height = (H * s) + 'px';
+    }
+    // Uzun rol adlarını sığacak kadar küçült
+    // Uzun rol adı ya da içerik kartı taşırırsa: önce başlığı küçült, yetmezse replik eksilt
+    function fitPersona() {
+      var p = document.getElementById('ig-persona'), body = card.querySelector('.ig-body'), size = 230;
+      // En fazla 3 satırlık başlık; kart taşmasın
+      function wide() { return p.scrollWidth > p.clientWidth || p.offsetHeight > size * 3.9; }
+      function overflow() { return body.scrollHeight > body.clientHeight + 1; }
+      function shrink() { size -= 6; p.style.fontSize = size + 'px'; }
+      p.style.fontSize = size + 'px';
+      while ((wide() || overflow()) && size > 120) shrink();
+      var bubbles = Array.prototype.slice.call(card.querySelectorAll('.ig-bubble'));
+      while (overflow() && bubbles.length > 1) bubbles.pop().remove();
+      while ((wide() || overflow()) && size > 80) shrink();
+      while (overflow() && bubbles.length) bubbles.pop().remove();
+    }
+    document.fonts.ready.then(function () { fitPersona(); H = card.offsetHeight; fit(); });
+    window.addEventListener('resize', fit); fit();
+
+    document.getElementById('ig-download').addEventListener('click', function () {
+      var btn = this; btn.disabled = true; btn.textContent = 'Hazırlanıyor…';
+      htmlToImage.toPng(card, { pixelRatio: 1, width: W, height: card.offsetHeight, cacheBust: true })
+        .then(function (url) {
+          var a = document.createElement('a');
+          a.href = url; a.download = 'howtolarp-<%= guide ? guide.slug : "" %>-<%= format %>.png'; a.click();
+        })
+        .catch(function () { alert('Görsel oluşturulamadı. Sayfayı yenileyip tekrar dene.'); })
+        .finally(function () { btn.disabled = false; btn.textContent = 'PNG indir ↓'; });
+    });
+    var copyBtn = document.getElementById('ig-copy');
+    copyBtn.addEventListener('click', function () {
+      var t = document.getElementById('ig-caption').value;
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+        function () { copyBtn.textContent = 'Kopyalandı ✓'; },
+        function () { document.getElementById('ig-caption').select(); });
+    });
+  })();
+</script>
+<%- include('partials/foot') %>

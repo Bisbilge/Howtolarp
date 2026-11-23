@@ -81,9 +81,9 @@ app.use(async (req, res, next) => {
   res.set('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-    "style-src 'self' https://fonts.googleapis.com",
-    'font-src https://fonts.gstatic.com',
-    "img-src 'self' data:",
+    "style-src 'self'",
+    "font-src 'self'",
+    "img-src 'self' data: blob:",
     'frame-src https://challenges.cloudflare.com',
     "connect-src 'self' https://challenges.cloudflare.com",
     "form-action 'self'",
@@ -485,6 +485,16 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER });
 });
 
+// Instagram görsel üretici: seçilen rehber için gönderi (1080x1350) ya da hikaye (1080x1920)
+app.get('/yonetim/instagram', requireAdmin, async (req, res) => {
+  const list = await db.all(`SELECT g.slug, g.title FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} ORDER BY g.created_at DESC, g.id DESC LIMIT 60`);
+  const slug = String(req.query.rehber || list[0]?.slug || '');
+  const guide = slug ? await findGuide(slug) : null;
+  const format = req.query.format === 'story' ? 'story' : 'post';
+  res.render('instagram', { title: 'Instagram', list, guide, format });
+});
+
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const guide = await db.get('SELECT id FROM guides WHERE id = ?', [id]);
@@ -607,6 +617,8 @@ app.post('/giris', async (req, res) => {
   const sonra = safeNext(req.body.sonra);
   const fail = (error) => res.status(400).render('auth', { title: 'Giriş yap', mode: 'giris', error, username, sonra });
 
+  if (isBot(req.body)) return fail('Giriş yapılamadı. Sayfayı yenileyip tekrar dene.');
+  if (!(await turnstileOk(req))) return fail('Robot olmadığını doğrulayamadık. Kutucuğu işaretleyip tekrar dene.');
   const window = 15 * 60e3;
   if (await countHits(`login:${ipKey(req)}`, window) >= LOGIN_PER_IP ||
       await countHits(`login-user:${username.toLowerCase()}`, window) >= LOGIN_PER_USER) {

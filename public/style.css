@@ -1,3 +1,17 @@
+/* Yazı tipleri sitede barındırılıyor (OFL lisanslı; public/fonts) */
+@font-face { font-family: 'Anton'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/anton-latin-ext-400-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Anton'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/anton-latin-400-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/archivo-latin-ext-400-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/archivo-latin-400-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/archivo-latin-ext-500-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/archivo-latin-500-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/archivo-latin-ext-700-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/archivo-latin-700-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/jetbrains-mono-latin-ext-400-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/jetbrains-mono-latin-ext-700-normal.woff2') format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/jetbrains-mono-latin-700-normal.woff2') format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
 /* HOW TO LARP: bulvar gazetesi x internet kültürü */
 :root {
   --bg: #ecebe6;
@@ -452,3 +466,52 @@ button.bubble:active { transform: scale(.97); }
 
 .owner button { text-transform: inherit; letter-spacing: inherit; }
 .stamp-wait { border-color: var(--ink); color: var(--ink); border-style: dashed; }
+
+/* ---------- Instagram görsel üretici ---------- */
+.adm-tools { margin: 16px 0 0; }
+.ig-page { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 40px; padding: clamp(32px, 5vw, 56px) var(--gut) 72px; align-items: start; }
+.ig-form { margin-top: 8px; gap: 18px; }
+.ig-formats { display: grid; gap: 4px; }
+.ig-caption-h { margin: 32px 0 8px; display: block; }
+.ig-caption { width: 100%; border: 2.5px solid var(--rule); padding: 10px 12px; font-size: 14px; line-height: 1.5; resize: vertical; }
+.ig-logos { display: flex; gap: 12px; }
+.ig-logos img { display: block; border-radius: 50%; border: 2px solid var(--ink); }
+.ig-stage { position: relative; width: 100%; max-width: 640px; overflow: hidden; border: 2px dashed var(--hair); }
+.ig-scale { width: 1080px; transform-origin: 0 0; }
+@media (max-width: 900px) { .ig-page { grid-template-columns: 1fr; } }
+
+/* Kartın kendisi her zaman açık temada, sabit renklerle (indirilen PNG temadan bağımsız olsun) */
+.ig {
+  --i-bg: #ecebe6; --i-ink: #0b0b0b; --i-lime: #c8ff1a; --i-pink: #ff2e88; --i-mute: #5f5f5a;
+  position: relative; width: 1080px; height: 1350px; background: var(--i-bg); color: var(--i-ink);
+  display: flex; flex-direction: column; overflow: hidden; font-family: var(--sans);
+}
+.ig-story { height: 1920px; }
+.ig-top { flex-shrink: 0; display: flex; align-items: center; gap: 24px; background: var(--i-ink); color: var(--i-bg); padding: 26px 56px; font: 700 26px var(--mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+.ig-top b { background: var(--i-lime); color: var(--i-ink); padding: 6px 14px; }
+.ig-top span { color: #9a9a92; }
+.ig-body { flex: 1; min-height: 0; overflow: hidden; padding: 64px 56px 0; display: flex; flex-direction: column; }
+.ig-story .ig-body { padding-top: 140px; }
+.ig-kicker { font: 700 26px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--i-pink); margin: 0 0 28px; }
+.ig-persona { font: 400 230px/1.26 var(--display); text-transform: uppercase; margin: 0; padding-top: .08em; max-width: 760px; overflow-wrap: normal; }
+.ig-line { font: 400 92px/1.1 var(--display); text-transform: uppercase; margin: 22px 0 0; }
+.ig-line s { color: var(--i-mute); text-decoration-color: var(--i-pink); text-decoration-thickness: 9px; }
+.ig-line mark { background: var(--i-lime); color: var(--i-ink); padding: 0 14px; }
+.ig-sum { font-size: 38px; line-height: 1.4; margin: 44px 0 0; max-width: 940px; }
+.ig-story .ig-sum { font-size: 44px; margin-top: 64px; }
+.ig-bubbles { display: flex; flex-direction: column; align-items: flex-start; gap: 34px; margin-top: 52px; }
+.ig-story .ig-bubbles { margin-top: 90px; gap: 44px; }
+.ig-bubble { position: relative; margin: 0; max-width: 860px; background: var(--i-ink); color: var(--i-bg); font: 400 52px/1.1 var(--display); text-transform: uppercase; padding: 22px 28px; transform: rotate(-1.4deg); }
+.ig-bubble::after { content: ''; position: absolute; left: 34px; bottom: -22px; border: 22px solid transparent; border-top-color: var(--i-ink); border-bottom: 0; border-left: 0; }
+.ig-bubble:nth-child(2) { background: var(--i-pink); color: var(--i-ink); transform: rotate(1.2deg); margin-left: 60px; }
+.ig-bubble:nth-child(2)::after { border-top-color: var(--i-pink); }
+.ig-bubble:nth-child(3) { background: var(--i-lime); color: var(--i-ink); transform: rotate(-.6deg); }
+.ig-bubble:nth-child(3)::after { border-top-color: var(--i-lime); }
+.ig-foot { flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 40px 56px 52px; border-top: 6px solid var(--i-ink); margin: 0 56px; padding-left: 0; padding-right: 0; }
+.ig-cta { font: 700 26px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--i-mute); }
+.ig-cta b { color: var(--i-ink); font-size: 34px; }
+.ig-mark { font: 400 72px/1 var(--display); white-space: nowrap; }
+.ig-mark span { background: var(--i-lime); padding: 0 12px; display: inline-block; transform: rotate(-3deg); }
+.ig-sticker { position: absolute; right: 64px; top: 150px; width: 200px; height: 200px; border-radius: 50%; background: var(--i-pink); display: grid; place-items: center; transform: rotate(10deg); }
+.ig-story .ig-sticker { top: 230px; }
+.ig-sticker span { font: 400 64px var(--display); color: var(--i-ink); }
