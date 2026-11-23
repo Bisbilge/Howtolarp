@@ -34,6 +34,11 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
   sıraya kendiliğinden düşer. Twitter için hazır metinli "Tweet'i aç" (önizleme görseli linkten gelir), Instagram için
   telefonda görseli paylaşım menüsüne veren "Instagram'da paylaş" düğmesi; paylaşılınca işaretlenir. Eski rehberler
   rehber sayfasındaki yönetici şeridinden sıraya eklenebilir.
+- **Hangi larpsın? testi** (`/test`): 6 soru, 8 dengeli sonuç; her sonucun paylaşılabilir sayfası ve görseli
+- **Yakalandım** butonu: rehberi deneyip ifşa olanların sayısı
+- **Rehber istekleri** (`/istekler`): rol önerisi ve oylama (hesapsız), "Bunu ben yazarım" ile başlığı hazır form;
+  rol yayına girince istek kendiliğinden "yazıldı" olur. Var olan rol istenirse rehbere yönlendirir.
+- Rehber formunda tarayıcıya taslak kaydı; ana sayfa araması Türkçe karakter duyarsız; rehberlerde Article JSON-LD
 - Yazı tipleri sitede barındırılır (`public/fonts`, OFL lisanslı); Google Fonts'a istek gitmez
 - CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu
@@ -59,6 +64,7 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 | `ADMIN_SIGNUP_CODE` | Editör davet kodu (en az 8 karakter). Kayıtta "Editör kodun var mı?" alanına ya da Hesap ayarlarına girilirse hesap **editör** olur: rehber onaylar, bildirimlere bakar, normal üyeleri engeller. Baş yöneticiler (`ADMIN_USERNAMES`) editörlerin yetkisini panelden alabilir. Kod sızarsa değiştirmen yeterli; yanlış denemeler günde 5 ile sınırlı. |
 | `CONTACT_EMAIL` | Gizlilik sayfasında gösterilecek iletişim adresi (önerilir). |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | İsteğe bağlı. İkisi de girilirse kayıt ve giriş formlarında Cloudflare "robot değilim" kutusu çıkar. Widget'ta tanımlı olmayan bir adresten (ör. `*.vercel.app`) giriş yapılamaz. |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | İsteğe bağlı. Onay bekleyen rehber, bildirim, yeni istek ve yeni editörde Telegram mesajı. Sohbet kimliği Yönetim → Telegram bildirimi → "Sohbet kimliğini bul" ile öğrenilir. |
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |

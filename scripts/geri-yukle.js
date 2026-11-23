@@ -12,7 +12,7 @@ async function main() {
   const backup = JSON.parse(fs.readFileSync(file, 'utf8'));
   if (backup.app !== 'howtolarp' || backup.format !== 1) throw new Error('Bu bir How to LARP yedeği değil.');
 
-  const order = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue'];
+  const order = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes'];
   for (const t of order) console.log(`${t.padEnd(11)} ${String(backup.tables[t]?.length ?? 0).padStart(6)} satır`);
   console.log(`Yedek tarihi: ${backup.created_at}`);
   if (!process.argv.includes('--evet')) {

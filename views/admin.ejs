@@ -149,6 +149,21 @@
     <% }) %>
   </ul>
 
+  <% if (user.isSuper) { %>
+    <h2 class="adm-h" id="telegram">Telegram bildirimi</h2>
+    <% if (tg.msg) { %><div class="notice-inline"><%= tg.msg %></div><% } %>
+    <p class="adm-empty">
+      Durum: <b><%= tg.token && tg.chat ? 'Açık ✓' : (tg.token ? 'Bot tanımlı, sohbet kimliği eksik' : 'Kapalı') %></b>.
+      Onay bekleyen rehber, bildirim, yeni istek ve yeni editörde mesaj gelir.
+    </p>
+    <% if (tg.token) { %>
+      <div class="share-row tg-row">
+        <form method="post" action="/yonetim/telegram/bul" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Sohbet kimliğini bul</button></form>
+        <% if (tg.chat) { %><form method="post" action="/yonetim/telegram/test" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Test mesajı gönder</button></form><% } %>
+      </div>
+    <% } %>
+  <% } %>
+
   <h2 class="adm-h">Editörler</h2>
   <% if (!editors.length) { %><p class="adm-empty">Henüz editör yok. Vercel'de ADMIN_SIGNUP_CODE tanımlayıp kodu editörlerine ver; kodla üye olan editör olur.</p><% } %>
   <ul class="adm-list">

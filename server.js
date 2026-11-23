@@ -27,6 +27,33 @@ const TURNSTILE_SITE_KEY = String(process.env.TURNSTILE_SITE_KEY || '').trim();
 const TURNSTILE_SECRET = String(process.env.TURNSTILE_SECRET_KEY || '').trim();
 const ADMIN_SIGNUP_CODE = String(process.env.ADMIN_SIGNUP_CODE || '').trim();
 const CONTACT_EMAIL = String(process.env.CONTACT_EMAIL || '').trim();
+// Telegram bildirimi (isteğe bağlı): onay bekleyen rehber, bildirim, yeni istek ve yeni editör
+const TG_TOKEN = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const TG_CHAT = String(process.env.TELEGRAM_CHAT_ID || '').trim();
+const TG_API = process.env.TELEGRAM_API_BASE || 'https://api.telegram.org'; // testler için değiştirilebilir
+
+async function telegram(method, body) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 3000);
+  try {
+    const r = await fetch(`${TG_API}/bot${TG_TOKEN}/${method}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctrl.signal,
+    });
+    return await r.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+// Hata olsa da sitenin işini bozmaz; Vercel'de yanıt dönmeden önce beklenir (en fazla 3 sn)
+async function notifyAdmins(text) {
+  if (!TG_TOKEN || !TG_CHAT) return;
+  try {
+    const r = await telegram('sendMessage', { chat_id: TG_CHAT, text, disable_web_page_preview: true });
+    if (!r.ok) console.error('telegram', r.description);
+  } catch (e) {
+    console.error('telegram gönderilemedi', e.message);
+  }
+}
 
 // Yöneticiler: virgülle ayrılmış kullanıcı adları (ör. ADMIN_USERNAMES=ali,ayse)
 const ADMINS = new Set(String(process.env.ADMIN_USERNAMES || '')
@@ -288,7 +315,15 @@ const GUIDE_SELECT = `SELECT g.*, u.username, u.banned, u.role AS author_role,
 const findGuide = (slug) => db.get(`${GUIDE_SELECT} WHERE g.slug = ?`, [slug]);
 
 // Yayına giren rehberi paylaşım sırasına ekle (zaten varsa dokunma)
-const queueShare = (id) => db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
+const queueShare = async (id) => {
+  await db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
+  await fulfillRequests(id);
+};
+// Aynı rol için açık istek varsa "yazıldı" olarak işaretle
+async function fulfillRequests(guideId) {
+  const g = await db.get('SELECT slug, title FROM guides WHERE id = ?', [guideId]);
+  if (g) await db.run('UPDATE requests SET done_slug = ? WHERE key = ? AND done_slug IS NULL', [g.slug, fold(persona(g.title)).trim()]);
+}
 
 // Paylaşım metinleri: Twitter (kısa + link, önizleme görseli link kartından gelir) ve Instagram (link profilde)
 function shareTexts(guide, baseUrl) {
@@ -364,19 +399,20 @@ app.get('/', async (req, res) => {
     ? db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT 3000`, params)
       .then((all) => all.filter((g) => matches(q, g.title, g.summary, g.category)).slice(offset, offset + PAGE_SIZE + 1))
     : db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`, [...params, PAGE_SIZE + 1, offset]);
-  const [rows, stats, top] = await Promise.all([
+  const [rows, stats, top, requested] = await Promise.all([
     listQuery,
     db.get(`SELECT
       (SELECT COUNT(*) FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}) AS guides,
       (SELECT COUNT(*) FROM users WHERE banned = 0) AS users`),
     db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} ORDER BY like_count DESC, g.created_at DESC LIMIT 8`),
+    topRequests(6),
   ]);
   const hasMore = rows.length > PAGE_SIZE;
   const guides = rows.slice(0, PAGE_SIZE);
   const personas = top.map((g) => persona(g.title));
 
   res.render('index', {
-    title: null, guides, q, kategori, sirala, stats, personas, sayfa, hasMore, offset,
+    title: null, guides, q, kategori, sirala, stats, personas, sayfa, hasMore, offset, requested,
     justReported: req.query.bildirildi === '1',
   });
 });
@@ -441,17 +477,20 @@ app.get('/rehber/:slug', async (req, res) => {
     inShareQueue: reportCount ? Number(reportCount.queued) > 0 : false,
     justReported: req.query.bildirildi === '1',
     justSubmitted: req.query.gonderildi === '1',
+    alreadyExists: req.query.varmis === '1',
   });
 });
 
 app.get('/yaz', requireUser, async (req, res) => {
-  res.render('form', { title: 'Rehber yaz', g: { difficulty: 3 }, errors: [], editing: null, trusted: await isTrusted(req.user) });
+  const baslik = String(req.query.baslik || '').trim().slice(0, 120);
+  const [trusted, requested] = await Promise.all([isTrusted(req.user), topRequests(5)]);
+  res.render('form', { title: 'Rehber yaz', g: { difficulty: 3, title: baslik }, errors: [], editing: null, trusted, requested });
 });
 
 app.post('/yaz', requireUser, async (req, res) => {
   const trusted = await isTrusted(req.user);
   const { g, errors } = validateGuide(req.body);
-  const fail = (list) => res.status(400).render('form', { title: 'Rehber yaz', g, errors: list, editing: null, trusted });
+  const fail = (list) => res.status(400).render('form', { title: 'Rehber yaz', g, errors: list, editing: null, trusted, requested: [] });
   if (isBot(req.body)) return fail(['Gönderilemedi. Sayfayı yenileyip tekrar dene.']);
   if (errors.length) return fail(errors);
 
@@ -470,6 +509,7 @@ app.post('/yaz', requireUser, async (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [slug, req.user.id, g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, trusted ? 1 : 0]);
   if (trusted) await queueShare((await db.get('SELECT id FROM guides WHERE slug = ?', [slug])).id);
+  else await notifyAdmins(`📝 Onay bekleyen yeni rehber: ${g.title}\n@${req.user.username}\n${res.locals.baseUrl}/yonetim`);
   res.redirect(`/rehber/${slug}${trusted ? '' : '?gonderildi=1'}`);
 });
 
@@ -500,6 +540,7 @@ app.post('/rehber/:slug/duzenle', requireUser, async (req, res) => {
   await db.run(`UPDATE guides SET title = ?, category = ?, difficulty = ?, summary = ?, kit = ?, steps = ?,
     phrases = ?, risks = ?, approved = ?, updated_at = datetime('now') WHERE id = ?`,
     [g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, approved, guide.id]);
+  if (!approved && guide.approved) await notifyAdmins(`✏️ Düzenlenen rehber yeniden onay bekliyor: ${g.title}\n@${req.user.username}\n${res.locals.baseUrl}/yonetim`);
   res.redirect(`/rehber/${guide.slug}${approved ? '' : '?gonderildi=1'}`);
 });
 
@@ -535,6 +576,7 @@ app.post('/rehber/:slug/bildir', requireUser, async (req, res) => {
   // Yönetici ve editör rehberleri bildirimle kendiliğinden gizlenmez (toplu sahte bildirime karşı)
   const autoHide = n >= AUTO_HIDE_AT && !isStaff({ username: guide.username, role: guide.author_role }) && guide.username !== 'editor';
   if (autoHide) await db.run('UPDATE guides SET hidden = 1 WHERE id = ?', [guide.id]);
+  await notifyAdmins(`${autoHide ? '🚫 Rehber bildirimlerle gizlendi' : '⚠️ Rehber bildirildi'}: ${guide.title}\nSebep: ${REPORT_REASONS[reason]} · toplam ${n} bildirim\n${res.locals.baseUrl}/yonetim`);
 
   res.redirect(autoHide ? '/?bildirildi=1' : `/rehber/${guide.slug}?bildirildi=1#bildir`);
 });
@@ -590,13 +632,14 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
     return { ...r, tweetUrl: tweetIntent(t.x) };
   });
 
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found, shares });
+  const tg = { token: !!TG_TOKEN, chat: !!TG_CHAT, msg: String(req.query.tg || '').slice(0, 500) };
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found, shares, tg });
 });
 
 // ---------- Yedek (sadece baş yönetici) ----------
 // Oturumlar ve geçici sınır kayıtları hariç tüm tablolar tek JSON dosyası olarak iner.
 // Geri yükleme: node scripts/geri-yukle.js <dosya>  (README'ye bakın)
-const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue'];
+const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes'];
 app.get('/yonetim/yedek', requireAdmin, async (req, res) => {
   if (!req.user.isSuper) return notFound(req, res);
   const tables = {};
@@ -634,6 +677,38 @@ app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const share = guide ? await db.get('SELECT x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?', [guide.id]) : null;
   res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share,
     tweetUrl: texts ? tweetIntent(texts.x) : null });
+});
+
+// Telegram kurulumu (sadece baş yönetici)
+app.post('/yonetim/telegram/:action', requireAdmin, async (req, res) => {
+  if (!req.user.isSuper) return notFound(req, res);
+  let msg;
+  try {
+    if (!TG_TOKEN) msg = 'TELEGRAM_BOT_TOKEN tanımlı değil.';
+    else if (req.params.action === 'test') {
+      if (!TG_CHAT) msg = 'TELEGRAM_CHAT_ID tanımlı değil. Önce "Sohbet kimliğini bul"u kullan.';
+      else {
+        const r = await telegram('sendMessage', { chat_id: TG_CHAT, text: '✅ How to LARP bildirimleri çalışıyor.' });
+        msg = r.ok ? 'Test mesajı gönderildi, Telegram\'a bak.' : `Gönderilemedi: ${r.description}`;
+      }
+    } else if (req.params.action === 'bul') {
+      const r = await telegram('getUpdates', {});
+      if (!r.ok) msg = `Telegram hatası: ${r.description}`;
+      else {
+        const chats = new Map();
+        for (const u of r.result || []) {
+          const c = (u.message || u.channel_post || u.my_chat_member || {}).chat;
+          if (c) chats.set(String(c.id), c.title || [c.first_name, c.last_name].filter(Boolean).join(' ') || c.username || '');
+        }
+        msg = chats.size
+          ? 'Bulunan sohbetler: ' + [...chats].map(([id, name]) => `${name} → ${id}`).join(' · ') + '. Bu numarayı TELEGRAM_CHAT_ID olarak gir.'
+          : 'Sohbet bulunamadı. Telegram\'da botuna bir mesaj yaz (ör. "merhaba"), sonra tekrar dene.';
+      }
+    } else return notFound(req, res);
+  } catch (e) {
+    msg = `Telegram'a ulaşılamadı: ${e.message}`;
+  }
+  res.redirect(`/yonetim?tg=${encodeURIComponent(msg)}#telegram`);
 });
 
 // Paylaşım sırası işlemleri: x / ig (paylaşıldı), atla, ekle (sıraya al), geri (işaretleri kaldır)
@@ -768,6 +843,7 @@ app.post('/kayit', async (req, res) => {
   const user = await db.get('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?) RETURNING id',
     [username, hashPassword(password), codeOk ? 'editor' : 'user']);
   await startSession(res, user.id);
+  if (codeOk) await notifyAdmins(`🎭 Yeni editör katıldı: @${username}`);
   res.redirect(codeOk ? '/yonetim' : (sonra === '/' ? '/yaz' : sonra));
 });
 
@@ -837,6 +913,7 @@ app.post('/hesap/kod', requireUser, async (req, res) => {
   if (await overLimit(`code:${ipKey(req)}`, 5, 864e5)) return fail('Çok fazla kod denemesi yapıldı. Yarın tekrar dene.');
   if (!codeMatches(String(req.body.code || '').trim())) return fail('Editör kodu yanlış.');
   await db.run(`UPDATE users SET role = 'editor' WHERE id = ?`, [req.user.id]);
+  await notifyAdmins(`🎭 Yeni editör katıldı: @${req.user.username}`);
   res.redirect('/yonetim');
 });
 
@@ -859,6 +936,73 @@ app.post('/hesap/sil', requireUser, async (req, res) => {
 app.get('/kurallar', (req, res) => res.render('rules', {
   title: 'Kurallar ve gizlilik', description: 'How to LARP topluluk kuralları ve gizlilik metni.',
 }));
+
+// ---------- Rehber istekleri ----------
+const voterId = (req) => (req.user ? `u:${req.user.id}` : `v:${req.visitor}`);
+function topRequests(limit) {
+  return db.all(`SELECT r.id, r.text, (SELECT COUNT(*) FROM request_votes v WHERE v.request_id = r.id) AS votes
+    FROM requests r WHERE r.hidden = 0 AND r.done_slug IS NULL ORDER BY votes DESC, r.created_at DESC LIMIT ?`, [limit]);
+}
+// "Şair Gibi Nasıl Larplanır?" ya da "şair" -> "Şair"
+function cleanRequest(t) {
+  const p = persona(String(t || '').replace(/\s+/g, ' ').trim());
+  return p ? p.charAt(0).toLocaleUpperCase('tr') + p.slice(1) : '';
+}
+
+app.get('/istekler', async (req, res) => {
+  const [open, done, myVotes] = await Promise.all([
+    db.all(`SELECT r.id, r.text, r.created_at, (SELECT COUNT(*) FROM request_votes v WHERE v.request_id = r.id) AS votes
+      FROM requests r WHERE r.hidden = 0 AND r.done_slug IS NULL ORDER BY votes DESC, r.created_at DESC LIMIT 100`),
+    db.all(`SELECT r.text, r.done_slug FROM requests r JOIN guides g ON g.slug = r.done_slug JOIN users u ON u.id = g.user_id
+      WHERE r.hidden = 0 AND ${VISIBLE} ORDER BY g.created_at DESC LIMIT 12`),
+    db.all('SELECT request_id FROM request_votes WHERE voter = ?', [voterId(req)]),
+  ]);
+  const voted = new Set(myVotes.map((v) => Number(v.request_id)));
+  res.render('requests', {
+    title: 'Rehber istekleri', description: 'Hangi rolün rehberi yazılsın? Öner, oy ver ya da kendin yaz.',
+    open, done, voted, error: null, text: '', added: req.query.eklendi === '1',
+  });
+});
+
+app.post('/istekler', async (req, res) => {
+  const text = cleanRequest(req.body.text);
+  const fail = async (error) => {
+    const open = await topRequests(100);
+    res.status(400).render('requests', { title: 'Rehber istekleri', open, done: [], voted: new Set(), error, text, added: false });
+  };
+  if (isBot(req.body)) return fail('Gönderilemedi. Sayfayı yenileyip tekrar dene.');
+  if (text.length < 3 || text.length > 60) return fail('Rol adı 3 ile 60 karakter arasında olmalı (ör. "Şarap uzmanı").');
+  if (LINK_RE.test(text)) return fail('Link ya da web adresi yazılamaz.');
+  const key = fold(text).trim();
+
+  let row = await db.get('SELECT id, hidden, done_slug FROM requests WHERE key = ?', [key]);
+  if (row && row.done_slug) return res.redirect(`/rehber/${row.done_slug}`); // zaten yazılmış
+  // Bu rolün rehberi zaten varsa isteğe gerek yok: rehbere götür
+  const existing = (await db.all(`SELECT g.slug, g.title FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}`))
+    .find((g) => fold(persona(g.title)).trim() === key);
+  if (existing) return res.redirect(`/rehber/${existing.slug}?varmis=1`);
+  if (!row) {
+    if (await overLimit(`istek:${ipKey(req)}`, 5, 864e5)) return fail('Bugün yeterince öneri yaptın. Yarın tekrar gel!');
+    row = await db.get('INSERT INTO requests (text, key) VALUES (?, ?) RETURNING id, hidden', [text, key]);
+    await notifyAdmins(`💡 Yeni rehber isteği: ${text}`);
+  }
+  await db.run('INSERT OR IGNORE INTO request_votes (request_id, voter) VALUES (?, ?)', [row.id, voterId(req)]);
+  res.redirect(`/istekler?eklendi=1#istek-${row.id}`);
+});
+
+app.post('/istekler/:id/oy', async (req, res) => {
+  const id = Number(req.params.id);
+  const r = await db.get('SELECT id FROM requests WHERE id = ? AND hidden = 0 AND done_slug IS NULL', [id]);
+  if (!r) return res.redirect('/istekler');
+  const del = await db.run('DELETE FROM request_votes WHERE request_id = ? AND voter = ?', [id, voterId(req)]);
+  if (del.rowsAffected === 0) await db.run('INSERT INTO request_votes (request_id, voter) VALUES (?, ?)', [id, voterId(req)]);
+  res.redirect(`/istekler#istek-${id}`);
+});
+
+app.post('/istekler/:id/gizle', requireAdmin, async (req, res) => {
+  await db.run('UPDATE requests SET hidden = 1 WHERE id = ?', [Number(req.params.id)]);
+  res.redirect('/istekler');
+});
 
 // ---------- "Hangi larpsın?" testi ----------
 app.get('/test', (req, res) => res.render('test', {
@@ -901,7 +1045,7 @@ app.get('/sitemap.xml', async (req, res) => {
   const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
   const base = res.locals.baseUrl;
-  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`,
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`, `<url><loc>${base}/istekler</loc></url>`,
     ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
 });

@@ -97,6 +97,20 @@ const SCHEMA = [
   // Kötüye kullanım sınırları için olay kayıtları (anahtar: işlem + kişi/IP özeti)
   `CREATE TABLE IF NOT EXISTS hits (key TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at)`,
+  // Rehber istekleri: "şunun rehberi yazılsın" önerileri ve oyları
+  `CREATE TABLE IF NOT EXISTS requests (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    text       TEXT NOT NULL,
+    key        TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    done_slug  TEXT,
+    hidden     INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS request_votes (
+    request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    voter      TEXT NOT NULL,
+    PRIMARY KEY (request_id, voter)
+  )`,
   // "Yakalandım": rehberi deneyip ifşa olanlar (üye ve hesapsız ziyaretçi)
   `CREATE TABLE IF NOT EXISTS caught (
     user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -121,6 +135,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS likes_guide ON likes(guide_id)',
   'CREATE INDEX IF NOT EXISTS anon_likes_guide ON anon_likes(guide_id)',
   'CREATE INDEX IF NOT EXISTS caught_guide ON caught(guide_id)',
+  'CREATE INDEX IF NOT EXISTS request_votes_req ON request_votes(request_id)',
   'CREATE INDEX IF NOT EXISTS anon_caught_guide ON anon_caught(guide_id)',
   'CREATE INDEX IF NOT EXISTS guides_pending ON guides(approved) WHERE approved = 0',
   'CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id)',

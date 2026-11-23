@@ -1,0 +1,51 @@
+<%- include('partials/head') %>
+<section class="page page-form">
+  <aside class="page-side">
+    <p class="kicker">Topluluk</p>
+    <h1 class="page-h">Rehber istekleri</h1>
+    <p>Hangi rolün rehberi yazılsın? Öner, beğendiklerine oy ver. En çok istenenleri editörler ve üyeler yazıyor.</p>
+    <p class="tip">Bir isteği sen yazmak istersen <b>"Bunu ben yazarım"</b>a bas; başlık hazır gelir.</p>
+  </aside>
+  <div class="page-main">
+    <% if (added) { %><div class="notice-inline">Teşekkürler! İsteğin listede, oyun da sayıldı.</div><% } %>
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+    <form method="post" action="/istekler" class="req-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="hp" aria-hidden="true"><label>Web sitesi <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <label class="f"><span class="f-l">Hangi rol? <em>ör. Şarap uzmanı, Kripto yatırımcısı</em></span>
+        <div class="search req-input">
+          <input name="text" required minlength="3" maxlength="60" value="<%= text %>" placeholder="___ nasıl larplanır?" autocomplete="off">
+          <button type="submit">Öner</button>
+        </div>
+      </label>
+    </form>
+
+    <h2 class="sub-h">En çok istenenler</h2>
+    <% if (!open.length) { %><p class="adm-empty">Henüz istek yok. İlk öneriyi sen yap!</p><% } %>
+    <ol class="req-list">
+      <% open.forEach(r => { %>
+        <li id="istek-<%= r.id %>">
+          <form method="post" action="/istekler/<%= r.id %>/oy" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="req-vote <%= voted.has(Number(r.id)) ? 'on' : '' %>" type="submit" aria-label="Oy ver">▲<b><%= r.votes %></b></button>
+          </form>
+          <span class="req-text"><%= r.text %> <small>nasıl larplanır?</small></span>
+          <span class="req-actions">
+            <a class="adm-btn" href="/yaz?baslik=<%= encodeURIComponent(r.text + ' Nasıl Larplanır?') %>">Bunu ben yazarım</a>
+            <% if (user && user.isAdmin) { %>
+              <form method="post" action="/istekler/<%= r.id %>/gizle" class="inline" onsubmit="return confirm('Bu istek gizlensin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="req-hide">Gizle</button></form>
+            <% } %>
+          </span>
+        </li>
+      <% }) %>
+    </ol>
+
+    <% if (done.length) { %>
+      <h2 class="sub-h">Yazıldı ✓</h2>
+      <ul class="req-done">
+        <% done.forEach(r => { %><li><a href="/rehber/<%= r.done_slug %>"><%= r.text %></a></li><% }) %>
+      </ul>
+    <% } %>
+  </div>
+</section>
+<%- include('partials/foot') %>

@@ -1,4 +1,7 @@
 <%- include('partials/head') %>
+<% if (typeof alreadyExists !== 'undefined' && alreadyExists) { %>
+  <div class="notice" role="status"><b>Bu rolün rehberi zaten var!</b> İşte burada. Eksik bir şey varsa yazarına "Yakalandım" ile haber ver 😄</div>
+<% } %>
 <% if (!guide.approved && !guide.banned) { %>
   <div class="notice" role="status">
     <% if (justSubmitted && isOwner) { %><b>Rehberin alındı!</b> Yöneticiler onaylayınca yayına girecek. Bu sırada sadece sen görebilirsin.

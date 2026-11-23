@@ -7,6 +7,11 @@
     <% if (!trusted) { %>
       <p class="tip tip-pink"><b>Onay:</b> İlk rehberlerin yöneticiler onayladıktan sonra yayına girer. Birkaç rehberin onaylanınca bu adım kalkar.</p>
     <% } %>
+    <% if (typeof requested !== 'undefined' && requested.length && !editing) { %>
+      <div class="tip tip-req"><b>Fikir mi lazım? En çok istenenler:</b>
+        <ul><% requested.forEach(r => { %><li><a href="/yaz?baslik=<%= encodeURIComponent(r.text + ' Nasıl Larplanır?') %>"><%= r.text %></a> <span class="muted">▲<%= r.votes %></span></li><% }) %></ul>
+      </div>
+    <% } %>
     <p class="tip">Link ve web adresi paylaşılamaz. Gerçek kişileri hedef alma. <a href="/kurallar">Kurallar</a></p>
   </aside>
   <div class="page-main">

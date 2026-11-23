@@ -29,6 +29,15 @@
   </div>
 </section>
 
+<% if (requested && requested.length) { %>
+<section class="req-strip">
+  <span class="req-strip-h">En çok istenenler</span>
+  <% requested.forEach(r => { %><a href="/istekler#istek-<%= r.id %>"><%= r.text %> <b>▲<%= r.votes %></b></a><% }) %>
+  <a class="req-strip-all" href="/istekler">Tümü · Öner →</a>
+</section>
+<% } else { %>
+<section class="req-strip"><span class="req-strip-h">Bir rolün rehberi mi yok?</span><a class="req-strip-all" href="/istekler">İstek yap →</a></section>
+<% } %>
 <section class="index" id="rehberler">
   <div class="index-head">
     <h2 class="index-title">Rehber endeksi</h2>

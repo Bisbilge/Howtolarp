@@ -608,3 +608,29 @@ button.bubble:active { transform: scale(.97); }
 .quiz-share { margin-top: 40px; border-top: 3px solid var(--rule); padding-top: 18px; }
 .quiz-share-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
 .quiz-share-btns .adm-btn { background: transparent; cursor: pointer; }
+
+/* ---------- Rehber istekleri ---------- */
+.req-form { margin-bottom: 8px; }
+.req-input { flex: none; }
+.req-input input { font: 400 clamp(22px, 3vw, 30px)/1.1 var(--display); text-transform: uppercase; }
+.req-list { list-style: none; margin: 0; padding: 0; border-top: 3px solid var(--rule); }
+.req-list li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.req-vote { display: grid; justify-items: center; min-width: 54px; padding: 6px 8px; border: 2.5px solid var(--ink); background: transparent; color: var(--ink); font: 700 12px var(--mono); cursor: pointer; }
+.req-vote b { font: 400 22px/1 var(--display); }
+.req-vote.on { background: var(--lime); color: var(--on-acc); border-color: var(--ink); }
+.req-text { font: 400 clamp(22px, 2.6vw, 28px)/1.1 var(--display); text-transform: uppercase; }
+.req-text small { font: 700 11px var(--mono); color: var(--mute); text-transform: none; letter-spacing: .04em; margin-left: 4px; }
+.req-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.req-hide { font: 700 12px var(--mono); text-transform: uppercase; background: transparent; color: var(--pink); border: 2px solid var(--pink); padding: 6px 10px; cursor: pointer; }
+.req-done { padding-left: 20px; }
+.req-done li { margin-bottom: 4px; }
+@media (max-width: 560px) { .req-list li { grid-template-columns: auto 1fr; } .req-actions { grid-column: 1 / -1; justify-content: flex-start; } }
+.req-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 14px var(--gut); border-bottom: 3px solid var(--rule); background: var(--bg-2); font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.req-strip-h { color: var(--pink); margin-right: 6px; }
+.req-strip a { text-decoration: none; border: 2px solid var(--ink); padding: 5px 9px; background: var(--bg); }
+.req-strip a:hover { background: var(--lime); color: var(--on-acc); }
+.req-strip a b { color: var(--pink); margin-left: 4px; }
+.req-strip .req-strip-all { border-color: transparent; background: transparent; text-decoration: underline; text-decoration-color: var(--pink); text-underline-offset: 4px; }
+.tip-req ul { margin: 6px 0 0; padding-left: 18px; }
+.tip-req a { font-weight: 700; }
+.tg-row { padding-left: 0; }
