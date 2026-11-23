@@ -517,6 +517,24 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found });
 });
 
+// ---------- Yedek (sadece baş yönetici) ----------
+// Oturumlar ve geçici sınır kayıtları hariç tüm tablolar tek JSON dosyası olarak iner.
+// Geri yükleme: node scripts/geri-yukle.js <dosya>  (README'ye bakın)
+const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'reports', 'seeded'];
+app.get('/yonetim/yedek', requireAdmin, async (req, res) => {
+  if (!req.user.isSuper) return notFound(req, res);
+  const tables = {};
+  for (const t of BACKUP_TABLES) {
+    const r = await db.run(`SELECT * FROM ${t}`);
+    tables[t] = r.rows.map((row) => Object.fromEntries(r.columns.map((c, i) => [c, row[i]])));
+  }
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  res.set('Content-Type', 'application/json; charset=utf-8');
+  res.set('Content-Disposition', `attachment; filename="howtolarp-yedek-${stamp}.json"`);
+  res.set('Cache-Control', 'no-store');
+  res.send(JSON.stringify({ app: 'howtolarp', format: 1, created_at: new Date().toISOString(), tables }));
+});
+
 // Türkçe karakter ve büyük/küçük harf duyarsız arama için sadeleştirme ("Çağdaş" ~ "cagdas")
 const TR_FOLD = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
 const fold = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[çğıöşü]/g, (c) => TR_FOLD[c])

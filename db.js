@@ -32,6 +32,8 @@ const db = {
   async get(sql, args = []) { return (await getClient().execute({ sql, args })).rows[0]; },
   async all(sql, args = []) { return (await getClient().execute({ sql, args })).rows; },
   async run(sql, args = []) { return getClient().execute({ sql, args }); },
+  // Birden çok yazmayı tek istekte, tek işlem (transaction) olarak çalıştırır
+  async batch(stmts) { return getClient().batch(stmts, 'write'); },
 };
 
 const SCHEMA = [

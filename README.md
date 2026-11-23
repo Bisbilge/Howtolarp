@@ -93,3 +93,16 @@ public/          CSS ve favicon
 - Canlı site `main` dalından yayınlanır (Vercel → Settings → Environments → Production → Branch Tracking: `main`).
 - `main`'e gönderilen her değişiklik birkaç dakika içinde canlıya çıkar.
 - Bir şey bozulursa: Vercel → Deployments → sorunsuz önceki yükleme → ⋯ → **Promote to Production** (anında geri alma).
+
+## Yedek
+
+- **Almak:** Yönetim → **Yedek indir** (sadece `ADMIN_USERNAMES`'teki baş yöneticiler görür). Hesaplar, rehberler,
+  beğeniler, bildirimler tek JSON dosyasına iner. Dosyada şifre özetleri de var: paylaşmayın.
+- **Geri yüklemek** (hedefteki veriyi silip yedekle değiştirir):
+
+  ```bash
+  # önce ne yükleneceğini gösterir, hiçbir şey yazmaz
+  TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... node scripts/geri-yukle.js howtolarp-yedek-....json
+  # onaylamak için --evet ekleyin
+  TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... node scripts/geri-yukle.js howtolarp-yedek-....json --evet
+  ```

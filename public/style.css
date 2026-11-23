@@ -553,3 +553,5 @@ button.bubble:active { transform: scale(.97); }
 .ig-x .ig-foot { margin: 0 64px; padding: 26px 0 34px; }
 .ig-x .ig-cta b { font-size: 30px; }
 .ig-x .ig-mark { font-size: 60px; }
+.adm-tools { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.adm-note { margin: 6px 0 0; font: 400 12px var(--mono); color: var(--mute); }
