@@ -95,6 +95,14 @@ const SCHEMA = [
   )`,
 ];
 
+// Sık yapılan sayımlar tüm tabloyu taramasın (beğeni sayısı her listede rehber başına hesaplanıyor)
+const INDEXES = [
+  'CREATE INDEX IF NOT EXISTS likes_guide ON likes(guide_id)',
+  'CREATE INDEX IF NOT EXISTS anon_likes_guide ON anon_likes(guide_id)',
+  'CREATE INDEX IF NOT EXISTS guides_pending ON guides(approved) WHERE approved = 0',
+  'CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id)',
+];
+
 // Önceki sürümle oluşturulmuş veritabanlarına eksik sütunları ekle
 const MIGRATIONS = [
   ['users', 'banned', 'INTEGER NOT NULL DEFAULT 0'],
@@ -147,6 +155,8 @@ async function setup() {
     const cols = await db.all(`PRAGMA table_info(${table})`);
     if (!cols.some((c) => c.name === col)) await db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
   }
+  // Göçlerden sonra: yeni sütunları kullanan indeksler
+  await getClient().batch(INDEXES, 'write');
 
   await seedGuides();
 }
