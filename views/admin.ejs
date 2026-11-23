@@ -9,6 +9,31 @@
 
   </dl>
 
+  <form class="search adm-search" method="get" action="/yonetim">
+    <input type="search" name="q" value="<%= q %>" placeholder="Rehber ara: başlık, kategori ya da yazar" aria-label="Rehber ara">
+    <button type="submit">Ara</button>
+  </form>
+  <% if (found) { %>
+    <h2 class="adm-h">Arama: “<%= q %>” <small class="muted"><%= found.length %> sonuç</small></h2>
+    <% if (!found.length) { %><p class="adm-empty">Eşleşen rehber yok.</p><% } %>
+    <ul class="adm-list">
+      <% found.forEach(g => { %>
+        <li>
+          <div>
+            <a href="/rehber/<%= g.slug %>"><%= g.title %></a>
+            <span class="muted handle">@<%= g.username %></span>
+            <% if (!g.approved) { %><span class="flag flag-wait">Onay bekliyor</span><% } %>
+            <% if (g.hidden) { %><span class="flag">Gizli</span><% } %>
+          </div>
+          <span class="adm-list-actions">
+            <a class="adm-btn" href="/rehber/<%= g.slug %>/duzenle">Düzenle</a>
+            <% if (g.approved && !g.hidden) { %><a class="adm-btn" href="/yonetim/instagram?rehber=<%= g.slug %>">Instagram</a><% } %>
+          </span>
+        </li>
+      <% }) %>
+    </ul>
+    <p><a class="ghost-btn" href="/yonetim">Aramayı temizle</a></p>
+  <% } %>
   <p class="adm-tools"><a class="ghost-btn" href="/yonetim/instagram">Instagram görseli hazırla ↗</a></p>
 
   <h2 class="adm-h">Onay bekleyenler</h2>

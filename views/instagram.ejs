@@ -6,11 +6,22 @@
     <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
     <h1 class="page-h">Instagram</h1>
     <form method="get" action="/yonetim/instagram" class="form ig-form">
-      <label class="f"><span class="f-l">Rehber</span>
-        <select name="rehber" onchange="this.form.submit()">
-          <% list.forEach(g => { %><option value="<%= g.slug %>" <%= guide && guide.slug === g.slug ? 'selected' : '' %>><%= g.title %></option><% }) %>
-        </select>
-      </label>
+      <% if (guide) { %><input type="hidden" name="rehber" value="<%= guide.slug %>"><% } %>
+      <div class="f">
+        <span class="f-l">Rehber <em><%= list.length %> rehber</em></span>
+        <div class="search ig-search">
+          <input type="search" name="q" id="ig-q" value="<%= q %>" placeholder="İsim yaz: kahve, star wars…" autocomplete="off" aria-label="Rehber ara">
+          <button type="submit">Ara</button>
+        </div>
+        <ul class="ig-list" id="ig-list">
+          <% list.forEach(g => { %>
+            <li data-key="<%= g.key %>"><a class="<%= guide && guide.slug === g.slug ? 'on' : '' %>" href="/yonetim/instagram?rehber=<%= g.slug %>&format=<%= format %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">
+              <span><%= persona(g.title) %></span><small><%= g.category %> · <%= formatDate(g.created_at) %></small></a></li>
+          <% }) %>
+          <li class="ig-none" id="ig-none" <%- list.length ? 'hidden' : '' %>>Eşleşen rehber yok.</li>
+        </ul>
+      </div>
+      <% if (guide) { %><p class="ig-current">Seçili: <b><%= guide.title %></b> · <a href="/rehber/<%= guide.slug %>">Rehbere git</a></p><% } %>
       <div class="ig-formats">
         <label class="radio"><input type="radio" name="format" value="post" <%= format === 'post' ? 'checked' : '' %> onchange="this.form.submit()"><span>Gönderi (1080×1350)</span></label>
         <label class="radio"><input type="radio" name="format" value="story" <%= format === 'story' ? 'checked' : '' %> onchange="this.form.submit()"><span>Hikaye (1080×1920)</span></label>
@@ -62,6 +73,23 @@
 </section>
 <script src="/vendor/html-to-image.js"></script>
 <script>
+  // Yazdıkça filtrele (Türkçe karakter duyarsız)
+  (function () {
+    var input = document.getElementById('ig-q'), items = document.querySelectorAll('#ig-list li[data-key]');
+    var none = document.getElementById('ig-none');
+    var map = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' };
+    function fold(t) { return t.toLocaleLowerCase('tr').replace(/[çğıöşü]/g, function (c) { return map[c]; }).normalize('NFKD').replace(/[\u0300-\u036f]/g, ''); }
+    function run() {
+      var f = fold(input.value.trim()), shown = 0;
+      items.forEach(function (li) { var ok = !f || li.dataset.key.indexOf(f) !== -1; li.hidden = !ok; if (ok) shown++; });
+      none.hidden = shown > 0;
+    }
+    input.addEventListener('input', run);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { var first = document.querySelector('#ig-list li[data-key]:not([hidden]) a'); if (first) { e.preventDefault(); location.href = first.href; } }
+    });
+    var cur = document.querySelector('#ig-list a.on'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+  })();
   (function () {
     var card = document.getElementById('ig-card');
     if (!card) return;

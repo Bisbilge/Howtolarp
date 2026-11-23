@@ -26,7 +26,9 @@
         <form method="post" action="/yonetim/rehber/<%= guide.id %>/gizle" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button>Gizle</button></form>
       <% } %>
       <form method="post" action="/yonetim/rehber/<%= guide.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
-      <a href="/yonetim">Panele git →</a>
+      <a href="/rehber/<%= guide.slug %>/duzenle">Düzenle</a>
+      <% if (guide.approved && !guide.hidden && !guide.banned) { %><a href="/yonetim/instagram?rehber=<%= guide.slug %>">Instagram görseli ↗</a><% } %>
+      <a href="/yonetim">Panel →</a>
     </div>
   </div>
 <% } %>

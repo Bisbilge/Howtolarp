@@ -482,17 +482,31 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   const editors = await db.all(`SELECT id, username, created_at FROM users WHERE role = 'editor' ORDER BY username`);
   const canBan = (u) => !isAdminName(u.username) && (req.user.isSuper || u.role !== 'editor');
 
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER });
+  // Rehber arama (tüm rehberler: yayında, bekleyen, gizli)
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const found = q ? (await db.all(`SELECT g.slug, g.title, g.category, g.approved, g.hidden, u.username FROM guides g
+      JOIN users u ON u.id = g.user_id ORDER BY g.created_at DESC LIMIT 2000`))
+    .filter((g) => matches(q, g.title, g.category, g.username)).slice(0, 50) : null;
+
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found });
 });
+
+// Türkçe karakter ve büyük/küçük harf duyarsız arama için sadeleştirme ("Çağdaş" ~ "cagdas")
+const TR_FOLD = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
+const fold = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[çğıöşü]/g, (c) => TR_FOLD[c])
+  .normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+const matches = (q, ...fields) => { const f = fold(q).trim(); return !f || fields.some((x) => fold(x).includes(f)); };
 
 // Instagram görsel üretici: seçilen rehber için gönderi (1080x1350) ya da hikaye (1080x1920)
 app.get('/yonetim/instagram', requireAdmin, async (req, res) => {
-  const list = await db.all(`SELECT g.slug, g.title FROM guides g JOIN users u ON u.id = g.user_id
-    WHERE ${VISIBLE} ORDER BY g.created_at DESC, g.id DESC LIMIT 60`);
-  const slug = String(req.query.rehber || list[0]?.slug || '');
+  const all = await db.all(`SELECT g.slug, g.title, g.category, g.created_at FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} ORDER BY g.created_at DESC, g.id DESC LIMIT 2000`);
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const list = all.filter((g) => matches(q, g.title, g.category)).map((g) => ({ ...g, key: fold(`${g.title} ${g.category}`) }));
+  const slug = String(req.query.rehber || list[0]?.slug || all[0]?.slug || '');
   const guide = slug ? await findGuide(slug) : null;
   const format = req.query.format === 'story' ? 'story' : 'post';
-  res.render('instagram', { title: 'Instagram', list, guide, format });
+  res.render('instagram', { title: 'Instagram', list, guide, format, q });
 });
 
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
