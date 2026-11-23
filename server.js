@@ -30,6 +30,15 @@ const CONTACT_EMAIL = String(process.env.CONTACT_EMAIL || '').trim();
 const ADMINS = new Set(String(process.env.ADMIN_USERNAMES || '')
   .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
 const isAdminName = (name) => ADMINS.has(String(name).toLowerCase());
+// Yönetim yetkisi: baş yönetici ya da editör rolü
+const isStaff = (u) => !!u && (isAdminName(u.username) || u.role === 'editor');
+
+// Editör davet kodu doğru mu? (ADMIN_SIGNUP_CODE, en az 8 karakter)
+function codeMatches(code) {
+  code = String(code || '');
+  return ADMIN_SIGNUP_CODE.length >= 8 && code.length === ADMIN_SIGNUP_CODE.length &&
+    crypto.timingSafeEqual(Buffer.from(code), Buffer.from(ADMIN_SIGNUP_CODE));
+}
 
 const CATEGORIES = [
   'Zeka & Kültür',
@@ -136,9 +145,12 @@ app.use(async (req, res, next) => {
   req.user = null;
   const token = req.cookies.sid;
   if (token) {
-    const row = await db.get(`SELECT u.id, u.username FROM sessions s
+    const row = await db.get(`SELECT u.id, u.username, u.role FROM sessions s
       JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ? AND u.banned = 0`, [token, Date.now()]);
-    if (row) req.user = { id: row.id, username: row.username, isAdmin: isAdminName(row.username) };
+    if (row) {
+      req.user = { id: row.id, username: row.username, role: row.role,
+        isSuper: isAdminName(row.username), isAdmin: isStaff(row) };
+    }
   }
   if (req.user?.isAdmin) {
     const c = await db.get(`SELECT
@@ -227,7 +239,7 @@ async function isTrusted(user) {
 
 // ---------- Rehber sorguları ----------
 const VISIBLE = 'g.hidden = 0 AND g.approved = 1 AND u.banned = 0';
-const GUIDE_SELECT = `SELECT g.*, u.username, u.banned,
+const GUIDE_SELECT = `SELECT g.*, u.username, u.banned, u.role AS author_role,
   ((SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id)
     + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count
   FROM guides g JOIN users u ON u.id = g.user_id`;
@@ -428,7 +440,7 @@ app.post('/rehber/:slug/bildir', requireUser, async (req, res) => {
     [guide.id, req.user.id, reason, note]);
   const { n } = await db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id]);
   // Yönetici ve editör rehberleri bildirimle kendiliğinden gizlenmez (toplu sahte bildirime karşı)
-  const autoHide = n >= AUTO_HIDE_AT && !isAdminName(guide.username) && guide.username !== 'editor';
+  const autoHide = n >= AUTO_HIDE_AT && !isStaff({ username: guide.username, role: guide.author_role }) && guide.username !== 'editor';
   if (autoHide) await db.run('UPDATE guides SET hidden = 1 WHERE id = ?', [guide.id]);
 
   res.redirect(autoHide ? '/?bildirildi=1' : `/rehber/${guide.slug}?bildirildi=1#bildir`);
@@ -446,7 +458,7 @@ app.get('/rehberlerim', requireUser, async (req, res) => {
 
 // ---------- Yönetim ----------
 app.get('/yonetim', requireAdmin, async (req, res) => {
-  const reported = (await db.all(`SELECT g.id, g.slug, g.title, g.hidden, g.user_id, u.username,
+  const reported = (await db.all(`SELECT g.id, g.slug, g.title, g.hidden, g.user_id, u.username, u.role,
       COUNT(r.id) AS report_count, MAX(r.created_at) AS last_report
     FROM reports r JOIN guides g ON g.id = r.guide_id JOIN users u ON u.id = g.user_id
     WHERE r.resolved_at IS NULL GROUP BY g.id ORDER BY report_count DESC, last_report DESC`))
@@ -462,12 +474,15 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   const totals = await db.get(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM guides) AS guides,
     (SELECT COUNT(*) FROM likes) + (SELECT COUNT(*) FROM anon_likes) AS likes`);
 
-  const pending = await db.all(`SELECT g.id, g.slug, g.title, g.summary, g.category, g.created_at, g.user_id, u.username,
+  const pending = await db.all(`SELECT g.id, g.slug, g.title, g.summary, g.category, g.created_at, g.user_id, u.username, u.role,
       (SELECT COUNT(*) FROM guides x WHERE x.user_id = g.user_id AND x.approved = 1) AS author_approved
     FROM guides g JOIN users u ON u.id = g.user_id
     WHERE g.approved = 0 AND u.banned = 0 ORDER BY g.created_at ASC LIMIT 100`);
 
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, isAdminName, TRUST_AFTER });
+  const editors = await db.all(`SELECT id, username, created_at FROM users WHERE role = 'editor' ORDER BY username`);
+  const canBan = (u) => !isAdminName(u.username) && (req.user.isSuper || u.role !== 'editor');
+
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER });
 });
 
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
@@ -496,10 +511,19 @@ app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
 });
 
 app.post('/yonetim/kullanici/:id/:action', requireAdmin, async (req, res) => {
-  const target = await db.get('SELECT id, username FROM users WHERE id = ?', [Number(req.params.id)]);
+  const target = await db.get('SELECT id, username, role FROM users WHERE id = ?', [Number(req.params.id)]);
   if (!target) return res.redirect('/yonetim');
+  if (req.params.action === 'yetki-al') {
+    // Sadece baş yönetici editörlüğü geri alabilir
+    if (!req.user.isSuper) return notFound(req, res);
+    await db.run(`UPDATE users SET role = 'user' WHERE id = ?`, [target.id]);
+    return res.redirect('/yonetim');
+  }
   if (req.params.action === 'engelle') {
+    // Baş yönetici engellenemez; editörü sadece baş yönetici engelleyebilir
     if (target.id === req.user.id || isAdminName(target.username)) return res.redirect('/yonetim');
+    if (target.role === 'editor' && !req.user.isSuper) return res.redirect('/yonetim');
+    await db.run(`UPDATE users SET role = 'user' WHERE id = ?`, [target.id]);
     await db.run('UPDATE users SET banned = 1 WHERE id = ?', [target.id]);
     await db.run('DELETE FROM sessions WHERE user_id = ?', [target.id]);
     await db.run(`UPDATE reports SET resolved_at = datetime('now')
@@ -549,22 +573,27 @@ app.post('/kayit', async (req, res) => {
   if (req.body.kabul !== '1') return fail('Üye olmak için kuralları ve gizlilik metnini kabul etmelisin.');
   if (await db.get('SELECT 1 FROM users WHERE username = ?', [username])) return fail('Bu kullanıcı adı alınmış.');
 
-  // Yönetici adları sadece yönetici koduyla, diğer korumalı adlar hiç alınamaz
-  if (isReserved(username)) {
-    const code = String(req.body.admin_code || '');
-    const ok = isAdminName(username) && ADMIN_SIGNUP_CODE.length >= 8 && code.length === ADMIN_SIGNUP_CODE.length &&
-      crypto.timingSafeEqual(Buffer.from(code), Buffer.from(ADMIN_SIGNUP_CODE));
-    if (!ok) return fail('Bu kullanıcı adı alınamaz. Başka bir ad dene.');
+  // Editör davet kodu: doğruysa hesap editör olarak açılır. Yanlış denemeler günde 5 ile sınırlı.
+  const code = String(req.body.admin_code || '').trim();
+  let codeOk = false;
+  if (code) {
+    if (await overLimit(`code:${ipKey(req)}`, 5, 864e5)) return fail('Çok fazla kod denemesi yapıldı. Yarın tekrar dene.');
+    codeOk = codeMatches(code);
+    if (!codeOk) return fail('Editör kodu yanlış. Kodun yoksa o alanı boş bırak.');
+  }
+  // Yönetici adları sadece kodla, diğer korumalı adlar hiç alınamaz
+  if (isReserved(username) && !(isAdminName(username) && codeOk)) {
+    return fail('Bu kullanıcı adı alınamaz. Başka bir ad dene.');
   }
   if (!(await turnstileOk(req))) return fail('Robot olmadığını doğrulayamadık. Kutucuğu işaretleyip tekrar dene.');
   if (await overLimit(`signup:${ipKey(req)}`, SIGNUPS_PER_IP_DAY, 864e5)) {
     return fail('Bu bağlantıdan bugün çok fazla hesap açıldı. Yarın tekrar dene.');
   }
 
-  const user = await db.get('INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id',
-    [username, hashPassword(password)]);
+  const user = await db.get('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?) RETURNING id',
+    [username, hashPassword(password), codeOk ? 'editor' : 'user']);
   await startSession(res, user.id);
-  res.redirect(sonra === '/' ? '/yaz' : sonra);
+  res.redirect(codeOk ? '/yonetim' : (sonra === '/' ? '/yaz' : sonra));
 });
 
 app.get('/giris', (req, res) => {
@@ -622,6 +651,16 @@ app.post('/hesap/sifre', requireUser, async (req, res) => {
   await db.run('DELETE FROM sessions WHERE user_id = ?', [req.user.id]);
   await startSession(res, req.user.id);
   res.redirect('/hesap?ok=1');
+});
+
+// Var olan hesaba editör kodu girme
+app.post('/hesap/kod', requireUser, async (req, res) => {
+  const fail = (error) => res.status(400).render('account', { title: 'Hesap ayarları', msg: null, error });
+  if (req.user.isAdmin) return res.redirect('/yonetim');
+  if (await overLimit(`code:${ipKey(req)}`, 5, 864e5)) return fail('Çok fazla kod denemesi yapıldı. Yarın tekrar dene.');
+  if (!codeMatches(String(req.body.code || '').trim())) return fail('Editör kodu yanlış.');
+  await db.run(`UPDATE users SET role = 'editor' WHERE id = ?`, [req.user.id]);
+  res.redirect('/yonetim');
 });
 
 app.post('/hesap/sil', requireUser, async (req, res) => {

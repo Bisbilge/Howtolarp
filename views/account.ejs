@@ -21,6 +21,19 @@
       <div class="f-actions"><button class="big-btn small" type="submit">Şifreyi değiştir</button></div>
     </form>
 
+    <% if (adminCodeEnabled && !user.isAdmin) { %>
+      <h2 class="sub-h">Editör kodu</h2>
+      <p>Editör olarak davet edildiysen sana verilen kodu gir.</p>
+      <form method="post" action="/hesap/kod" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label class="f"><span class="f-l">Kod</span><input name="code" type="password" required autocomplete="off"></label>
+        <div class="f-actions"><button class="big-btn small" type="submit">Editör ol</button></div>
+      </form>
+    <% } else if (user.isAdmin) { %>
+      <h2 class="sub-h">Yetki</h2>
+      <p><b><%= user.isSuper ? 'Baş yönetici' : 'Editör' %></b> olarak <a href="/yonetim">yönetim paneline</a> erişimin var.</p>
+    <% } %>
+
     <h2 class="sub-h danger-h">Hesabı sil</h2>
     <p>Hesabın, yazdığın tüm rehberler ve beğenilerin <b>kalıcı olarak</b> silinir. Bu işlem geri alınamaz.</p>
     <form method="post" action="/hesap/sil" class="form" onsubmit="return confirm('Hesabın ve tüm rehberlerin kalıcı olarak silinecek. Emin misin?')">

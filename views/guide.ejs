@@ -15,7 +15,7 @@
 <% } %>
 <% if (user && user.isAdmin) { %>
   <div class="adminbar">
-    <span><b>Yönetici</b> · <%= guideReports %> açık bildirim</span>
+    <span><b><%= user.isSuper ? 'Yönetici' : 'Editör' %></b> · <%= guideReports %> açık bildirim</span>
     <div>
       <% if (!guide.approved) { %>
         <form method="post" action="/yonetim/rehber/<%= guide.id %>/onayla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button class="ok">Onayla</button></form>

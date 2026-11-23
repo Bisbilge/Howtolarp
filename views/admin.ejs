@@ -1,6 +1,6 @@
 <%- include('partials/head') %>
 <section class="admin">
-  <p class="kicker">Sahne arkası</p>
+  <p class="kicker">Sahne arkası · <%= user.isSuper ? 'Baş yönetici' : 'Editör' %></p>
   <h1 class="page-h">Yönetim</h1>
   <dl class="stats">
     <div><dt>Onay bekleyen</dt><dd><%= pending.length %></dd></div>
@@ -26,7 +26,7 @@
         <div class="case-actions">
           <form method="post" action="/yonetim/rehber/<%= g.id %>/onayla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="ok">Onayla</button></form>
           <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber reddedilip silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Reddet</button></form>
-          <% if (!isAdminName(g.username)) { %>
+          <% if (canBan(g)) { %>
             <form method="post" action="/yonetim/kullanici/<%= g.user_id %>/engelle" class="inline" onsubmit="return confirm('@<%= g.username %> spam diye engellensin mi? Bekleyen tüm rehberleri silinir.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Spam, engelle</button></form>
           <% } %>
         </div>
@@ -54,7 +54,7 @@
           <form method="post" action="/yonetim/rehber/<%= g.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Sorun yok, yayında kalsın</button></form>
           <form method="post" action="/yonetim/rehber/<%= g.id %>/gizle" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Gizle</button></form>
           <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
-          <% if (!isAdminName(g.username)) { %>
+          <% if (canBan(g)) { %>
             <form method="post" action="/yonetim/kullanici/<%= g.user_id %>/engelle" class="inline" onsubmit="return confirm('@<%= g.username %> engellensin mi? Tüm rehberleri gizlenir ve oturumu kapanır.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Yazarı engelle</button></form>
           <% } %>
         </div>
@@ -81,6 +81,21 @@
           <form method="post" action="/yonetim/rehber/<%= g.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>Yayına al</button></form>
           <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber kalıcı olarak silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Sil</button></form>
         </span>
+      </li>
+    <% }) %>
+  </ul>
+
+  <h2 class="adm-h">Editörler</h2>
+  <% if (!editors.length) { %><p class="adm-empty">Henüz editör yok. Vercel'de ADMIN_SIGNUP_CODE tanımlayıp kodu editörlerine ver; kodla üye olan editör olur.</p><% } %>
+  <ul class="adm-list">
+    <% editors.forEach(u => { %>
+      <li>
+        <b class="handle">@<%= u.username %></b> <span class="muted">· <%= formatDate(u.created_at) %></span>
+        <% if (user.isSuper) { %>
+          <span class="adm-list-actions">
+            <form method="post" action="/yonetim/kullanici/<%= u.id %>/yetki-al" class="inline" onsubmit="return confirm('@<%= u.username %> artık editör olmasın mı?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Yetkiyi al</button></form>
+          </span>
+        <% } %>
       </li>
     <% }) %>
   </ul>

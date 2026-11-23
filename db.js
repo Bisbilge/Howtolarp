@@ -99,6 +99,8 @@ const SCHEMA = [
 const MIGRATIONS = [
   ['users', 'banned', 'INTEGER NOT NULL DEFAULT 0'],
   ['guides', 'hidden', 'INTEGER NOT NULL DEFAULT 0'],
+  // Rol: 'user' ya da 'editor' (editörler yönetim panelini kullanır). Baş yöneticiler ADMIN_USERNAMES ile belirlenir.
+  ['users', 'role', "TEXT NOT NULL DEFAULT 'user'"],
   // Onay kuyruğu: yeni üyelerin rehberleri yönetici onayına kadar 0 kalır
   ['guides', 'approved', 'INTEGER NOT NULL DEFAULT 1'],
   ['seeded', 'guide_id', 'INTEGER'],
