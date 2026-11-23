@@ -39,7 +39,7 @@
     <% for (let k = 0; k < 2; k++) { %>
       <div class="ticker-group" <%- k ? 'aria-hidden="true"' : '' %>>
         <span class="ticker-label">ŞU AN LARPLANIYOR</span>
-        <% ticker.forEach(t => { %><a href="/rehber/<%= t.slug %>" <%- k ? 'tabindex="-1"' : '' %>><%= persona(t.title) %></a><span class="ticker-sep">✕</span><% }) %>
+        <% ticker.forEach(t => { %><a href="/rehber/<%= t.slug %>" <%- k ? 'tabindex="-1"' : '' %>><%- markEn(persona(t.title)) %></a><span class="ticker-sep">✕</span><% }) %>
       </div>
     <% } %>
   </div>

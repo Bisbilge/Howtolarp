@@ -2,7 +2,7 @@
   <a href="/rehber/<%= g.slug %>">
     <span class="row-no"><%= String(n).padStart(2, '0') %></span>
     <span class="row-main">
-      <span class="row-title"><% if (g.hidden) { %><span class="flag">Gizli</span> <% } %><%= g.title %></span>
+      <span class="row-title"><% if (g.hidden) { %><span class="flag">Gizli</span> <% } %><%- markEn(g.title) %></span>
       <span class="row-sum"><%= g.summary %></span>
     </span>
     <span class="row-meta">

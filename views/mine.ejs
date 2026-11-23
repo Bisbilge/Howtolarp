@@ -19,7 +19,7 @@
       <% guides.forEach(g => { %>
         <li>
           <div>
-            <a class="mine-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+            <a class="mine-title" href="/rehber/<%= g.slug %>"><%- markEn(g.title) %></a>
             <p class="mine-meta">
               <span class="row-cat"><%= g.category %></span>
               <%= formatDate(g.created_at) %> · <%= g.like_count %> larpladı · <%= g.caught_count %> yakalandı

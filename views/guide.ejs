@@ -41,7 +41,7 @@
     <p class="crumbs"><a href="/">Endeks</a> / <a href="/kategori/<%= CATEGORY_INFO[guide.category] ? CATEGORY_INFO[guide.category].slug : '' %>"><%= guide.category %></a> / Rehber #<%= String(guide.id).padStart(3, '0') %></p>
     <div class="g-head-grid">
       <div>
-        <h1 class="g-title"><%= guide.title %></h1>
+        <h1 class="g-title"><%- markEn(guide.title) %></h1>
         <p class="g-sum"><%= guide.summary %></p>
         <div class="g-tools">
           <button type="button" class="ghost-btn" data-share data-title="<%= guide.title %>">Paylaş ↗</button>
@@ -63,7 +63,7 @@
         <div class="idcard-body">
           <div class="idcard-photo" aria-hidden="true"><span>?</span></div>
           <dl>
-            <dt>Rol</dt><dd class="idcard-role"><%= persona(guide.title) %></dd>
+            <dt>Rol</dt><dd class="idcard-role"><%- markEn(persona(guide.title)) %></dd>
             <dt>Zorluk</dt><dd><%- include('partials/meter', { level: guide.difficulty }) %> <%= DIFFICULTY_LABELS[guide.difficulty] %></dd>
             <dt>Yazan</dt><dd class="handle">@<%= guide.username %></dd>
             <dt>Tarih</dt><dd><%= formatDate(guide.created_at) %></dd>
@@ -95,7 +95,7 @@
     <% if (lines(guide.phrases).length) { %>
       <section class="sec">
         <h2 class="sec-h"><span>C</span> Replikler <small>dokun, kopyala</small></h2>
-        <div class="bubbles"><% lines(guide.phrases).forEach(l => { %><button type="button" class="bubble" data-copy title="Kopyalamak için dokun"><%= l.replace(/^["“”']+|["“”']+$/g, '') %></button><% }) %></div>
+        <div class="bubbles"><% lines(guide.phrases).forEach(l => { %><button type="button" class="bubble" data-copy title="Kopyalamak için dokun"><%- markEn(l.replace(/^["“”']+|["“”']+$/g, '')) %></button><% }) %></div>
       </section>
     <% } %>
 

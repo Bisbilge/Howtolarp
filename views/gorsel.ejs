@@ -16,7 +16,7 @@
         <ul class="ig-list" id="ig-list">
           <% list.forEach(g => { %>
             <li data-key="<%= g.key %>"><a class="<%= guide && guide.slug === g.slug ? 'on' : '' %>" href="/yonetim/gorsel?rehber=<%= g.slug %>&format=<%= format %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">
-              <span><%= persona(g.title) %></span><small><%= g.category %> · <%= formatDate(g.created_at) %></small></a></li>
+              <span><%- markEn(persona(g.title)) %></span><small><%= g.category %> · <%= formatDate(g.created_at) %></small></a></li>
           <% }) %>
           <li class="ig-none" id="ig-none" <%- list.length ? 'hidden' : '' %>>Eşleşen rehber yok.</li>
         </ul>
@@ -68,12 +68,12 @@
         <div class="ig-body">
           <div class="ig-main">
           <p class="ig-kicker"><%= guide.category %> · Zorluk <%= guide.difficulty %>/5 · <%= DIFFICULTY_LABELS[guide.difficulty] %></p>
-          <h2 class="ig-persona" id="ig-persona"><%= persona(guide.title) %></h2>
+          <h2 class="ig-persona" id="ig-persona"><%- markEn(persona(guide.title)) %></h2>
           <p class="ig-line"><s>olma.</s> <mark>öyle görün.</mark></p>
           <p class="ig-sum"><%= guide.summary %></p>
           </div>
           <div class="ig-bubbles">
-            <% phrases.forEach(p => { %><p class="ig-bubble"><%= p %></p><% }) %>
+            <% phrases.forEach(p => { %><p class="ig-bubble"><%- markEn(p) %></p><% }) %>
           </div>
         </div>
         <div class="ig-foot">

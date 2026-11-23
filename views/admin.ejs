@@ -49,7 +49,7 @@
     <article class="case share">
       <header class="case-head">
         <div>
-          <a class="case-title" href="/rehber/<%= s.slug %>"><%= s.title %></a>
+          <a class="case-title" href="/rehber/<%= s.slug %>"><%- markEn(s.title) %></a>
           <p class="case-meta"><%= s.category %> · sıraya girdi: <%= formatDate(s.queued_at) %></p>
         </div>
         <div class="case-actions"><form method="post" action="/yonetim/paylasim/<%= s.guide_id %>/atla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="">Atla</button></form></div>
@@ -81,7 +81,7 @@
     <article class="case case-wait">
       <header class="case-head">
         <div>
-          <a class="case-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+          <a class="case-title" href="/rehber/<%= g.slug %>"><%- markEn(g.title) %></a>
           <p class="case-meta">
             <span class="handle">@<%= g.username %></span> · <%= g.category %> · <%= formatDate(g.created_at) %>
             · onaylı rehberi: <b><%= g.author_approved %>/<%= TRUST_AFTER %></b>
@@ -107,7 +107,7 @@
     <article class="case">
       <header class="case-head">
         <div>
-          <a class="case-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+          <a class="case-title" href="/rehber/<%= g.slug %>"><%- markEn(g.title) %></a>
           <p class="case-meta">
             <span class="handle">@<%= g.username %></span>
             · <b><%= g.report_count %></b> bildirim

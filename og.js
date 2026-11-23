@@ -25,7 +25,8 @@ function init() {
 const el = (type, style, ...children) => ({
   type, props: { style: { display: 'flex', ...style }, children: children.length === 1 ? children[0] : children },
 });
-const up = (t) => String(t).toLocaleUpperCase('tr');
+const { upperMixed } = require('./textcase');
+const up = (t) => upperMixed(t);
 
 function personaSize(text) {
   const n = text.length;

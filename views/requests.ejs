@@ -29,7 +29,7 @@
             <input type="hidden" name="_csrf" value="<%= csrf %>">
             <button class="req-vote <%= voted.has(Number(r.id)) ? 'on' : '' %>" type="submit" aria-label="Oy ver">▲<b><%= r.votes %></b></button>
           </form>
-          <span class="req-text"><%= r.text %> <small>nasıl larplanır?</small></span>
+          <span class="req-text"><%- markEn(r.text) %> <small>nasıl larplanır?</small></span>
           <span class="req-actions">
             <a class="adm-btn" href="/yaz?baslik=<%= encodeURIComponent(r.text + ' Nasıl Larplanır?') %>">Bunu ben yazarım</a>
             <% if (user && user.isAdmin) { %>

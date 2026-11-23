@@ -4,6 +4,7 @@ const express = require('express');
 const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = require('./db');
 const { renderGuideImage } = require('./og');
 const quiz = require('./quiz');
+const { markEn } = require('./textcase');
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -112,7 +113,7 @@ app.use(async (req, res, next) => {
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
     description: null, ogType: 'website', ogImage: null, jsonLd: null, noindex: false, canonical: null,
-    CATEGORY_INFO, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    CATEGORY_INFO, markEn, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
@@ -153,7 +154,7 @@ app.get('/og/rehber/:file', async (req, res) => {
       .filter((s) => s && s.length <= 60)[0] || '';
     const png = await renderGuideImage({
       persona: persona(guide.title), category: guide.category, difficulty: guide.difficulty, number: guide.id, phrase,
-    }, `${guide.slug}:${guide.updated_at}`);
+    }, `${guide.slug}:${guide.updated_at}:${OG_RENDER}`);
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400');
     res.send(png);
@@ -167,7 +168,7 @@ app.get('/og/test/:file', async (req, res) => {
   const r = quiz.RESULTS[key];
   if (!r) return res.redirect(302, '/og.png');
   try {
-    const png = await renderGuideImage({ persona: r.name, kicker: 'Hangi larpsın? Test sonucu', badge: 'TEST', phrase: 'Sen hangisisin? howtolarp.org/test' }, `test:${key}:v1`);
+    const png = await renderGuideImage({ persona: r.name, kicker: 'Hangi larpsın? Test sonucu', badge: 'TEST', phrase: 'Sen hangisisin? howtolarp.org/test' }, `test:${key}:${OG_RENDER}`);
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400');
     res.send(png);
@@ -176,7 +177,9 @@ app.get('/og/test/:file', async (req, res) => {
     res.redirect(302, '/og.png');
   }
 });
-const ogVersion = (g) => crypto.createHash('sha1').update(String(g.updated_at)).digest('hex').slice(0, 8);
+// Görsel tasarımı değişince OG_RENDER artırılır: önbellekteki eski görseller kullanılmasın
+const OG_RENDER = 2;
+const ogVersion = (g) => crypto.createHash('sha1').update(`${OG_RENDER}:${g.updated_at}`).digest('hex').slice(0, 8);
 
 // ---------- Çerezler, oturum, CSRF ----------
 function parseCookies(header = '') {
@@ -440,7 +443,7 @@ async function renderList(req, res, kategori) {
   ]);
   const hasMore = rows.length > PAGE_SIZE;
   const guides = rows.slice(0, PAGE_SIZE);
-  const personas = top.map((g) => persona(g.title));
+  const personas = top.map((g) => markEn(persona(g.title)));
 
   const listPath = kategori ? `/kategori/${CATEGORY_INFO[kategori].slug}` : '/';
   res.render('index', {
@@ -1069,7 +1072,7 @@ app.get('/test/sonuc/:key', async (req, res) => {
   const shareText = `"Hangi larpsın?" testinde ${r.name} çıktım 😅 Sen hangisisin?`;
   res.render('test-result', {
     title: `${r.name} larpçısısın`, description: r.line, result: r, key: req.params.key, guide, noindex: true,
-    ogImage: `${res.locals.baseUrl}/og/test/${req.params.key}.png`,
+    ogImage: `${res.locals.baseUrl}/og/test/${req.params.key}.png?v=${OG_RENDER}`,
     tweetUrl: tweetIntent(`${shareText}\n\n${url}`),
     waUrl: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${url}`)}`,
     shareUrl: url,

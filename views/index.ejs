@@ -14,7 +14,7 @@
   <div class="hero-text">
     <p class="kicker">Sayı <%= String(stats.guides).padStart(3, '0') %> · <%= stats.users %> larpçı · Ücretsiz, tabii ki</p>
     <h1 class="hero-h">
-      <span class="hero-persona" data-personas="<%= JSON.stringify(personas) %>"><%= personas[0] || 'Zeki biri' %></span>
+      <span class="hero-persona" data-personas="<%= JSON.stringify(personas) %>"><%- personas[0] || 'Zeki biri' %></span>
       <span class="hero-line"><s>olma.</s> <mark>öyle görün.</mark></span>
     </h1>
     <p class="hero-sub">Hiç okumadığın kitabı okumuş, hiç kurmadığın şirketi kurmuş gibi davranmanın halk ansiklopedisi. <%= signupsOpen ? 'Rehberleri üyeler yazıyor. Sıra sende.' : 'Bir rol seç, hazırlığını yap, sahneye çık.' %></p>
@@ -41,7 +41,7 @@
 <% if (!kategori && requested && requested.length) { %>
 <section class="req-strip">
   <span class="req-strip-h">En çok istenenler</span>
-  <% requested.forEach(r => { %><a href="/istekler#istek-<%= r.id %>"><%= r.text %> <b>▲<%= r.votes %></b></a><% }) %>
+  <% requested.forEach(r => { %><a href="/istekler#istek-<%= r.id %>"><%- markEn(r.text) %> <b>▲<%= r.votes %></b></a><% }) %>
   <a class="req-strip-all" href="/istekler">Tümü · Öner →</a>
 </section>
 <% } else if (!kategori) { %>
@@ -93,7 +93,7 @@
     if (list.length < 2) return;
     setInterval(function () {
       el.classList.add('flip');
-      setTimeout(function () { i = (i + 1) % list.length; el.textContent = list[i]; el.classList.remove('flip'); }, 180);
+      setTimeout(function () { i = (i + 1) % list.length; el.innerHTML = list[i]; el.classList.remove('flip'); }, 180);
     }, 2400);
   })();
 </script>

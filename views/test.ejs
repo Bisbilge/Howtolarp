@@ -8,7 +8,7 @@
   <form class="quiz-form" method="get" action="/test/sonuc">
     <% questions.forEach((q, i) => { %>
       <fieldset class="quiz-q">
-        <legend><span class="quiz-no"><%= i + 1 %></span> <%= q.q %></legend>
+        <legend><span class="quiz-no"><%= i + 1 %></span> <span><%- markEn(q.q) %></span></legend>
         <div class="quiz-opts">
           <% q.a.forEach((a, j) => { %>
             <label class="quiz-opt">
