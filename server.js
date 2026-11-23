@@ -71,7 +71,7 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website', ogImage: null, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    description: null, ogType: 'website', ogImage: null, jsonLd: null, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
@@ -333,10 +333,6 @@ app.get('/', async (req, res) => {
 
   const where = [VISIBLE];
   const params = [];
-  if (q) {
-    where.push('(g.title LIKE ? OR g.summary LIKE ?)');
-    params.push(`%${q}%`, `%${q}%`);
-  }
   if (kategori) {
     where.push('g.category = ?');
     params.push(kategori);
@@ -344,9 +340,13 @@ app.get('/', async (req, res) => {
   const order = sirala === 'populer' ? 'like_count DESC, g.created_at DESC, g.id DESC' : 'g.created_at DESC, g.id DESC';
   const offset = (sayfa - 1) * PAGE_SIZE;
 
+  // Arama Türkçe karakter/büyük-küçük harf duyarsız olsun diye uygulamada süzülür (SQLite LIKE sadece ASCII'yi bilir)
+  const listQuery = q
+    ? db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT 3000`, params)
+      .then((all) => all.filter((g) => matches(q, g.title, g.summary, g.category)).slice(offset, offset + PAGE_SIZE + 1))
+    : db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`, [...params, PAGE_SIZE + 1, offset]);
   const [rows, stats, top] = await Promise.all([
-    db.all(`${GUIDE_SELECT} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`,
-      [...params, PAGE_SIZE + 1, offset]),
+    listQuery,
     db.get(`SELECT
       (SELECT COUNT(*) FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}) AS guides,
       (SELECT COUNT(*) FROM users WHERE banned = 0) AS users`),
@@ -388,8 +388,30 @@ app.get('/rehber/:slug', async (req, res) => {
       ORDER BY RANDOM() LIMIT 3`, [guide.category, guide.id]),
   ]);
 
+  const base = res.locals.baseUrl;
+  const isoDate = (s) => new Date(String(s).replace(' ', 'T') + 'Z').toISOString();
+  const jsonLd = (!guide.hidden && guide.approved && !guide.banned) ? JSON.stringify([
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: guide.title.slice(0, 110), description: guide.summary, inLanguage: 'tr-TR',
+      image: [`${base}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}`],
+      datePublished: isoDate(guide.created_at), dateModified: isoDate(guide.updated_at),
+      author: { '@type': 'Person', name: guide.username },
+      publisher: { '@type': 'Organization', name: 'How to LARP', url: base },
+      mainEntityOfPage: `${base}/rehber/${guide.slug}`,
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'How to LARP', item: `${base}/` },
+        { '@type': 'ListItem', position: 2, name: guide.category, item: `${base}/?kategori=${encodeURIComponent(guide.category)}` },
+        { '@type': 'ListItem', position: 3, name: guide.title },
+      ],
+    },
+  ]).replace(/</g, '\\u003c') : null;
+
   res.render('guide', {
-    title: guide.title, description: guide.summary, ogType: 'article',
+    title: guide.title, description: guide.summary, ogType: 'article', jsonLd,
     ogImage: !guide.hidden && guide.approved && !guide.banned
       ? `${res.locals.baseUrl}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}` : null,
     guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,

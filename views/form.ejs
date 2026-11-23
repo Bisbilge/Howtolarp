@@ -10,6 +10,11 @@
     <p class="tip">Link ve web adresi paylaşılamaz. Gerçek kişileri hedef alma. <a href="/kurallar">Kurallar</a></p>
   </aside>
   <div class="page-main">
+    <div class="draft-note" id="draft-note" hidden>
+      <span>Kaydedilmemiş bir taslağın var (<span id="draft-time"></span>).</span>
+      <button type="button" class="ghost-btn" id="draft-restore">Geri yükle</button>
+      <button type="button" class="ghost-btn" id="draft-drop">Sil</button>
+    </div>
     <% if (errors.length) { %>
       <div class="alert"><b>Sahneye çıkamazsın:</b><ul><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
     <% } %>
@@ -62,4 +67,38 @@
     </form>
   </div>
 </section>
+<script>
+  // Taslak: form yazdıkça bu tarayıcıya kaydedilir; sayfa kapanırsa geri yüklenebilir.
+  (function () {
+    var form = document.querySelector('.form');
+    if (!form) return;
+    var KEY = 'howtolarp-taslak:<%= editing ? editing.slug : "yeni" %>';
+    var FIELDS = ['title', 'category', 'difficulty', 'summary', 'kit', 'steps', 'phrases', 'risks'];
+    function read() { var o = {}; FIELDS.forEach(function (n) { var el = form.elements[n]; if (el) o[n] = el.value; }); return o; }
+    function same(a, b) { return FIELDS.every(function (n) { return String(a[n] || '') === String(b[n] || ''); }); }
+    function load() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+    function drop() { try { localStorage.removeItem(KEY); } catch (e) {} }
+    var initial = read(), saved = load(), t;
+
+    // Sayfadaki halden farklı bir taslak varsa sor (üzerine kendiliğinden yazma)
+    if (saved && saved.data && !same(saved.data, initial)) {
+      var note = document.getElementById('draft-note');
+      document.getElementById('draft-time').textContent = new Date(saved.at).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+      note.hidden = false;
+      document.getElementById('draft-restore').onclick = function () {
+        FIELDS.forEach(function (n) { var el = form.elements[n]; if (el && saved.data[n] != null) el.value = saved.data[n]; });
+        note.hidden = true;
+      };
+      document.getElementById('draft-drop').onclick = function () { drop(); note.hidden = true; };
+    }
+    form.addEventListener('input', function () {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        var now = read();
+        try { if (same(now, initial)) drop(); else localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), data: now })); } catch (e) {}
+      }, 400);
+    });
+    form.addEventListener('submit', drop);
+  })();
+</script>
 <%- include('partials/foot') %>
