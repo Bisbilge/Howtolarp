@@ -1,31 +1,58 @@
 <%- include('partials/head') %>
 <section class="page page-about">
   <aside class="page-side">
-    <h1 class="page-h page-h-xl">larp</h1>
-    <p class="phon">/larp/ · fiil, argo</p>
+    <p class="kicker">Sözlük</p>
+    <h1 class="page-h page-h-xl">Larp ne demek?</h1>
+    <p class="phon">larp · /larp/ · isim, argo<br>larplamak · fiil</p>
   </aside>
-  <div class="page-main dict">
+  <article class="page-main dict">
+    <p class="lead"><b>Larp</b>, internet argosunda <b>olmadığın biri gibi davranmak</b>, bir rolü gerçekmiş gibi oynamak demek. Hiç okumadığın kitabı okumuş gibi konuşmak, şirketin yokken kendini "kurucu" diye tanıtmak, hazır kahve içip çekirdeğin hangi yükseltide yetiştiğini sormak: hepsi larp.</p>
+
+    <h2 class="sub-h">Kelimenin kökeni</h2>
+    <p><b>LARP</b>, İngilizce <i>live action role-playing</i> yani "canlı rol yapma oyunu"nun kısaltması. Asıl anlamıyla, oyuncuların kostüm giyip bir karakteri gerçek mekanda canlandırdığı oyunlar için kullanılıyor.</p>
+    <p>Sosyal medyada ise anlam kaydı: Artık bir oyunda değil, <b>gündelik hayatta</b> rol yapan, kendini olduğundan farklı gösteren biri için "larp yapıyor" deniyor. Çoğu zaman da şaka ve iğneleme karışık bir tonla.</p>
+
+    <h2 class="sub-h">Larplamak ne demek?</h2>
+    <p>Türkçede kelime fiil olarak da kullanılıyor: <b>larplamak</b> ya da <b>larp yapmak</b>, bir rolü oynamak, öyleymiş gibi davranmak demek. Rol yapan kişiye de <b>larpçı</b> deniyor.</p>
     <ol class="defs">
-      <li><b>Asıl anlamı.</b> <i>Live action role-playing:</i> kostüm giyip canlı olarak rol yapılan oyun.</li>
-      <li><b>İnternetteki anlamı.</b> Olmadığın biri gibi davranmak. <span class="ex">"Hiç okumadığı kitap hakkında yorum yapıyor, resmen entelektüel larplıyor."</span></li>
-      <li><b>Bu sitedeki anlamı.</b> Bir rolün nasıl oynandığını adım adım anlatan topluluk rehberi.</li>
+      <li><span class="ex">"Hiç okumadığı kitap hakkında yorum yapıyor, resmen entelektüel larplıyor."</span></li>
+      <li><span class="ex">"Şirketi yok ama LinkedIn'de CEO larpı yapıyor."</span></li>
+      <li><span class="ex">"Kahveyi kokladı, gözlerini kapattı, 'hafif yaban mersini' dedi. Tam bir kahve uzmanı larpı."</span></li>
+      <li><span class="ex">"Bir kere 10 kilometre koştu, şimdi maratoncu larplıyor."</span></li>
     </ol>
-    <h2 class="sub-h">Bir rehberde ne olur?</h2>
+
+    <h2 class="sub-h">Benzer kavramlardan farkı</h2>
+    <dl class="parts parts-wide">
+      <div><dt>≈</dt><dd><b>Poz kesmek:</b> Yakın anlamlı, ama poz kesmek daha çok anlık bir hava atma. Larp bir rolü sürdürmek, o kişi gibi konuşup davranmak.</dd></div>
+      <div><dt>≈</dt><dd><b>-mış gibi yapmak:</b> Larpın en sade Türkçe karşılığı. "Zeki biri gibi yapmak" ile "zeki biri larplamak" aynı şey.</dd></div>
+      <div><dt>≠</dt><dd><b>Cosplay:</b> Cosplay görünüşü taklit etmek, yani kostüm. Larp ise davranışı taklit etmek; kostüm şart değil.</dd></div>
+    </dl>
+
+    <h2 class="sub-h">Larp kötü bir şey mi?</h2>
+    <p>Çoğu zaman değil. Gündelik larpların büyük kısmı masum: biraz özenti, biraz kendini olduğundan iyi gösterme isteği, bolca da komedi. Herkes hayatında en az bir kez bir şeyden anlıyormuş gibi yapmıştır.</p>
+    <p>Sınır, insanları kandırıp zarar vermeye başladığı yer. Sahte belge, dolandırıcılık ya da birinin güvenini kötüye kullanmak larp değil, düpedüz yalan. How to LARP rolleri ti'ye alır, insanları değil. <a href="/kurallar">Topluluk kuralları</a></p>
+
+    <h2 class="sub-h">How to LARP nedir?</h2>
+    <p>Bu site, gündelik larpların nasıl yapıldığını anlatan mizahi bir rehber koleksiyonu. Her rehber bir rolü dört bölümde anlatıyor:</p>
     <dl class="parts">
       <div><dt>A</dt><dd><b>Hazırlık:</b> rol için gereken eşyalar, bilgiler ve tavırlar.</dd></div>
       <div><dt>B</dt><dd><b>Sahne talimatı:</b> adım adım ne yapacağın.</dd></div>
       <div><dt>C</dt><dd><b>Replikler:</b> ezberlenecek cümleler.</dd></div>
       <div><dt>D</dt><dd><b>Nerede yakalanırsın:</b> ifşa olma riskleri.</dd></div>
     </dl>
-    <h2 class="sub-h">Kurallar</h2>
-    <ul class="rules">
-      <li>Rehberler mizah içindir. Rolleri ti'ye al, insanları değil.</li>
-      <li>Gerçek, isimle belirtilen kişileri hedef alma.</li>
-      <li>Dolandırıcılık, sahte belge ya da birine zarar verecek talimat yazma.</li>
-    </ul>
-    <p>Kuralların tamamı ve gizlilik metni: <a href="/kurallar">Kurallar &amp; gizlilik</a></p>
-    <% if (user || signupsOpen) { %><a class="big-btn" href="<%= user ? '/yaz' : '/kayit' %>">Bir rehber yaz →</a>
-    <% } else { %><a class="big-btn" href="/rastgele">Rastgele bir rol ver ↻</a><% } %>
-  </div>
+    <p>Örnek rehberler: <a href="/rehber/zeki-biri-gibi-nasil-larplanir">Zeki biri nasıl larplanır?</a> · <a href="/rehber/startup-kurucusu-nasil-larplanir">Startup kurucusu nasıl larplanır?</a> · <a href="/rehber/kahve-uzmani-nasil-larplanir">Kahve uzmanı nasıl larplanır?</a></p>
+
+    <h2 class="sub-h">Sık sorulanlar</h2>
+    <div class="faq">
+      <% faqs.forEach(f => { %>
+        <details><summary><%= f.q %></summary><p><%= f.a %></p></details>
+      <% }) %>
+    </div>
+
+    <div class="f-actions about-cta">
+      <a class="big-btn" href="/">Rehberlere göz at →</a>
+      <a class="ghost-btn" href="/test">Hangi larpsın? Testi çöz</a>
+    </div>
+  </article>
 </section>
 <%- include('partials/foot') %>

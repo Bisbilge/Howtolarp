@@ -39,6 +39,9 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
 - **Rehber istekleri** (`/istekler`): rol önerisi ve oylama (hesapsız), "Bunu ben yazarım" ile başlığı hazır form;
   rol yayına girince istek kendiliğinden "yazıldı" olur. Var olan rol istenirse rehbere yönlendirir.
 - Rehber formunda tarayıcıya taslak kaydı; ana sayfa araması Türkçe karakter duyarsız; rehberlerde Article JSON-LD
+- **SEO:** kategori sayfaları (`/kategori/<slug>`, eski `?kategori=` 301 ile yönlenir), "Larp ne demek?" sözlük sayfası
+  (`/larp-ne-demek`, SSS ve JSON-LD; eski `/hakkinda` 301), arama/sıralama/test sonucu sayfalarında `noindex`,
+  hesap ve yönetim sayfalarında `X-Robots-Tag`, sayfalamada kendi canonical'ı, ana sayfada WebSite/Organization JSON-LD
 - Yazı tipleri sitede barındırılır (`public/fonts`, OFL lisanslı); Google Fonts'a istek gitmez
 - CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu

@@ -38,7 +38,7 @@
 <% } %>
 <article class="guide">
   <header class="g-head">
-    <p class="crumbs"><a href="/">Endeks</a> / <a href="/?kategori=<%= encodeURIComponent(guide.category) %>#rehberler"><%= guide.category %></a> / Rehber #<%= String(guide.id).padStart(3, '0') %></p>
+    <p class="crumbs"><a href="/">Endeks</a> / <a href="/kategori/<%= CATEGORY_INFO[guide.category] ? CATEGORY_INFO[guide.category].slug : '' %>"><%= guide.category %></a> / Rehber #<%= String(guide.id).padStart(3, '0') %></p>
     <div class="g-head-grid">
       <div>
         <h1 class="g-title"><%= guide.title %></h1>

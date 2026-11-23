@@ -78,6 +78,18 @@ const CATEGORIES = [
   'İnternet Kültürü',
   'Diğer',
 ];
+// Kategori sayfaları: /kategori/<slug>
+const CATEGORY_INFO = {
+  'Zeka & Kültür': { slug: 'zeka-kultur', intro: 'Hiç okumadığın kitabı okumuş, hiç dinlemediğin dersi almış gibi görünmenin rehberleri: zeki biri, felsefe öğrencisi, tarih meraklısı, poliglot ve daha fazlası.' },
+  'Kariyer & İş': { slug: 'kariyer-is', intro: 'Toplantıda bilgili, LinkedIn\'de vizyoner, takvimde hep meşgul görünmenin rehberleri: startup kurucusu, senior yazılımcı, yapay zeka uzmanı.' },
+  'Yaşam Tarzı': { slug: 'yasam-tarzi', intro: 'Kahveden şaraba, minimalizmden ekşi mayaya: hayatını çözmüş, zevk sahibi biri gibi görünmenin rehberleri.' },
+  'Sanat & Estetik': { slug: 'sanat-estetik', intro: 'Film eleştirmeni, çağdaş sanat meraklısı, indie müzik dinleyicisi: sanattan anlıyormuş gibi görünmenin rehberleri.' },
+  'Spor & Sağlık': { slug: 'spor-saglik', intro: 'Ayda iki kez salona gidip her gün gidiyormuş gibi görünmenin rehberleri: maratoncu, futbol yorumcusu, 5 AM Club üyesi.' },
+  'İnternet Kültürü': { slug: 'internet-kulturu', intro: 'Anime hayranı, profesyonel oyuncu, podcast\'i olan biri: internette bir şeyin uzmanı gibi görünmenin rehberleri.' },
+  'Diğer': { slug: 'diger', intro: 'Hiçbir kutuya sığmayan roller: araba tutkunu ve topluluğun yazdığı diğer larp rehberleri.' },
+};
+const categoryBySlug = (slug) => Object.keys(CATEGORY_INFO).find((c) => CATEGORY_INFO[c].slug === slug);
+
 const DIFFICULTY_LABELS = ['', 'Çocuk oyuncağı', 'Kolay', 'Orta', 'Zor', 'Method oyunculuğu'];
 const REPORT_REASONS = {
   kisi: 'Gerçek bir kişiyi hedef alıyor',
@@ -99,7 +111,8 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website', ogImage: null, jsonLd: null, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    description: null, ogType: 'website', ogImage: null, jsonLd: null, noindex: false, canonical: null,
+    CATEGORY_INFO, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
@@ -107,6 +120,10 @@ app.use(async (req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
   res.set('Referrer-Policy', 'same-origin');
+  // Hesap ve yönetim sayfaları arama motorlarında görünmesin
+  if (/^\/(yonetim|hesap|rehberlerim|yaz|giris|kayit|cikis)(\/|$)/.test(req.path) || /\/duzenle$/.test(req.path)) {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+  }
   res.set('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
@@ -380,8 +397,22 @@ function validateGuide(body) {
 const PAGE_SIZE = 30;
 
 app.get('/', async (req, res) => {
+  // Eski ?kategori= bağlantıları kalıcı olarak kategori sayfasına
+  if (CATEGORIES.includes(req.query.kategori)) {
+    const rest = new URLSearchParams(req.query); rest.delete('kategori');
+    return res.redirect(301, `/kategori/${CATEGORY_INFO[req.query.kategori].slug}${rest.toString() ? '?' + rest : ''}`);
+  }
+  return renderList(req, res, '');
+});
+
+app.get('/kategori/:slug', async (req, res) => {
+  const kategori = categoryBySlug(req.params.slug);
+  if (!kategori) return notFound(req, res);
+  return renderList(req, res, kategori);
+});
+
+async function renderList(req, res, kategori) {
   const q = String(req.query.q || '').trim().slice(0, 80);
-  const kategori = CATEGORIES.includes(req.query.kategori) ? req.query.kategori : '';
   const sirala = req.query.sirala === 'populer' ? 'populer' : 'yeni';
   const sayfa = Math.min(Math.max(parseInt(req.query.sayfa, 10) || 1, 1), 500);
 
@@ -411,11 +442,23 @@ app.get('/', async (req, res) => {
   const guides = rows.slice(0, PAGE_SIZE);
   const personas = top.map((g) => persona(g.title));
 
+  const listPath = kategori ? `/kategori/${CATEGORY_INFO[kategori].slug}` : '/';
   res.render('index', {
-    title: null, guides, q, kategori, sirala, stats, personas, sayfa, hasMore, offset, requested,
+    title: kategori ? `${kategori} larp rehberleri` : null,
+    description: kategori ? CATEGORY_INFO[kategori].intro : null,
+    // Arama ve sıralama sonuçları dizine girmesin; sayfalar kendi adresini göstersin
+    noindex: !!q || sirala !== 'yeni',
+    canonical: `${res.locals.baseUrl}${listPath}${sayfa > 1 ? `?sayfa=${sayfa}` : ''}`,
+    jsonLd: !kategori && sayfa === 1 && !q ? JSON.stringify([
+      { '@context': 'https://schema.org', '@type': 'WebSite', name: 'How to LARP', url: `${res.locals.baseUrl}/`, inLanguage: 'tr-TR',
+        description: 'Olmadığın biri gibi davranmanın rehberleri.' },
+      { '@context': 'https://schema.org', '@type': 'Organization', name: 'How to LARP', url: `${res.locals.baseUrl}/`,
+        logo: `${res.locals.baseUrl}/favicon.svg` },
+    ]).replace(/</g, '\\u003c') : null,
+    guides, q, kategori, sirala, stats, personas, sayfa, hasMore, offset, requested, listPath,
     justReported: req.query.bildirildi === '1',
   });
-});
+}
 
 app.get('/rastgele', async (req, res) => {
   const g = await db.get(`SELECT g.slug FROM guides g JOIN users u ON u.id = g.user_id
@@ -443,7 +486,7 @@ app.get('/rehber/:slug', async (req, res) => {
       (SELECT COUNT(*) FROM share_queue s WHERE s.guide_id = ? AND s.skipped = 0 AND (s.x_at IS NULL OR s.ig_at IS NULL)) AS queued
       FROM reports WHERE guide_id = ? AND resolved_at IS NULL`, [guide.id, guide.id]) : none,
     db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} AND g.category = ? AND g.id != ?
-      ORDER BY RANDOM() LIMIT 3`, [guide.category, guide.id]),
+      ORDER BY like_count DESC, g.created_at DESC LIMIT 4`, [guide.category, guide.id]),
   ]);
 
   const base = res.locals.baseUrl;
@@ -462,7 +505,7 @@ app.get('/rehber/:slug', async (req, res) => {
       '@context': 'https://schema.org', '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'How to LARP', item: `${base}/` },
-        { '@type': 'ListItem', position: 2, name: guide.category, item: `${base}/?kategori=${encodeURIComponent(guide.category)}` },
+        { '@type': 'ListItem', position: 2, name: guide.category, item: `${base}/kategori/${(CATEGORY_INFO[guide.category] || { slug: '' }).slug}` },
         { '@type': 'ListItem', position: 3, name: guide.title },
       ],
     },
@@ -484,7 +527,7 @@ app.get('/rehber/:slug', async (req, res) => {
 app.get('/yaz', requireUser, async (req, res) => {
   const baslik = String(req.query.baslik || '').trim().slice(0, 120);
   const [trusted, requested] = await Promise.all([isTrusted(req.user), topRequests(5)]);
-  res.render('form', { title: 'Rehber yaz', g: { difficulty: 3, title: baslik }, errors: [], editing: null, trusted, requested });
+  res.render('form', { noindex: true, title: 'Rehber yaz', g: { difficulty: 3, title: baslik }, errors: [], editing: null, trusted, requested });
 });
 
 app.post('/yaz', requireUser, async (req, res) => {
@@ -588,7 +631,7 @@ app.get('/u/:username', (req, res) => res.redirect(301, '/'));
 // Üyenin kendi rehberleri: sadece kendisi görür
 app.get('/rehberlerim', requireUser, async (req, res) => {
   const guides = await db.all(`${GUIDE_SELECT} WHERE g.user_id = ? ORDER BY g.created_at DESC`, [req.user.id]);
-  res.render('mine', { title: 'Rehberlerim', guides });
+  res.render('mine', { title: 'Rehberlerim', guides, noindex: true });
 });
 
 // ---------- Yönetim ----------
@@ -799,7 +842,7 @@ function signupsClosed(req, res) {
 app.get('/kayit', (req, res) => {
   if (!SIGNUPS_OPEN) return signupsClosed(req, res);
   if (req.user) return res.redirect('/');
-  res.render('auth', { title: 'Üye ol', mode: 'kayit', error: null, username: '', sonra: safeNext(req.query.sonra) });
+  res.render('auth', { noindex: true, title: 'Üye ol', mode: 'kayit', error: null, username: '', sonra: safeNext(req.query.sonra) });
 });
 
 // Kullanıcı adı korumalı mı? (yönetici adları ve "admin", "editor" gibi resmi görünen adlar)
@@ -849,7 +892,7 @@ app.post('/kayit', async (req, res) => {
 
 app.get('/giris', (req, res) => {
   if (req.user) return res.redirect('/');
-  res.render('auth', { title: 'Giriş yap', mode: 'giris', error: null, username: '', sonra: safeNext(req.query.sonra) });
+  res.render('auth', { noindex: true, title: 'Giriş yap', mode: 'giris', error: null, username: '', sonra: safeNext(req.query.sonra) });
 });
 
 app.post('/giris', async (req, res) => {
@@ -885,7 +928,7 @@ app.post('/cikis', async (req, res) => {
 
 // ---------- Hesap ayarları ----------
 app.get('/hesap', requireUser, (req, res) => {
-  res.render('account', { title: 'Hesap ayarları', msg: req.query.ok === '1' ? 'Şifren değişti.' : null, error: null });
+  res.render('account', { noindex: true, title: 'Hesap ayarları', msg: req.query.ok === '1' ? 'Şifren değişti.' : null, error: null });
 });
 
 app.post('/hesap/sifre', requireUser, async (req, res) => {
@@ -1025,7 +1068,7 @@ app.get('/test/sonuc/:key', async (req, res) => {
   const url = `${res.locals.baseUrl}/test/sonuc/${req.params.key}`;
   const shareText = `"Hangi larpsın?" testinde ${r.name} çıktım 😅 Sen hangisisin?`;
   res.render('test-result', {
-    title: `${r.name} larpçısısın`, description: r.line, result: r, key: req.params.key, guide,
+    title: `${r.name} larpçısısın`, description: r.line, result: r, key: req.params.key, guide, noindex: true,
     ogImage: `${res.locals.baseUrl}/og/test/${req.params.key}.png`,
     tweetUrl: tweetIntent(`${shareText}\n\n${url}`),
     waUrl: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${url}`)}`,
@@ -1033,9 +1076,33 @@ app.get('/test/sonuc/:key', async (req, res) => {
   });
 });
 
-app.get('/hakkinda', (req, res) => res.render('about', {
-  title: 'Larp nedir?', description: 'Larp ne demek? İnternet argosunda olmadığın biri gibi davranmak. How to LARP sözlüğü ve kuralları.',
-}));
+// "Larp ne demek?" sözlük sayfası (eski /hakkinda adresi buraya yönlenir)
+const LARP_FAQ = [
+  { q: 'LARP neyin kısaltması?', a: 'İngilizce live action role-playing, yani "canlı rol yapma oyunu" ifadesinin kısaltması. Oyuncuların kostümle bir karakteri gerçek mekanda canlandırdığı oyunlar için kullanılır.' },
+  { q: 'İnternette larp ne anlama geliyor?', a: 'Olmadığın biri gibi davranmak, bir rolü gerçekmiş gibi oynamak. Örneğin hiç okumadığın kitabı okumuş gibi konuşmak ya da şirketin yokken kendini kurucu diye tanıtmak.' },
+  { q: 'Larplamak ne demek?', a: 'Larp yapmak, yani bir rolü oynamak, öyleymiş gibi davranmak. "Entelektüel larplıyor", "CEO larpı yapıyor" gibi kullanılır.' },
+  { q: 'Larpçı kime denir?', a: 'Bir rolü oynayan, kendini olduğundan farklı gösteren kişiye. Çoğu zaman şakayla karışık söylenir.' },
+  { q: 'Larp nasıl okunur?', a: 'Yazıldığı gibi, tek hece: "larp". Fiil hali "larplamak", geçmiş zamanı "larpladım" diye çekimlenir.' },
+  { q: 'Larp ile cosplay arasındaki fark ne?', a: 'Cosplay bir karakterin görünüşünü, yani kostümünü taklit etmektir. Larp ise davranışı taklit etmek; kostüm gerekmez.' },
+];
+app.get('/hakkinda', (req, res) => res.redirect(301, '/larp-ne-demek'));
+app.get('/larp-ne-demek', (req, res) => {
+  const base = res.locals.baseUrl;
+  res.render('about', {
+    title: 'Larp ne demek? Larplamak anlamı ve örnekleri',
+    description: 'Larp ne demek, larplamak ne anlama gelir? İnternet argosundaki anlamı, kelimenin kökeni ve günlük kullanımdan örnekler.',
+    ogType: 'article', faqs: LARP_FAQ,
+    jsonLd: JSON.stringify([
+      { '@context': 'https://schema.org', '@type': 'Article', headline: 'Larp ne demek? Larplamak anlamı ve örnekleri',
+        description: 'Larp kelimesinin internet argosundaki anlamı, kökeni ve kullanım örnekleri.', inLanguage: 'tr-TR',
+        mainEntityOfPage: `${base}/larp-ne-demek`, image: [`${base}/og.png`],
+        author: { '@type': 'Organization', name: 'How to LARP' }, publisher: { '@type': 'Organization', name: 'How to LARP', url: base } },
+      { '@context': 'https://schema.org', '@type': 'FAQPage',
+        mainEntity: LARP_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    ]).replace(/</g, '\\u003c'),
+  });
+});
+
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nDisallow: /yonetim\nDisallow: /yaz\nDisallow: /hesap\nDisallow: /rehberlerim\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
@@ -1045,14 +1112,15 @@ app.get('/sitemap.xml', async (req, res) => {
   const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
   const base = res.locals.baseUrl;
-  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`, `<url><loc>${base}/istekler</loc></url>`,
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/larp-ne-demek</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`, `<url><loc>${base}/istekler</loc></url>`,
+    ...Object.values(CATEGORY_INFO).map((c) => `<url><loc>${base}/kategori/${c.slug}</loc></url>`),
     ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
 });
 
 // ---------- Hatalar ----------
 function notFound(req, res) {
-  res.status(404).render('error', { title: 'Bulunamadı', message: 'Bu sayfa var gibi davranıyordu ama yokmuş.' });
+  res.status(404).render('error', { noindex: true, title: 'Bulunamadı', message: 'Bu sayfa var gibi davranıyordu ama yokmuş.' });
 }
 app.use(notFound);
 app.use((err, req, res, _next) => {

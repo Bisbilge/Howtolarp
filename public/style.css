@@ -634,3 +634,15 @@ button.bubble:active { transform: scale(.97); }
 .tip-req ul { margin: 6px 0 0; padding-left: 18px; }
 .tip-req a { font-weight: 700; }
 .tg-row { padding-left: 0; }
+.cat-head { padding: clamp(28px, 5vw, 56px) var(--gut) 8px; }
+.cat-head .page-h { margin: 12px 0 12px; }
+.cat-head .lede { max-width: 720px; }
+.page-about .lead { font-size: clamp(19px, 2.2vw, 22px); line-height: 1.5; margin-top: 0; }
+.page-about .defs { list-style: none; padding-left: 0; }
+.page-about .defs li { padding-left: 0; }
+.parts-wide dt { font-size: 22px; }
+.faq details { border-bottom: 1px solid var(--hair); padding: 12px 0; }
+.faq summary { cursor: pointer; font: 400 22px/1.2 var(--display); text-transform: uppercase; }
+.faq summary:hover { color: var(--pink); }
+.faq p { margin: 10px 0 0; }
+.about-cta { margin-top: 32px; }

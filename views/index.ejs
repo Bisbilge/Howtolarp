@@ -2,6 +2,14 @@
 <% if (justReported) { %>
   <div class="notice" role="status"><b>Bildirimin alındı.</b> Rehber, yöneticiler inceleyene kadar yayından kaldırıldı.</div>
 <% } %>
+<% const listUrl = (o) => { const p = new URLSearchParams(Object.fromEntries(Object.entries(o).filter(([k, v]) => v && !(k === 'sirala' && v === 'yeni') && !(k === 'sayfa' && v === 1)))).toString(); return (o.path || listPath) + (p ? '?' + p : ''); }; %>
+<% if (kategori) { %>
+<section class="cat-head">
+  <p class="crumbs"><a href="/">Endeks</a> / Kategori</p>
+  <h1 class="page-h page-h-xl"><%= kategori %></h1>
+  <p class="lede"><%= CATEGORY_INFO[kategori].intro %></p>
+</section>
+<% } else { %>
 <section class="hero">
   <div class="hero-text">
     <p class="kicker">Sayı <%= String(stats.guides).padStart(3, '0') %> · <%= stats.users %> larpçı · Ücretsiz, tabii ki</p>
@@ -29,33 +37,33 @@
   </div>
 </section>
 
-<% if (requested && requested.length) { %>
+<% } %>
+<% if (!kategori && requested && requested.length) { %>
 <section class="req-strip">
   <span class="req-strip-h">En çok istenenler</span>
   <% requested.forEach(r => { %><a href="/istekler#istek-<%= r.id %>"><%= r.text %> <b>▲<%= r.votes %></b></a><% }) %>
   <a class="req-strip-all" href="/istekler">Tümü · Öner →</a>
 </section>
-<% } else { %>
+<% } else if (!kategori) { %>
 <section class="req-strip"><span class="req-strip-h">Bir rolün rehberi mi yok?</span><a class="req-strip-all" href="/istekler">İstek yap →</a></section>
 <% } %>
 <section class="index" id="rehberler">
   <div class="index-head">
-    <h2 class="index-title">Rehber endeksi</h2>
-    <form class="search" method="get" action="/#rehberler">
+    <h2 class="index-title"><%= kategori ? 'Bu kategorideki rehberler' : 'Rehber endeksi' %></h2>
+    <form class="search" method="get" action="<%= listPath %>#rehberler">
       <input type="search" name="q" value="<%= q %>" placeholder="Ne larplıyoruz bugün?" aria-label="Rehberlerde ara">
-      <% if (kategori) { %><input type="hidden" name="kategori" value="<%= kategori %>"><% } %>
-      <input type="hidden" name="sirala" value="<%= sirala %>">
+      <% if (sirala !== 'yeni') { %><input type="hidden" name="sirala" value="<%= sirala %>"><% } %>
       <button type="submit">Ara</button>
     </form>
   </div>
   <div class="filters">
     <div class="cats">
-      <a class="<%= !kategori ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, sirala }) %>#rehberler">Hepsi</a>
-      <% CATEGORIES.forEach(c => { %><a class="<%= kategori === c ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, sirala, kategori: c }) %>#rehberler"><%= c %></a><% }) %>
+      <a class="<%= !kategori ? 'on' : '' %>" href="<%= listUrl({ path: '/', q, sirala }) %>#rehberler">Hepsi</a>
+      <% CATEGORIES.forEach(c => { %><a class="<%= kategori === c ? 'on' : '' %>" href="<%= listUrl({ path: '/kategori/' + CATEGORY_INFO[c].slug, q, sirala }) %>#rehberler"><%= c %></a><% }) %>
     </div>
     <div class="sort">
-      <a class="<%= sirala === 'yeni' ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, kategori, sirala: 'yeni' }) %>#rehberler">Yeni</a>
-      <a class="<%= sirala === 'populer' ? 'on' : '' %>" href="/?<%= new URLSearchParams({ q, kategori, sirala: 'populer' }) %>#rehberler">Çok larplanan</a>
+      <a class="<%= sirala === 'yeni' ? 'on' : '' %>" href="<%= listUrl({ q, sirala: 'yeni' }) %>#rehberler">Yeni</a>
+      <a class="<%= sirala === 'populer' ? 'on' : '' %>" href="<%= listUrl({ q, sirala: 'populer' }) %>#rehberler">Çok larplanan</a>
     </div>
   </div>
 
@@ -63,9 +71,9 @@
     <ol class="rows"><% guides.forEach((g, i) => { %><%- include('partials/row', { g, n: offset + i + 1 }) %><% }) %></ol>
     <% if (sayfa > 1 || hasMore) { %>
       <nav class="pager" aria-label="Sayfalar">
-        <% if (sayfa > 1) { %><a href="/?<%= new URLSearchParams({ q, kategori, sirala, sayfa: sayfa - 1 }) %>#rehberler">← Önceki</a><% } else { %><span></span><% } %>
+        <% if (sayfa > 1) { %><a href="<%= listUrl({ q, sirala, sayfa: sayfa - 1 }) %>#rehberler">← Önceki</a><% } else { %><span></span><% } %>
         <span class="pager-no">Sayfa <%= sayfa %></span>
-        <% if (hasMore) { %><a href="/?<%= new URLSearchParams({ q, kategori, sirala, sayfa: sayfa + 1 }) %>#rehberler">Sonraki →</a><% } else { %><span></span><% } %>
+        <% if (hasMore) { %><a href="<%= listUrl({ q, sirala, sayfa: sayfa + 1 }) %>#rehberler">Sonraki →</a><% } else { %><span></span><% } %>
       </nav>
     <% } %>
   <% } else { %>
