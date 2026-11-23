@@ -71,7 +71,7 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website', ogImage: null, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    description: null, ogType: 'website', ogImage: null, analytics: !!process.env.VERCEL_ENV, signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
     turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     adminCodeEnabled: ADMIN_SIGNUP_CODE.length >= 8,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
