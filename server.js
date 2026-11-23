@@ -10,6 +10,22 @@ const SESSION_DAYS = 30;
 const SIGNUPS_OPEN = process.env.SIGNUPS_OPEN !== '0';
 const AUTO_HIDE_AT = 3; // bu kadar farklı kişi bildirirse rehber incelemeye kadar gizlenir
 
+// ---- Spam ve kötüye kullanım ayarları ----
+const TRUST_AFTER = 2;            // bu kadar rehberi onaylanan üye "güvenilir" sayılır, onay beklemez
+const MAX_PENDING = 3;            // güvenilir olmayan üyenin aynı anda onay bekleyen en fazla rehberi
+const GUIDES_PER_DAY = 5;         // üye başına günlük en fazla rehber (yöneticiler hariç)
+const SIGNUPS_PER_IP_DAY = 3;     // aynı bağlantıdan günde en fazla hesap
+const LOGIN_PER_IP = 20;          // 15 dakikada aynı bağlantıdan en fazla giriş denemesi
+const LOGIN_PER_USER = 8;         // 15 dakikada aynı kullanıcı adına en fazla giriş denemesi
+// Herkesin alamayacağı kullanıcı adları
+const RESERVED = new Set(['admin', 'administrator', 'yonetici', 'yonetim', 'moderator', 'mod', 'editor', 'editör',
+  'howtolarp', 'how_to_larp', 'root', 'destek', 'support', 'sistem', 'system', 'resmi', 'official', 'staff']);
+// Cloudflare Turnstile (isteğe bağlı): ikisi de tanımlıysa kayıt formunda "robot değilim" kutusu çıkar
+const TURNSTILE_SITE_KEY = String(process.env.TURNSTILE_SITE_KEY || '').trim();
+const TURNSTILE_SECRET = String(process.env.TURNSTILE_SECRET_KEY || '').trim();
+const ADMIN_SIGNUP_CODE = String(process.env.ADMIN_SIGNUP_CODE || '').trim();
+const CONTACT_EMAIL = String(process.env.CONTACT_EMAIL || '').trim();
+
 // Yöneticiler: virgülle ayrılmış kullanıcı adları (ör. ADMIN_USERNAMES=ali,ayse)
 const ADMINS = new Set(String(process.env.ADMIN_USERNAMES || '')
   .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
@@ -45,12 +61,26 @@ app.use(async (req, res, next) => {
   // Hata sayfası erken aşamada bile render edilebilsin diye varsayılanlar
   Object.assign(res.locals, {
     user: null, csrf: '', path: req.path, title: null, ticker: [], persona, openReports: 0,
-    description: null, ogType: 'website', signupsOpen: SIGNUPS_OPEN,
+    description: null, ogType: 'website', signupsOpen: SIGNUPS_OPEN, pendingCount: 0,
+    turnstileKey: TURNSTILE_SECRET ? TURNSTILE_SITE_KEY : '', contactEmail: CONTACT_EMAIL,
     baseUrl: process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : `${req.protocol}://${req.get('host')}`,
   });
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
   res.set('Referrer-Policy', 'same-origin');
+  res.set('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+    "style-src 'self' https://fonts.googleapis.com",
+    'font-src https://fonts.gstatic.com',
+    "img-src 'self' data:",
+    'frame-src https://challenges.cloudflare.com',
+    "connect-src 'self' https://challenges.cloudflare.com",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+  ].join('; '));
   await ensureReady();
   next();
 });
@@ -110,8 +140,11 @@ app.use(async (req, res, next) => {
     if (row) req.user = { id: row.id, username: row.username, isAdmin: isAdminName(row.username) };
   }
   if (req.user?.isAdmin) {
-    res.locals.openReports = (await db.get(
-      'SELECT COUNT(DISTINCT guide_id) AS n FROM reports WHERE resolved_at IS NULL')).n;
+    const c = await db.get(`SELECT
+      (SELECT COUNT(DISTINCT guide_id) FROM reports WHERE resolved_at IS NULL) AS reports,
+      (SELECT COUNT(*) FROM guides WHERE approved = 0) AS pending`);
+    res.locals.openReports = Number(c.reports) + Number(c.pending);
+    res.locals.pendingCount = Number(c.pending);
   }
   res.locals.user = req.user;
   res.locals.CATEGORIES = CATEGORIES;
@@ -153,18 +186,46 @@ function safeNext(url) {
   return typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') ? url : '/';
 }
 
-// Basit giriş denemesi sınırı (IP başına 15 dakikada 10)
-const attempts = new Map();
-function tooManyAttempts(ip) {
+// ---------- Kötüye kullanım sınırları (veritabanında: Vercel'de bellek güvenilir değil) ----------
+// IP adresleri açık tutulmaz, tek yönlü özet olarak saklanır ve 2 gün sonra silinir.
+const ipKey = (req) => crypto.createHash('sha256').update(`howtolarp:${req.ip}`).digest('hex').slice(0, 24);
+
+// Bu işlemi kaydet; pencere içinde sınırı aştıysa true döner
+async function overLimit(key, limit, windowMs) {
   const now = Date.now();
-  const list = (attempts.get(ip) || []).filter((t) => now - t < 15 * 60e3);
-  list.push(now);
-  attempts.set(ip, list);
-  return list.length > 10;
+  await db.run('INSERT INTO hits (key, at) VALUES (?, ?)', [key, now]);
+  const { n } = await db.get('SELECT COUNT(*) AS n FROM hits WHERE key = ? AND at > ?', [key, now - windowMs]);
+  if (Math.random() < 0.05) await db.run('DELETE FROM hits WHERE at < ?', [now - 2 * 864e5]);
+  return Number(n) > limit;
+}
+const countHits = async (key, windowMs) =>
+  Number((await db.get('SELECT COUNT(*) AS n FROM hits WHERE key = ? AND at > ?', [key, Date.now() - windowMs])).n);
+
+// Botlar görünmeyen alanı da doldurur
+const isBot = (body) => String(body?.website || '').trim() !== '';
+
+async function turnstileOk(req) {
+  if (!TURNSTILE_SECRET || !TURNSTILE_SITE_KEY) return true;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: new URLSearchParams({ secret: TURNSTILE_SECRET, response: String(req.body['cf-turnstile-response'] || ''), remoteip: req.ip }),
+    });
+    return (await r.json()).success === true;
+  } catch {
+    return false;
+  }
+}
+
+// Üye güvenilir mi? (yöneticiler ve yeterince rehberi onaylanmış olanlar onay beklemez)
+async function isTrusted(user) {
+  if (user.isAdmin) return true;
+  const { n } = await db.get('SELECT COUNT(*) AS n FROM guides WHERE user_id = ? AND approved = 1', [user.id]);
+  return Number(n) >= TRUST_AFTER;
 }
 
 // ---------- Rehber sorguları ----------
-const VISIBLE = 'g.hidden = 0 AND u.banned = 0';
+const VISIBLE = 'g.hidden = 0 AND g.approved = 1 AND u.banned = 0';
 const GUIDE_SELECT = `SELECT g.*, u.username, u.banned,
   ((SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id)
     + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count
@@ -178,6 +239,9 @@ async function deleteGuide(id) {
   await db.run('DELETE FROM reports WHERE guide_id = ?', [id]);
   await db.run('DELETE FROM guides WHERE id = ?', [id]);
 }
+
+// Link, web adresi ya da alan adı (spam'in asıl amacı budur)
+const LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]{2,}\.(com|net|org|io|co|xyz|ru|info|biz|me|tr|app|link|site|online|shop|store|club|live|top|vip|pro|gg|ly|to)\b)/i;
 
 function validateGuide(body) {
   const g = {
@@ -198,6 +262,9 @@ function validateGuide(body) {
   if (g.steps.split('\n').filter((s) => s.trim()).length < 2) errors.push('En az iki adım yaz.');
   if (['kit', 'steps', 'phrases', 'risks'].some((k) => g[k].length > 6000)) {
     errors.push('Bölümlerden biri çok uzun (en fazla 6000 karakter).');
+  }
+  if (Object.values(g).some((v) => LINK_RE.test(String(v)))) {
+    errors.push('Rehberlerde link ya da web adresi paylaşılamaz.');
   }
   return { g, errors };
 }
@@ -253,7 +320,7 @@ app.get('/rehber/:slug', async (req, res) => {
   const guide = await findGuide(req.params.slug);
   const isOwner = !!guide && req.user?.id === guide.user_id;
   const isAdmin = !!req.user?.isAdmin;
-  if (!guide || ((guide.hidden || guide.banned) && !isOwner && !isAdmin)) return notFound(req, res);
+  if (!guide || ((guide.hidden || guide.banned || !guide.approved) && !isOwner && !isAdmin)) return notFound(req, res);
 
   const none = Promise.resolve(null);
   const [likedRow, reportedRow, reportCount, more] = await Promise.all([
@@ -271,21 +338,36 @@ app.get('/rehber/:slug', async (req, res) => {
     guide, liked: !!likedRow, reported: !!reportedRow, more, isOwner,
     guideReports: reportCount ? reportCount.n : 0,
     justReported: req.query.bildirildi === '1',
+    justSubmitted: req.query.gonderildi === '1',
   });
 });
 
-app.get('/yaz', requireUser, (req, res) => {
-  res.render('form', { title: 'Rehber yaz', g: { difficulty: 3 }, errors: [], editing: null });
+app.get('/yaz', requireUser, async (req, res) => {
+  res.render('form', { title: 'Rehber yaz', g: { difficulty: 3 }, errors: [], editing: null, trusted: await isTrusted(req.user) });
 });
 
 app.post('/yaz', requireUser, async (req, res) => {
+  const trusted = await isTrusted(req.user);
   const { g, errors } = validateGuide(req.body);
-  if (errors.length) return res.status(400).render('form', { title: 'Rehber yaz', g, errors, editing: null });
+  const fail = (list) => res.status(400).render('form', { title: 'Rehber yaz', g, errors: list, editing: null, trusted });
+  if (isBot(req.body)) return fail(['Gönderilemedi. Sayfayı yenileyip tekrar dene.']);
+  if (errors.length) return fail(errors);
+
+  if (!req.user.isAdmin) {
+    const { today, pending } = await db.get(`SELECT
+      (SELECT COUNT(*) FROM guides WHERE user_id = ? AND created_at > datetime('now', '-1 day')) AS today,
+      (SELECT COUNT(*) FROM guides WHERE user_id = ? AND approved = 0) AS pending`, [req.user.id, req.user.id]);
+    if (Number(today) >= GUIDES_PER_DAY) return fail([`Bir günde en fazla ${GUIDES_PER_DAY} rehber yazabilirsin. Yarın devam!`]);
+    if (!trusted && Number(pending) >= MAX_PENDING) {
+      return fail([`Onay bekleyen ${MAX_PENDING} rehberin var. Onlar incelenince yenilerini gönderebilirsin.`]);
+    }
+  }
+
   const slug = await slugify(g.title);
-  await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [slug, req.user.id, g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks]);
-  res.redirect(`/rehber/${slug}`);
+  await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks, approved)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [slug, req.user.id, g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, trusted ? 1 : 0]);
+  res.redirect(`/rehber/${slug}${trusted ? '' : '?gonderildi=1'}`);
 });
 
 async function loadOwned(req, res) {
@@ -300,18 +382,22 @@ async function loadOwned(req, res) {
 
 app.get('/rehber/:slug/duzenle', requireUser, async (req, res) => {
   const guide = await loadOwned(req, res);
-  if (guide) res.render('form', { title: 'Rehberi düzenle', g: guide, errors: [], editing: guide });
+  if (guide) res.render('form', { title: 'Rehberi düzenle', g: guide, errors: [], editing: guide, trusted: await isTrusted(req.user) });
 });
 
 app.post('/rehber/:slug/duzenle', requireUser, async (req, res) => {
   const guide = await loadOwned(req, res);
   if (!guide) return;
+  const trusted = await isTrusted(req.user);
   const { g, errors } = validateGuide(req.body);
-  if (errors.length) return res.status(400).render('form', { title: 'Rehberi düzenle', g, errors, editing: guide });
+  if (isBot(req.body)) errors.push('Gönderilemedi. Sayfayı yenileyip tekrar dene.');
+  if (errors.length) return res.status(400).render('form', { title: 'Rehberi düzenle', g, errors, editing: guide, trusted });
+  // Güvenilir olmayan üyenin düzenlemesi yeniden onaya düşer (onaydan sonra spam'e çevrilmesin)
+  const approved = trusted || (req.user.isAdmin && guide.user_id !== req.user.id) ? guide.approved : 0;
   await db.run(`UPDATE guides SET title = ?, category = ?, difficulty = ?, summary = ?, kit = ?, steps = ?,
-    phrases = ?, risks = ?, updated_at = datetime('now') WHERE id = ?`,
-    [g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, guide.id]);
-  res.redirect(`/rehber/${guide.slug}`);
+    phrases = ?, risks = ?, approved = ?, updated_at = datetime('now') WHERE id = ?`,
+    [g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks, approved, guide.id]);
+  res.redirect(`/rehber/${guide.slug}${approved ? '' : '?gonderildi=1'}`);
 });
 
 app.post('/rehber/:slug/sil', requireUser, async (req, res) => {
@@ -323,7 +409,7 @@ app.post('/rehber/:slug/sil', requireUser, async (req, res) => {
 
 app.post('/rehber/:slug/larpladim', async (req, res) => {
   const guide = await findGuide(req.params.slug);
-  if (!guide || guide.hidden || guide.banned) return notFound(req, res);
+  if (!guide || guide.hidden || guide.banned || !guide.approved) return notFound(req, res);
   const [table, col, who] = req.user ? ['likes', 'user_id', req.user.id] : ['anon_likes', 'visitor', req.visitor];
   const del = await db.run(`DELETE FROM ${table} WHERE ${col} = ? AND guide_id = ?`, [who, guide.id]);
   if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id) VALUES (?, ?)`, [who, guide.id]);
@@ -332,7 +418,7 @@ app.post('/rehber/:slug/larpladim', async (req, res) => {
 
 app.post('/rehber/:slug/bildir', requireUser, async (req, res) => {
   const guide = await findGuide(req.params.slug);
-  if (!guide || guide.hidden || guide.banned) return notFound(req, res);
+  if (!guide || guide.hidden || guide.banned || !guide.approved) return notFound(req, res);
   if (guide.user_id === req.user.id) return res.redirect(`/rehber/${guide.slug}`);
   const reason = Object.hasOwn(REPORT_REASONS, req.body.reason) ? req.body.reason : 'diger';
   const note = String(req.body.note || '').trim().slice(0, 500);
@@ -340,9 +426,11 @@ app.post('/rehber/:slug/bildir', requireUser, async (req, res) => {
   await db.run('INSERT OR IGNORE INTO reports (guide_id, user_id, reason, note) VALUES (?, ?, ?, ?)',
     [guide.id, req.user.id, reason, note]);
   const { n } = await db.get('SELECT COUNT(*) AS n FROM reports WHERE guide_id = ? AND resolved_at IS NULL', [guide.id]);
-  if (n >= AUTO_HIDE_AT) await db.run('UPDATE guides SET hidden = 1 WHERE id = ?', [guide.id]);
+  // Yönetici ve editör rehberleri bildirimle kendiliğinden gizlenmez (toplu sahte bildirime karşı)
+  const autoHide = n >= AUTO_HIDE_AT && !isAdminName(guide.username) && guide.username !== 'editor';
+  if (autoHide) await db.run('UPDATE guides SET hidden = 1 WHERE id = ?', [guide.id]);
 
-  res.redirect(n >= AUTO_HIDE_AT ? '/?bildirildi=1' : `/rehber/${guide.slug}?bildirildi=1#bildir`);
+  res.redirect(autoHide ? '/?bildirildi=1' : `/rehber/${guide.slug}?bildirildi=1#bildir`);
 });
 
 // Sosyal katman yok: herkese açık profil sayfası tutmuyoruz.
@@ -373,7 +461,12 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   const totals = await db.get(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM guides) AS guides,
     (SELECT COUNT(*) FROM likes) + (SELECT COUNT(*) FROM anon_likes) AS likes`);
 
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, isAdminName });
+  const pending = await db.all(`SELECT g.id, g.slug, g.title, g.summary, g.category, g.created_at, g.user_id, u.username,
+      (SELECT COUNT(*) FROM guides x WHERE x.user_id = g.user_id AND x.approved = 1) AS author_approved
+    FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE g.approved = 0 AND u.banned = 0 ORDER BY g.created_at ASC LIMIT 100`);
+
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, isAdminName, TRUST_AFTER });
 });
 
 app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
@@ -381,6 +474,9 @@ app.post('/yonetim/rehber/:id/:action', requireAdmin, async (req, res) => {
   const guide = await db.get('SELECT id FROM guides WHERE id = ?', [id]);
   if (!guide) return res.redirect('/yonetim');
   switch (req.params.action) {
+    case 'onayla':
+      await db.run('UPDATE guides SET approved = 1 WHERE id = ?', [id]);
+      break;
     case 'temiz': // bildirimleri kapat, yayına al
       await db.run(`UPDATE reports SET resolved_at = datetime('now') WHERE guide_id = ? AND resolved_at IS NULL`, [id]);
       await db.run('UPDATE guides SET hidden = 0 WHERE id = ?', [id]);
@@ -407,6 +503,8 @@ app.post('/yonetim/kullanici/:id/:action', requireAdmin, async (req, res) => {
     await db.run('DELETE FROM sessions WHERE user_id = ?', [target.id]);
     await db.run(`UPDATE reports SET resolved_at = datetime('now')
       WHERE resolved_at IS NULL AND guide_id IN (SELECT id FROM guides WHERE user_id = ?)`, [target.id]);
+    // Onay bekleyen rehberleri kuyruktan temizlensin
+    await db.run('DELETE FROM guides WHERE user_id = ? AND approved = 0', [target.id]);
   } else if (req.params.action === 'kaldir') {
     await db.run('UPDATE users SET banned = 0 WHERE id = ?', [target.id]);
   } else {
@@ -429,17 +527,38 @@ app.get('/kayit', (req, res) => {
   res.render('auth', { title: 'Üye ol', mode: 'kayit', error: null, username: '', sonra: safeNext(req.query.sonra) });
 });
 
+// Kullanıcı adı korumalı mı? (yönetici adları ve "admin", "editor" gibi resmi görünen adlar)
+const isReserved = (name) => {
+  const n = String(name).toLowerCase();
+  return RESERVED.has(n) || RESERVED.has(n.replace(/[._\d]/g, '')) || isAdminName(n);
+};
+
 app.post('/kayit', async (req, res) => {
   if (!SIGNUPS_OPEN) return signupsClosed(req, res);
+  if (req.user) return res.redirect('/');
   const username = String(req.body.username || '').trim();
   const password = String(req.body.password || '');
   const sonra = safeNext(req.body.sonra);
   const fail = (error) => res.status(400).render('auth', { title: 'Üye ol', mode: 'kayit', error, username, sonra });
 
-  if (tooManyAttempts(req.ip)) return fail('Çok fazla deneme yaptın. Biraz sonra tekrar dene.');
+  if (isBot(req.body)) return fail('Kayıt tamamlanamadı. Sayfayı yenileyip tekrar dene.');
   if (!/^[a-zA-Z0-9_.]{3,24}$/.test(username)) return fail('Kullanıcı adı 3-24 karakter olmalı; harf, rakam, nokta ve alt çizgi kullanabilirsin.');
   if (password.length < 8) return fail('Şifre en az 8 karakter olmalı.');
+  if (password.toLowerCase() === username.toLowerCase()) return fail('Şifre kullanıcı adınla aynı olamaz.');
+  if (req.body.kabul !== '1') return fail('Üye olmak için kuralları ve gizlilik metnini kabul etmelisin.');
   if (await db.get('SELECT 1 FROM users WHERE username = ?', [username])) return fail('Bu kullanıcı adı alınmış.');
+
+  // Yönetici adları sadece yönetici koduyla, diğer korumalı adlar hiç alınamaz
+  if (isReserved(username)) {
+    const code = String(req.body.admin_code || '');
+    const ok = isAdminName(username) && ADMIN_SIGNUP_CODE.length >= 8 && code.length === ADMIN_SIGNUP_CODE.length &&
+      crypto.timingSafeEqual(Buffer.from(code), Buffer.from(ADMIN_SIGNUP_CODE));
+    if (!ok) return fail('Bu kullanıcı adı alınamaz. Başka bir ad dene.');
+  }
+  if (!(await turnstileOk(req))) return fail('Robot olmadığını doğrulayamadık. Kutucuğu işaretleyip tekrar dene.');
+  if (await overLimit(`signup:${ipKey(req)}`, SIGNUPS_PER_IP_DAY, 864e5)) {
+    return fail('Bu bağlantıdan bugün çok fazla hesap açıldı. Yarın tekrar dene.');
+  }
 
   const user = await db.get('INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id',
     [username, hashPassword(password)]);
@@ -458,9 +577,18 @@ app.post('/giris', async (req, res) => {
   const sonra = safeNext(req.body.sonra);
   const fail = (error) => res.status(400).render('auth', { title: 'Giriş yap', mode: 'giris', error, username, sonra });
 
-  if (tooManyAttempts(req.ip)) return fail('Çok fazla deneme yaptın. Biraz sonra tekrar dene.');
+  const window = 15 * 60e3;
+  if (await countHits(`login:${ipKey(req)}`, window) >= LOGIN_PER_IP ||
+      await countHits(`login-user:${username.toLowerCase()}`, window) >= LOGIN_PER_USER) {
+    return fail('Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene.');
+  }
   const user = await db.get('SELECT id, password_hash, banned FROM users WHERE username = ?', [username]);
-  if (!user || !verifyPassword(password, user.password_hash)) return fail('Kullanıcı adı ya da şifre yanlış.');
+  if (!user || !verifyPassword(password, user.password_hash)) {
+    // Sadece hatalı denemeler sayılır
+    await overLimit(`login:${ipKey(req)}`, LOGIN_PER_IP, window);
+    await overLimit(`login-user:${username.toLowerCase()}`, LOGIN_PER_USER, window);
+    return fail('Kullanıcı adı ya da şifre yanlış.');
+  }
   if (user.banned) return fail('Bu hesap kurallara aykırı içerik nedeniyle askıya alındı.');
   await startSession(res, user.id);
   res.redirect(sonra);
@@ -472,19 +600,62 @@ app.post('/cikis', async (req, res) => {
   res.redirect('/');
 });
 
+// ---------- Hesap ayarları ----------
+app.get('/hesap', requireUser, (req, res) => {
+  res.render('account', { title: 'Hesap ayarları', msg: req.query.ok === '1' ? 'Şifren değişti.' : null, error: null });
+});
+
+app.post('/hesap/sifre', requireUser, async (req, res) => {
+  const fail = (error) => res.status(400).render('account', { title: 'Hesap ayarları', msg: null, error });
+  const current = String(req.body.current || '');
+  const next = String(req.body.password || '');
+  const user = await db.get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+  if (await countHits(`pw:${req.user.id}`, 15 * 60e3) >= LOGIN_PER_USER) return fail('Çok fazla deneme. 15 dakika sonra tekrar dene.');
+  if (!verifyPassword(current, user.password_hash)) {
+    await overLimit(`pw:${req.user.id}`, LOGIN_PER_USER, 15 * 60e3);
+    return fail('Mevcut şifren yanlış.');
+  }
+  if (next.length < 8) return fail('Yeni şifre en az 8 karakter olmalı.');
+  await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hashPassword(next), req.user.id]);
+  // Diğer cihazlardaki oturumları kapat, bu cihazda yeni oturum aç
+  await db.run('DELETE FROM sessions WHERE user_id = ?', [req.user.id]);
+  await startSession(res, req.user.id);
+  res.redirect('/hesap?ok=1');
+});
+
+app.post('/hesap/sil', requireUser, async (req, res) => {
+  const user = await db.get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+  if (req.body.onay !== 'SİL' || !verifyPassword(String(req.body.password || ''), user.password_hash)) {
+    return res.status(400).render('account', { title: 'Hesap ayarları', msg: null,
+      error: 'Hesabı silmek için şifreni ve onay kutusuna büyük harflerle SİL yazmalısın.' });
+  }
+  const id = req.user.id;
+  for (const g of await db.all('SELECT id FROM guides WHERE user_id = ?', [id])) await deleteGuide(g.id);
+  await db.run('DELETE FROM likes WHERE user_id = ?', [id]);
+  await db.run('DELETE FROM reports WHERE user_id = ?', [id]);
+  await db.run('DELETE FROM sessions WHERE user_id = ?', [id]);
+  await db.run('DELETE FROM users WHERE id = ?', [id]);
+  res.clearCookie('sid', cookieOpts());
+  res.render('error', { title: 'Hesabın silindi', message: 'Hesabın ve yazdığın tüm rehberler kalıcı olarak silindi. Sahne seni özleyecek.', user: null });
+});
+
+app.get('/kurallar', (req, res) => res.render('rules', {
+  title: 'Kurallar ve gizlilik', description: 'How to LARP topluluk kuralları ve gizlilik metni.',
+}));
+
 app.get('/hakkinda', (req, res) => res.render('about', {
   title: 'Larp nedir?', description: 'Larp ne demek? İnternet argosunda olmadığın biri gibi davranmak. How to LARP sözlüğü ve kuralları.',
 }));
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nDisallow: /yonetim\nDisallow: /yaz\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nDisallow: /yonetim\nDisallow: /yaz\nDisallow: /hesap\nDisallow: /rehberlerim\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
 });
 
 app.get('/sitemap.xml', async (req, res) => {
   const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
   const base = res.locals.baseUrl;
-  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`,
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`,
     ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
 });

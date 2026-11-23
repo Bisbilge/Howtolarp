@@ -15,7 +15,17 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
   Yöneticiler `/yonetim` panelinden bildirimleri inceler; rehberi yayında tutar, gizler, siler ya da yazarı engeller.
 - "Rastgele rol" (`/rastgele`), paylaşma butonu, repliğe dokununca kopyalama, sayfalama
 - Paylaşım önizlemesi (Open Graph görseli ve etiketleri), `sitemap.xml`, `robots.txt`
-- CSRF koruması, giriş denemesi sınırı, otomatik HTML kaçışı
+- **Spam koruması:**
+  - Yeni üyelerin ilk rehberleri yönetici onayından sonra yayına girer; 2 rehberi onaylanan üye "güvenilir" olur.
+    Güvenilir olmayan üyenin düzenlemesi yeniden onaya düşer.
+  - Rehberlerde link/web adresi yasak; üye başına günde 5 rehber, aynı anda en fazla 3 onay bekleyen rehber.
+  - Aynı bağlantıdan günde en fazla 3 hesap; hatalı giriş denemeleri IP ve kullanıcı adı başına sınırlı.
+    Sınırlar veritabanında tutulur, IP adresleri sadece özet olarak 2 gün saklanır.
+  - Formlarda bot tuzağı (gizli alan); isteğe bağlı Cloudflare Turnstile.
+  - "admin", "editor" gibi resmi görünen ve yönetici kullanıcı adları alınamaz.
+- Hesap ayarları (`/hesap`): şifre değiştirme, hesabı ve tüm içeriği silme
+- Kurallar ve gizlilik sayfası (`/kurallar`); kayıtta kabul onayı
+- CSRF koruması, Content-Security-Policy, otomatik HTML kaçışı
 - Açık ve karanlık tema, mobil uyumlu
 
 ## Yerelde çalıştırma
@@ -36,6 +46,9 @@ Yerelde veritabanı `data/howtolarp.db` dosyasıdır.
 | Değişken | Açıklama |
 | --- | --- |
 | `SIGNUPS_OPEN` | Üye kaydı varsayılan olarak açıktır. `0` yapılırsa geçici olarak kapanır (mevcut hesaplar `/giris`'ten girmeye devam eder). Ziyaretçiler her durumda hesapsız "Larpladım" diyebilir. |
+| `ADMIN_SIGNUP_CODE` | Yönetici adlarıyla üye olmak için gereken gizli kod (en az 8 karakter). Kayıt formundaki "Yönetici misin?" alanına girilir. Yönetici hesabı zaten açıksa gerekmez. |
+| `CONTACT_EMAIL` | Gizlilik sayfasında gösterilecek iletişim adresi (önerilir). |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | İsteğe bağlı. İkisi de girilirse kayıt formunda Cloudflare "robot değilim" kutusu çıkar. |
 | `ADMIN_USERNAMES` | Yönetici kullanıcı adları, virgülle ayrılmış (ör. `ali,ayse`). Bu adlarla üye olan kişi `/yonetim` paneline girer. |
 | `TURSO_DATABASE_URL` | Canlı veritabanı adresi (`libsql://...turso.io`). Boşsa yerel dosya kullanılır. |
 | `TURSO_AUTH_TOKEN` | Turso erişim anahtarı |

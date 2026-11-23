@@ -9,12 +9,25 @@
     <form method="post" action="/<%= mode %>" class="form">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
       <input type="hidden" name="sonra" value="<%= sonra %>">
+      <div class="hp" aria-hidden="true"><label>Web sitesi <input name="website" tabindex="-1" autocomplete="off"></label></div>
       <label class="f"><span class="f-l">Kullanıcı adı</span>
         <input class="f-big" name="username" required autocomplete="username" value="<%= username %>" <%- mode === 'kayit' ? 'pattern="[a-zA-Z0-9_.]{3,24}" title="3-24 karakter: harf, rakam, nokta, alt çizgi"' : '' %>>
       </label>
       <label class="f"><span class="f-l">Şifre <% if (mode === 'kayit') { %><em>en az 8 karakter</em><% } %></span>
         <input class="f-big" name="password" type="password" required <%- mode === 'kayit' ? 'minlength="8" autocomplete="new-password"' : 'autocomplete="current-password"' %>>
       </label>
+      <% if (mode === 'kayit') { %>
+        <label class="check"><input type="checkbox" name="kabul" value="1" required>
+          <span><a href="/kurallar" target="_blank">Kuralları ve gizlilik metnini</a> okudum, kabul ediyorum.</span></label>
+        <% if (turnstileKey) { %>
+          <div class="cf-turnstile" data-sitekey="<%= turnstileKey %>" data-language="tr"></div>
+          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <% } %>
+        <details class="admin-code">
+          <summary>Yönetici misin?</summary>
+          <label class="f"><span class="f-l">Yönetici kodu</span><input name="admin_code" type="password" autocomplete="off"></label>
+        </details>
+      <% } %>
       <div class="f-actions">
         <button class="big-btn" type="submit"><%= mode === 'kayit' ? 'Üye ol →' : 'Giriş yap →' %></button>
         <% if (mode === 'kayit') { %>

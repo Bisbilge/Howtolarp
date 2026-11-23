@@ -1,0 +1,38 @@
+<%- include('partials/head') %>
+<section class="page page-form">
+  <aside class="page-side">
+    <p class="kicker">Sahne arkası · <span class="handle">@<%= user.username %></span></p>
+    <h1 class="page-h">Hesap ayarları</h1>
+    <p><a href="/rehberlerim">← Rehberlerim</a></p>
+  </aside>
+  <div class="page-main">
+    <% if (msg) { %><div class="notice-inline"><%= msg %></div><% } %>
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+    <h2 class="sub-h">Şifre değiştir</h2>
+    <form method="post" action="/hesap/sifre" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label class="f"><span class="f-l">Mevcut şifre</span>
+        <input name="current" type="password" required autocomplete="current-password">
+      </label>
+      <label class="f"><span class="f-l">Yeni şifre <em>en az 8 karakter</em></span>
+        <input name="password" type="password" required minlength="8" autocomplete="new-password">
+      </label>
+      <div class="f-actions"><button class="big-btn small" type="submit">Şifreyi değiştir</button></div>
+    </form>
+
+    <h2 class="sub-h danger-h">Hesabı sil</h2>
+    <p>Hesabın, yazdığın tüm rehberler ve beğenilerin <b>kalıcı olarak</b> silinir. Bu işlem geri alınamaz.</p>
+    <form method="post" action="/hesap/sil" class="form" onsubmit="return confirm('Hesabın ve tüm rehberlerin kalıcı olarak silinecek. Emin misin?')">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label class="f"><span class="f-l">Şifren</span>
+        <input name="password" type="password" required autocomplete="current-password">
+      </label>
+      <label class="f"><span class="f-l">Onay <em>büyük harflerle SİL yaz</em></span>
+        <input name="onay" required autocomplete="off" placeholder="SİL">
+      </label>
+      <div class="f-actions"><button class="big-btn small danger-btn" type="submit">Hesabımı sil</button></div>
+    </form>
+  </div>
+</section>
+<%- include('partials/foot') %>

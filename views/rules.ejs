@@ -1,0 +1,33 @@
+<%- include('partials/head') %>
+<section class="page page-about">
+  <aside class="page-side">
+    <h1 class="page-h">Kurallar &amp; gizlilik</h1>
+    <p class="phon">Son güncelleme: 23 Kasım 2026</p>
+  </aside>
+  <div class="page-main dict">
+    <h2 class="sub-h">Topluluk kuralları</h2>
+    <p>How to LARP bir mizah sitesidir. Rehberler <b>rolleri</b> ti'ye alır, <b>insanları</b> değil.</p>
+    <ul class="rules">
+      <li>Gerçek, isimle ya da tanınabilir şekilde belirtilen kişileri hedef alma.</li>
+      <li>Nefret söylemi, taciz, ayrımcılık ve cinsel içerik yasaktır.</li>
+      <li>Dolandırıcılık, sahte belge, kimlik taklidi ya da birine zarar verecek talimat yazma. Buradaki "larp" sosyal bir şakadır, insanları kandırma kılavuzu değil.</li>
+      <li>Reklam, spam ve link paylaşımı yasaktır.</li>
+      <li>Başkasının yazısını kopyalayıp kendi rehberin gibi yayınlama.</li>
+    </ul>
+    <p>Yeni üyelerin ilk rehberleri yöneticiler onayladıktan sonra yayına girer. Kurallara aykırı rehberler uyarı yapılmadan kaldırılabilir; kuralları tekrar tekrar ihlal eden hesaplar engellenir. Bir rehberi sorunlu buluyorsan altındaki <b>"Bu rehberi bildir"</b> bağlantısını kullan.</p>
+    <p>Yazdığın rehberin sorumluluğu sana aittir. Rehberini yayınlayarak, metnin How to LARP'ta gösterilmesine izin vermiş olursun. Hesabını sildiğinde rehberlerin de silinir.</p>
+
+    <h2 class="sub-h">Gizlilik</h2>
+    <p>Mümkün olduğunca az bilgi topluyoruz. E-posta adresi, gerçek ad ya da telefon numarası istemiyoruz.</p>
+    <dl class="parts">
+      <div><dt>1</dt><dd><b>Hesap bilgileri:</b> kullanıcı adın ve şifren. Şifren tek yönlü şifrelenerek (scrypt) saklanır; kimse göremez.</dd></div>
+      <div><dt>2</dt><dd><b>İçerik:</b> yazdığın rehberler, beğenilerin ve gönderdiğin bildirimler.</dd></div>
+      <div><dt>3</dt><dd><b>Çerezler:</b> oturumunu açık tutmak (<code>sid</code>), formları sahte isteklerden korumak (<code>csrf</code>) ve hesapsız beğenileri saymak (<code>vid</code>) için. Reklam ya da takip çerezi kullanmıyoruz.</dd></div>
+      <div><dt>4</dt><dd><b>Kötüye kullanım önleme:</b> spam ve şifre tahminini engellemek için IP adresinin tek yönlü özeti en fazla 2 gün tutulur, sonra silinir.</dd></div>
+    </dl>
+    <p>Site Vercel'de barındırılıyor, veritabanı Turso'da tutuluyor; bu hizmetler verileri yurt dışındaki sunucularda işleyebilir. Verilerini satmıyor, kimseyle paylaşmıyoruz.</p>
+    <p><b>Haklarına gelince:</b> İstediğin zaman <a href="/hesap">Hesap ayarları</a> sayfasından şifreni değiştirebilir ya da hesabını ve tüm içeriğini kalıcı olarak silebilirsin.
+      <% if (contactEmail) { %>Diğer talep ve soruların için: <a href="mailto:<%= contactEmail %>"><%= contactEmail %></a><% } %></p>
+  </div>
+</section>
+<%- include('partials/foot') %>

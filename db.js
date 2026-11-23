@@ -84,6 +84,9 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
   // Hangi örnek rehberlerin eklendiğini tutar: silinen örnekler geri gelmez
   `CREATE TABLE IF NOT EXISTS seeded (title TEXT PRIMARY KEY)`,
+  // Kötüye kullanım sınırları için olay kayıtları (anahtar: işlem + kişi/IP özeti)
+  `CREATE TABLE IF NOT EXISTS hits (key TEXT NOT NULL, at INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at)`,
   // Hesabı olmayan ziyaretçilerin beğenileri (tarayıcı çereziyle)
   `CREATE TABLE IF NOT EXISTS anon_likes (
     visitor  TEXT NOT NULL,
@@ -96,6 +99,8 @@ const SCHEMA = [
 const MIGRATIONS = [
   ['users', 'banned', 'INTEGER NOT NULL DEFAULT 0'],
   ['guides', 'hidden', 'INTEGER NOT NULL DEFAULT 0'],
+  // Onay kuyruğu: yeni üyelerin rehberleri yönetici onayına kadar 0 kalır
+  ['guides', 'approved', 'INTEGER NOT NULL DEFAULT 1'],
   ['seeded', 'guide_id', 'INTEGER'],
   ['seeded', 'hash', 'TEXT'],
 ];

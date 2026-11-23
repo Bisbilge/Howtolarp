@@ -10,9 +10,9 @@
   <dl class="stats">
     <div><dt>Rehber</dt><dd><%= guides.length %></dd></div>
     <div><dt>Larplanma</dt><dd><%= guides.reduce((n, g) => n + Number(g.like_count), 0) %></dd></div>
-    <div><dt>Yayında</dt><dd><%= guides.filter(g => !g.hidden).length %></dd></div>
+    <div><dt>Yayında</dt><dd><%= guides.filter(g => !g.hidden && g.approved).length %></dd></div>
   </dl>
-  <p class="mine-note">Bu sayfayı sadece sen görürsün. Rehberlerinde adın görünür ama herkese açık bir profilin yok.</p>
+  <p class="mine-note">Bu sayfayı sadece sen görürsün. Rehberlerinde adın görünür ama herkese açık bir profilin yok. · <a href="/hesap">Hesap ayarları</a></p>
 
   <% if (guides.length) { %>
     <ul class="mine-list">
@@ -23,6 +23,7 @@
             <p class="mine-meta">
               <span class="row-cat"><%= g.category %></span>
               <%= formatDate(g.created_at) %> · <%= g.like_count %> larpladı
+              <% if (!g.approved) { %> · <span class="flag flag-wait">Onay bekliyor</span><% } %>
               <% if (g.hidden) { %> · <span class="flag">İnceleniyor</span><% } %>
             </p>
           </div>

@@ -3,10 +3,37 @@
   <p class="kicker">Sahne arkası</p>
   <h1 class="page-h">Yönetim</h1>
   <dl class="stats">
+    <div><dt>Onay bekleyen</dt><dd><%= pending.length %></dd></div>
     <div><dt>Açık bildirim</dt><dd><%= reported.length %></dd></div>
     <div><dt>Rehber</dt><dd><%= totals.guides %></dd></div>
-    <div><dt>Üye</dt><dd><%= totals.users %></dd></div>
+
   </dl>
+
+  <h2 class="adm-h">Onay bekleyenler</h2>
+  <% if (!pending.length) { %>
+    <p class="adm-empty">Onay bekleyen rehber yok.</p>
+  <% } %>
+  <% pending.forEach(g => { %>
+    <article class="case case-wait">
+      <header class="case-head">
+        <div>
+          <a class="case-title" href="/rehber/<%= g.slug %>"><%= g.title %></a>
+          <p class="case-meta">
+            <span class="handle">@<%= g.username %></span> · <%= g.category %> · <%= formatDate(g.created_at) %>
+            · onaylı rehberi: <b><%= g.author_approved %>/<%= TRUST_AFTER %></b>
+          </p>
+        </div>
+        <div class="case-actions">
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/onayla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="ok">Onayla</button></form>
+          <form method="post" action="/yonetim/rehber/<%= g.id %>/sil" class="inline" onsubmit="return confirm('Rehber reddedilip silinsin mi?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Reddet</button></form>
+          <% if (!isAdminName(g.username)) { %>
+            <form method="post" action="/yonetim/kullanici/<%= g.user_id %>/engelle" class="inline" onsubmit="return confirm('@<%= g.username %> spam diye engellensin mi? Bekleyen tüm rehberleri silinir.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Spam, engelle</button></form>
+          <% } %>
+        </div>
+      </header>
+      <p class="case-sum"><%= g.summary %></p>
+    </article>
+  <% }) %>
 
   <h2 class="adm-h">Bildirilen rehberler</h2>
   <% if (!reported.length) { %>

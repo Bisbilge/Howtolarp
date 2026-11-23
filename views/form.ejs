@@ -4,6 +4,10 @@
     <h1 class="page-h"><%= editing ? 'Rolü revize et' : 'Yeni rol yaz' %></h1>
     <p>Her satır ayrı bir madde olur. Kısa yaz, net yaz: okuyan kişi bu metinle sahneye çıkacak.</p>
     <p class="tip">İpucu: Başlığı "<b>X Nasıl Larplanır?</b>" diye bitirirsen rol kartında sadece "X" görünür.</p>
+    <% if (!trusted) { %>
+      <p class="tip tip-pink"><b>Onay:</b> İlk rehberlerin yöneticiler onayladıktan sonra yayına girer. Birkaç rehberin onaylanınca bu adım kalkar.</p>
+    <% } %>
+    <p class="tip">Link ve web adresi paylaşılamaz. Gerçek kişileri hedef alma. <a href="/kurallar">Kurallar</a></p>
   </aside>
   <div class="page-main">
     <% if (errors.length) { %>
@@ -11,6 +15,7 @@
     <% } %>
     <form method="post" action="<%= editing ? '/rehber/' + editing.slug + '/duzenle' : '/yaz' %>" class="form">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="hp" aria-hidden="true"><label>Web sitesi <input name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <label class="f"><span class="f-l">01 / Başlık</span>
         <input class="f-big" name="title" required minlength="5" maxlength="120" value="<%= g.title || '' %>" placeholder="Zeki Biri Gibi Nasıl Larplanır?">
@@ -51,7 +56,7 @@
       </label>
 
       <div class="f-actions">
-        <button class="big-btn" type="submit"><%= editing ? 'Kaydet →' : 'Yayınla →' %></button>
+        <button class="big-btn" type="submit"><%= editing ? 'Kaydet →' : (trusted ? 'Yayınla →' : 'Onaya gönder →') %></button>
         <a href="<%= editing ? '/rehber/' + editing.slug : '/' %>">Vazgeç</a>
       </div>
     </form>

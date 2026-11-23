@@ -1,4 +1,11 @@
 <%- include('partials/head') %>
+<% if (!guide.approved && !guide.banned) { %>
+  <div class="notice" role="status">
+    <% if (justSubmitted && isOwner) { %><b>Rehberin alındı!</b> Yöneticiler onaylayınca yayına girecek. Bu sırada sadece sen görebilirsin.
+    <% } else if (isOwner && !user.isAdmin) { %><b>Onay bekliyor.</b> Yöneticiler onaylayınca yayına girecek.
+    <% } else { %><b>Onay bekleyen rehber.</b> Henüz yayında değil.<% } %>
+  </div>
+<% } %>
 <% if (guide.hidden || guide.banned) { %>
   <div class="notice notice-warn" role="status">
     <% if (guide.banned) { %><b>Yazarı engelli.</b> Bu rehber kimseye görünmüyor.
@@ -10,6 +17,9 @@
   <div class="adminbar">
     <span><b>Yönetici</b> · <%= guideReports %> açık bildirim</span>
     <div>
+      <% if (!guide.approved) { %>
+        <form method="post" action="/yonetim/rehber/<%= guide.id %>/onayla" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button class="ok">Onayla</button></form>
+      <% } %>
       <% if (guide.hidden) { %>
         <form method="post" action="/yonetim/rehber/<%= guide.id %>/temiz" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/rehber/<%= guide.slug %>"><button>Yayına al</button></form>
       <% } else { %>
@@ -54,7 +64,7 @@
           </dl>
         </div>
         <div class="barcode" aria-hidden="true"></div>
-        <div class="stamp" aria-hidden="true">Onaylı<br>larp</div>
+        <div class="stamp <%= guide.approved ? '' : 'stamp-wait' %>" aria-hidden="true"><%- guide.approved ? 'Onaylı<br>larp' : 'Onay<br>bekliyor' %></div>
       </div>
     </div>
   </header>
@@ -97,7 +107,7 @@
       <p class="larp-count"><%= guide.like_count %></p>
       <p class="larp-label">kişi bu rehberle larpladı</p>
     </div>
-    <% if (!guide.hidden && !guide.banned) { %>
+    <% if (!guide.hidden && !guide.banned && guide.approved) { %>
       <form method="post" action="/rehber/<%= guide.slug %>/larpladim">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <button class="big-btn <%= liked ? 'is-on' : '' %>" type="submit"><%= liked ? '✓ Larpladım' : 'Ben de larpladım' %></button>
@@ -105,7 +115,7 @@
     <% } %>
   </div>
 
-  <% if (!isOwner && !guide.hidden && (user || signupsOpen)) { %>
+  <% if (!isOwner && !guide.hidden && guide.approved && (user || signupsOpen)) { %>
   <section class="report" id="bildir">
     <% if (justReported || reported) { %>
       <p class="report-done">✕ Bu rehberi bildirdin. Yöneticiler inceleyecek, teşekkürler.</p>
