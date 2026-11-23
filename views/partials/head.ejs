@@ -47,6 +47,7 @@
 <header class="masthead">
   <a class="wordmark" href="/" aria-label="How to LARP ana sayfa">HOW TO <span>LARP</span></a>
   <nav class="nav">
+    <a href="/test" class="<%= path.startsWith('/test') ? 'on' : '' %>">Hangi larpsın?</a>
     <a href="/rastgele" title="Rastgele bir rehber aç">Rastgele</a>
     <a href="/hakkinda" class="<%= path === '/hakkinda' ? 'on' : '' %>">Larp ne?</a>
     <% if (user) { %>

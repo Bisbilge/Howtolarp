@@ -35,7 +35,7 @@ function personaSize(text) {
   return 80;
 }
 
-function tree({ persona, category, difficulty, number, phrase }) {
+function tree({ persona, category, difficulty, number, phrase, kicker, badge }) {
   const size = personaSize(persona);
   return el('div', { width: 1200, height: 630, flexDirection: 'column', background: C.bg, color: C.ink, position: 'relative' },
     // Üst bant
@@ -46,7 +46,7 @@ function tree({ persona, category, difficulty, number, phrase }) {
       el('div', { fontFamily: 'Mono', fontSize: 20, color: C.light, letterSpacing: 3 }, 'HOWTOLARP.ORG')),
     // Gövde
     el('div', { flexDirection: 'column', padding: '34px 48px 0', flexGrow: 1 },
-      el('div', { fontFamily: 'Mono', fontSize: 20, color: C.pink, letterSpacing: 3 }, up(`${category} · Zorluk ${difficulty}/5`)),
+      el('div', { fontFamily: 'Mono', fontSize: 20, color: C.pink, letterSpacing: 3 }, up(kicker || `${category} · Zorluk ${difficulty}/5`)),
       el('div', { fontFamily: 'Anton', fontSize: size, lineHeight: 1.12, marginTop: 14, maxWidth: 880, maxHeight: size * 2.3, overflow: 'hidden', flexWrap: 'wrap' }, up(persona)),
       el('div', { alignItems: 'center', marginTop: 10 },
         el('div', { position: 'relative', fontFamily: 'Anton', fontSize: 58, color: C.mute },
@@ -55,12 +55,12 @@ function tree({ persona, category, difficulty, number, phrase }) {
         el('div', { fontFamily: 'Anton', fontSize: 58, background: C.lime, color: C.ink, padding: '6px 16px 0', marginLeft: 18 }, 'ÖYLE GÖRÜN.')),
       phrase
         ? el('div', { marginTop: 'auto', marginBottom: 40, alignSelf: 'flex-start', maxWidth: 900, background: C.ink, color: C.light,
-            fontFamily: 'Anton', fontSize: 34, padding: '12px 20px 10px' }, `“${up(phrase)}”`)
+            fontFamily: 'Anton', fontSize: 34, padding: '12px 20px 10px' }, kicker ? up(phrase) : `“${up(phrase)}”`)
         : el('div', {})),
     // Numara rozeti
     el('div', { position: 'absolute', right: 52, top: 104, width: 168, height: 168, borderRadius: 84, background: C.pink,
       alignItems: 'center', justifyContent: 'center', transform: 'rotate(10deg)' },
-      el('div', { fontFamily: 'Anton', fontSize: 54, color: C.ink }, `#${String(number).padStart(3, '0')}`)));
+      el('div', { fontFamily: 'Anton', fontSize: 54, color: C.ink }, badge || `#${String(number).padStart(3, '0')}`)));
 }
 
 // Aynı sunucu örneğinde tekrar üretmemek için küçük bellek önbelleği

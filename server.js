@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const express = require('express');
 const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = require('./db');
 const { renderGuideImage } = require('./og');
+const quiz = require('./quiz');
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -114,6 +115,20 @@ app.get('/og/rehber/:file', async (req, res) => {
     res.send(png);
   } catch (err) {
     console.error('og görseli üretilemedi', err);
+    res.redirect(302, '/og.png');
+  }
+});
+app.get('/og/test/:file', async (req, res) => {
+  const key = String(req.params.file).replace(/\.png$/, '');
+  const r = quiz.RESULTS[key];
+  if (!r) return res.redirect(302, '/og.png');
+  try {
+    const png = await renderGuideImage({ persona: r.name, kicker: 'Hangi larpsın? Test sonucu', badge: 'TEST', phrase: 'Sen hangisisin? howtolarp.org/test' }, `test:${key}:v1`);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400');
+    res.send(png);
+  } catch (err) {
+    console.error('test görseli üretilemedi', err);
     res.redirect(302, '/og.png');
   }
 });
@@ -845,6 +860,35 @@ app.get('/kurallar', (req, res) => res.render('rules', {
   title: 'Kurallar ve gizlilik', description: 'How to LARP topluluk kuralları ve gizlilik metni.',
 }));
 
+// ---------- "Hangi larpsın?" testi ----------
+app.get('/test', (req, res) => res.render('test', {
+  title: 'Hangi larpsın?', description: '6 soruda hangi rolü larpladığını bul. Sonucunu paylaş, arkadaşların da çözsün.',
+  questions: quiz.QUESTIONS,
+}));
+
+app.get('/test/sonuc', (req, res) => {
+  const answers = quiz.QUESTIONS.map((_, i) => Number(req.query[`s${i + 1}`]));
+  if (answers.some((a) => !(a >= 0 && a <= 3))) return res.redirect('/test');
+  res.redirect(`/test/sonuc/${quiz.score(answers)}`);
+});
+
+app.get('/test/sonuc/:key', async (req, res) => {
+  const r = quiz.RESULTS[req.params.key];
+  if (!r) return notFound(req, res);
+  const placeholders = r.titles.map(() => '?').join(', ');
+  const guide = await db.get(`SELECT g.slug, g.title FROM guides g JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} AND g.title IN (${placeholders}) LIMIT 1`, r.titles);
+  const url = `${res.locals.baseUrl}/test/sonuc/${req.params.key}`;
+  const shareText = `"Hangi larpsın?" testinde ${r.name} çıktım 😅 Sen hangisisin?`;
+  res.render('test-result', {
+    title: `${r.name} larpçısısın`, description: r.line, result: r, key: req.params.key, guide,
+    ogImage: `${res.locals.baseUrl}/og/test/${req.params.key}.png`,
+    tweetUrl: tweetIntent(`${shareText}\n\n${url}`),
+    waUrl: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${url}`)}`,
+    shareUrl: url,
+  });
+});
+
 app.get('/hakkinda', (req, res) => res.render('about', {
   title: 'Larp nedir?', description: 'Larp ne demek? İnternet argosunda olmadığın biri gibi davranmak. How to LARP sözlüğü ve kuralları.',
 }));
@@ -857,7 +901,7 @@ app.get('/sitemap.xml', async (req, res) => {
   const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
   const base = res.locals.baseUrl;
-  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`,
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/hakkinda</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`,
     ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);
 });

@@ -1,0 +1,25 @@
+<%- include('partials/head') %>
+<section class="quiz">
+  <header class="quiz-head">
+    <p class="kicker">6 soru · 1 dakika</p>
+    <h1 class="page-h page-h-xl">Hangi <span class="hl-mark">larpsın?</span></h1>
+    <p class="lede">Dürüst cevap ver. Ya da vermeyi larpla, fark etmez.</p>
+  </header>
+  <form class="quiz-form" method="get" action="/test/sonuc">
+    <% questions.forEach((q, i) => { %>
+      <fieldset class="quiz-q">
+        <legend><span class="quiz-no"><%= i + 1 %></span> <%= q.q %></legend>
+        <div class="quiz-opts">
+          <% q.a.forEach((a, j) => { %>
+            <label class="quiz-opt">
+              <input type="radio" name="s<%= i + 1 %>" value="<%= j %>" <%= j === 0 ? 'required' : '' %>>
+              <span><%= a[0] %></span>
+            </label>
+          <% }) %>
+        </div>
+      </fieldset>
+    <% }) %>
+    <div class="f-actions"><button class="big-btn" type="submit">Sonucu gör →</button></div>
+  </form>
+</section>
+<%- include('partials/foot') %>
