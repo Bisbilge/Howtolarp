@@ -87,3 +87,9 @@ vercel.json      Vercel yönlendirme ayarları
 views/           EJS şablonları
 public/          CSS ve favicon
 ```
+
+## Yayın düzeni
+
+- Canlı site `main` dalından yayınlanır (Vercel → Settings → Environments → Production → Branch Tracking: `main`).
+- `main`'e gönderilen her değişiklik birkaç dakika içinde canlıya çıkar.
+- Bir şey bozulursa: Vercel → Deployments → sorunsuz önceki yükleme → ⋯ → **Promote to Production** (anında geri alma).
