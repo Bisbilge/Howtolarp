@@ -1,0 +1,79 @@
+<%- include('partials/head') %>
+<% const P = s.P; const link = (o) => { const q = Object.assign({ donem, format }, o); return '/yonetim/gorsel/istatistik?donem=' + q.donem + '&format=' + q.format; }; %>
+<section class="ig-page">
+  <div class="ig-controls">
+    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a> · <a href="/yonetim/gorsel/enler">En çoklar</a></p>
+    <h1 class="page-h">Larp raporu</h1>
+    <p class="ig-intro">Sitedeki gerçek sayılardan istatistik görseli. Hepsi <a href="/istatistik?donem=<%= donem %>">/istatistik</a> sayfasında da var.</p>
+    <div class="form ig-form">
+      <div class="f">
+        <span class="f-l">Dönem</span>
+        <div class="seg">
+          <% Object.entries(PERIODS).forEach(([k, p]) => { %>
+            <a class="<%= donem === k ? 'on' : '' %>" href="<%= link({ donem: k }) %>"><%= p.label %></a>
+          <% }) %>
+        </div>
+      </div>
+      <div class="f">
+        <span class="f-l">Boyut</span>
+        <div class="seg">
+          <a class="<%= format === 'post' ? 'on' : '' %>" href="<%= link({ format: 'post' }) %>">Instagram gönderi</a>
+          <a class="<%= format === 'story' ? 'on' : '' %>" href="<%= link({ format: 'story' }) %>">Instagram hikaye</a>
+          <a class="<%= format === 'x' ? 'on' : '' %>" href="<%= link({ format: 'x' }) %>"><span lang="en">Twitter</span> / X</a>
+        </div>
+      </div>
+    </div>
+    <p class="ig-hint">Veri az olan istatistikler görselde çıkmaz. Şehir, larp saati ve test sonuçları bu özellik eklendiğinden beri tutuluyor; ilk günlerde az satır görmen normal.</p>
+
+    <% if (s.larps) { %>
+      <div class="f-actions ig-actions">
+        <% if (format === 'x') { %>
+          <a class="big-btn" href="<%= tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
+        <% } else { %>
+          <button class="big-btn" type="button" id="ig-share" hidden>Instagram'da paylaş ↗</button>
+        <% } %>
+        <button class="<%= format === 'x' ? 'ghost-btn' : 'big-btn' %>" type="button" id="ig-download">PNG indir ↓</button>
+      </div>
+      <p class="ig-hint" id="ig-share-hint" hidden>Görsel paylaşım menüsünde açılır, açıklama panoya kopyalanır.</p>
+      <p class="ig-caption-h f-l"><%= format === 'x' ? 'Önerilen tweet' : 'Önerilen açıklama' %></p>
+      <textarea class="ig-caption" id="ig-caption" rows="9" readonly><%= text %></textarea>
+      <button class="ghost-btn" type="button" id="ig-copy">Metni kopyala</button>
+    <% } %>
+  </div>
+
+  <% if (!s.larps) { %>
+    <div class="ig-empty">
+      <p class="page-h">Henüz kimse larplamamış.</p>
+      <p><%= P.label %> içinde "Ben de larpladım"a basan olmadı. <a href="<%= link({ donem: 'tum' }) %>">Tüm zamanlara bak →</a></p>
+    </div>
+  <% } else { %>
+  <div class="ig-stage" data-format="<%= format %>">
+    <div class="ig-scale">
+      <div class="ig ig-<%= format %> ig-report" id="ig-card" data-file="howtolarp-rapor-<%= donem %>-<%= format %>.png">
+        <div class="ig-top"><b><%= P.of %> larp raporu</b><span>📊 HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
+        <div class="ig-body">
+          <div class="ig-main">
+            <p class="ig-kicker">Larp nabzı · <%= P.label %></p>
+            <h2 class="ig-persona ig-fit">Türkiye <%= P.lower %> <mark><%= s.larps.toLocaleString('tr-TR') %></mark> kez larpladı.</h2>
+            <p class="ig-sub"><b><%= s.caught.toLocaleString('tr-TR') %> kişi</b> yakalandı · ifşa oranı %<%= s.caughtPct %></p>
+          </div>
+          <% if (rows.length) { %>
+          <ul class="ig-stats">
+            <% rows.forEach((r) => { %>
+              <li><span class="k"><%= r.label %></span><span class="v ig-fit2"><%- markEn(r.value) %></span><span class="n"><%- markEn(r.note) %></span></li>
+            <% }) %>
+          </ul>
+          <% } %>
+        </div>
+        <div class="ig-foot">
+          <div class="ig-cta">Tüm istatistikler<br><b lang="en">howtolarp.org/istatistik</b></div>
+          <div class="ig-mark">HOW TO <span>LARP</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</section>
+<script src="/vendor/html-to-image.js"></script>
+<script src="/card.js?v=1"></script>
+<%- include('partials/foot') %>

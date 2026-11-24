@@ -3,7 +3,7 @@
    const g1 = top[0]; %>
 <section class="ig-page">
   <div class="ig-controls">
-    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a> · <a href="/yonetim/gorsel">Rehber görseli</a></p>
+    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a> · <a href="/yonetim/gorsel">Rehber görseli</a> · <a href="/yonetim/gorsel/istatistik">Larp raporu</a></p>
     <h1 class="page-h">En çoklar</h1>
     <div class="form ig-form">
       <div class="f">
@@ -63,7 +63,7 @@
   <div class="ig-stage" data-format="<%= format %>">
     <div class="ig-scale">
       <% if (tur === 'liste') { %>
-      <div class="ig ig-<%= format %> ig-top5" id="ig-card">
+      <div class="ig ig-<%= format %> ig-top5" id="ig-card" data-file="howtolarp-<%= tur %>-<%= donem %>-<%= format %>.png">
         <div class="ig-top"><b><%= P.label %></b><span>EN ÇOK LARPLANANLAR ✕ EN ÇOK LARPLANANLAR ✕ EN ÇOK LARPLANANLAR</span></div>
         <div class="ig-body">
           <div class="ig-main">
@@ -82,7 +82,7 @@
         </div>
       </div>
       <% } else if (tur === 'yazar') { %>
-      <div class="ig ig-<%= format %> ig-larper ig-author" id="ig-card">
+      <div class="ig ig-<%= format %> ig-larper ig-author" id="ig-card" data-file="howtolarp-<%= tur %>-<%= donem %>-<%= format %>.png">
         <div class="ig-top"><b><%= P.of %> yazarı</b><span>✍️ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
         <div class="ig-body">
           <div class="ig-main">
@@ -103,7 +103,7 @@
         <div class="ig-sticker"><span>✍️</span></div>
       </div>
       <% } else { %>
-      <div class="ig ig-<%= format %> ig-larper" id="ig-card">
+      <div class="ig ig-<%= format %> ig-larper" id="ig-card" data-file="howtolarp-<%= tur %>-<%= donem %>-<%= format %>.png">
         <div class="ig-top"><b><%= P.of %> larperi</b><span>🏆 HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
         <div class="ig-body">
           <div class="ig-main">
@@ -126,78 +126,5 @@
   <% } %>
 </section>
 <script src="/vendor/html-to-image.js"></script>
-<script>
-  (function () {
-    var card = document.getElementById('ig-card');
-    if (!card) return;
-    var stage = document.querySelector('.ig-stage'), scaleEl = document.querySelector('.ig-scale');
-    var W = card.offsetWidth, H = card.offsetHeight;
-    function fit() {
-      var s = Math.min(1, stage.clientWidth / W);
-      scaleEl.style.transform = 'scale(' + s + ')';
-      stage.style.height = (H * s) + 'px';
-    }
-    // Taşarsa: önce başlığı, sonra sıralamadaki adları küçült
-    function fitText() {
-      var body = card.querySelector('.ig-body');
-      function over() { return body.scrollHeight > body.clientHeight + 1; }
-      function shrink(els, min) {
-        els.forEach(function (el) {
-          var size = parseFloat(getComputedStyle(el).fontSize);
-          while ((el.scrollWidth > el.clientWidth + 1 || over()) && size > min) { size -= 4; el.style.fontSize = size + 'px'; }
-        });
-      }
-      shrink(Array.prototype.slice.call(card.querySelectorAll('.ig-fit')), 56);
-      var names = Array.prototype.slice.call(card.querySelectorAll('.ig-fit2'));
-      var size = names.length ? parseFloat(getComputedStyle(names[0]).fontSize) : 0;
-      while (names.length && over() && size > 34) { size -= 3; names.forEach(function (n) { n.style.fontSize = size + 'px'; }); }
-      if (over()) { var b = card.querySelector('.ig-bubbles'); if (b) b.remove(); }
-    }
-    document.fonts.ready.then(function () { fitText(); H = card.offsetHeight; fit(); });
-    window.addEventListener('resize', fit); fit();
-
-    var fileName = 'howtolarp-<%= tur %>-<%= donem %>-<%= format %>.png', blobP = null;
-    function makeBlob() {
-      blobP = blobP || document.fonts.ready.then(function () {
-        return htmlToImage.toBlob(card, { pixelRatio: 1, width: W, height: card.offsetHeight, cacheBust: true });
-      });
-      blobP.catch(function () { blobP = null; });
-      return blobP;
-    }
-    var shareBtn = document.getElementById('ig-share');
-    if (shareBtn && navigator.canShare) {
-      try {
-        if (navigator.canShare({ files: [new File([new Blob(['x'])], 'a.png', { type: 'image/png' })] })) {
-          shareBtn.hidden = false; document.getElementById('ig-share-hint').hidden = false;
-          setTimeout(makeBlob, 800);
-        }
-      } catch (e) {}
-    }
-    if (shareBtn) shareBtn.addEventListener('click', function () {
-      var text = document.getElementById('ig-caption').value;
-      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
-      makeBlob().then(function (blob) {
-        return navigator.share({ files: [new File([blob], fileName, { type: 'image/png' })], text: text });
-      }).catch(function (e) {
-        if (e && e.name === 'AbortError') return;
-        alert('Paylaşım menüsü açılamadı. PNG indir düğmesiyle indirip paylaşabilirsin.');
-      });
-    });
-    document.getElementById('ig-download').addEventListener('click', function () {
-      var btn = this; btn.disabled = true; btn.textContent = 'Hazırlanıyor…';
-      makeBlob().then(function (blob) {
-        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; a.click();
-        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-      }).catch(function () { alert('Görsel oluşturulamadı. Sayfayı yenileyip tekrar dene.'); })
-        .finally(function () { btn.disabled = false; btn.textContent = 'PNG indir ↓'; });
-    });
-    var copyBtn = document.getElementById('ig-copy');
-    copyBtn.addEventListener('click', function () {
-      var t = document.getElementById('ig-caption').value;
-      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
-        function () { copyBtn.textContent = 'Kopyalandı ✓'; },
-        function () { document.getElementById('ig-caption').select(); });
-    });
-  })();
-</script>
+<script src="/card.js?v=1"></script>
 <%- include('partials/foot') %>

@@ -50,6 +50,7 @@
   <nav class="nav">
     <a href="/test" class="<%= path.startsWith('/test') ? 'on' : '' %>">Hangi larpsın?</a>
     <a href="/rastgele" title="Rastgele bir rehber aç">Rastgele</a>
+    <a href="/istatistik" class="<%= path === '/istatistik' ? 'on' : '' %>">İstatistik</a>
     <a href="/larp-ne-demek" class="<%= path === '/larp-ne-demek' ? 'on' : '' %>">Larp ne demek?</a>
     <% if (user) { %>
       <% if (user.isAdmin) { %>

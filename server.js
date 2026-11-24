@@ -5,6 +5,8 @@ const { db, ensureReady, ConfigError, hashPassword, verifyPassword, slugify } = 
 const { renderGuideImage } = require('./og');
 const quiz = require('./quiz');
 const { markEn } = require('./textcase');
+const makeStats = require('./stats');
+const { cityOf, quips: STAT_QUIPS, sayiEki } = makeStats;
 
 const app = express();
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -325,6 +327,7 @@ async function isTrusted(user) {
 
 // ---------- Rehber sorguları ----------
 const VISIBLE = 'g.hidden = 0 AND g.approved = 1 AND u.banned = 0';
+const larpStats = makeStats({ db, VISIBLE, persona, quizResults: quiz.RESULTS });
 const GUIDE_SELECT = `SELECT g.*, u.username, u.banned, u.role AS author_role,
   ((SELECT COUNT(*) FROM likes l WHERE l.guide_id = g.id)
     + (SELECT COUNT(*) FROM anon_likes a WHERE a.guide_id = g.id)) AS like_count,
@@ -626,7 +629,9 @@ app.post(['/rehber/:slug/larpladim', '/rehber/:slug/yakalandim'], async (req, re
   const [userTable, anonTable] = REACTIONS[req.path.endsWith('/yakalandim') ? 'yakalandim' : 'larpladim'];
   const [table, col, who] = req.user ? [userTable, 'user_id', req.user.id] : [anonTable, 'visitor', req.visitor];
   const del = await db.run(`DELETE FROM ${table} WHERE ${col} = ? AND guide_id = ?`, [who, guide.id]);
-  if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id, at) VALUES (?, ?, datetime('now'))`, [who, guide.id]);
+  if (del.rowsAffected === 0) {
+    await db.run(`INSERT INTO ${table} (${col}, guide_id, at, city) VALUES (?, ?, datetime('now'), ?)`, [who, guide.id, cityOf(req)]);
+  }
   res.redirect(`/rehber/${guide.slug}#larpladim`);
 });
 
@@ -711,7 +716,7 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
 // ---------- Yedek (sadece baş yönetici) ----------
 // Oturumlar ve geçici sınır kayıtları hariç tüm tablolar tek JSON dosyası olarak iner.
 // Geri yükleme: node scripts/geri-yukle.js <dosya>  (README'ye bakın)
-const BACKUP_TABLES = ['users', 'guides', 'slug_redirects', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes'];
+const BACKUP_TABLES = ['users', 'guides', 'slug_redirects', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes', 'quiz_results'];
 app.get('/yonetim/yedek', requireAdmin, async (req, res) => {
   if (!req.user.isSuper) return notFound(req, res);
   const tables = {};
@@ -802,6 +807,43 @@ app.get('/yonetim/gorsel/enler', requireAdmin, async (req, res) => {
   }
   res.render('gorsel-top', { title: 'Görsel oluştur · En çoklar', tur, donem, format, P, top, author, text, TOP_PERIODS,
     tweetUrl: text ? tweetIntent(text) : null });
+});
+
+// ---------- Larp istatistikleri ----------
+const hourLabel = (h) => `${String(h).padStart(2, '0')}.00`;
+app.get('/istatistik', async (req, res) => {
+  const chosen = Object.hasOwn(larpStats.PERIODS, req.query.donem) ? req.query.donem : null;
+  const s = await larpStats.compute(chosen || await larpStats.pickPeriod());
+  res.render('stats', {
+    title: 'Larp istatistikleri',
+    description: `Türkiye ${s.P.lower} ${s.larps} kez larpladı, ${s.caught} kişi yakalandı. En çok larplanan rol, en riskli larp, larp saati ve daha fazlası.`,
+    s, auto: !chosen, quips: STAT_QUIPS, hourLabel, ek: sayiEki, noindex: !!chosen, PERIODS: larpStats.PERIODS,
+  });
+});
+
+// Görsel için en ilginç satırlar (sırayla, veri olanlar)
+function statRows(s) {
+  const rows = [];
+  if (s.topGuide) rows.push({ label: 'En çok larplanan', value: s.topGuide.name, note: `${s.topGuide.n} kez` });
+  if (s.risky) rows.push({ label: 'En riskli larp', value: s.risky.name, note: `%${s.risky.pct} yakalandı` });
+  if (s.peakHour) rows.push({ label: 'Larp saati', value: hourLabel(s.peakHour.hour), note: STAT_QUIPS.hour(s.peakHour.hour) });
+  if (s.cities) rows.push({ label: 'En larpçı şehir', value: s.cities[0].city, note: s.cities[0].fav ? `Favorisi: ${s.cities[0].fav}` : `${s.cities[0].n} larp` });
+  if (s.quiz) rows.push({ label: 'Testte en çok çıkan', value: s.quiz.name, note: `Çözenlerin %${s.quiz.pct}${sayiEki(s.quiz.pct)}` });
+  if (s.safe) rows.push({ label: 'En güvenli larp', value: s.safe.name, note: s.safe.pct ? `%${s.safe.pct} yakalandı` : `${s.safe.l} kez larplandı, kimse yakalanmadı` });
+  if (s.topCategory) rows.push({ label: 'En gözde kategori', value: s.topCategory.name, note: `Larpların %${s.topCategory.pct}${sayiEki(s.topCategory.pct)}` });
+  if (s.night) rows.push({ label: 'Gece yarısı larpı', value: s.night.name, note: '00.00–05.00 arası' });
+  return rows;
+}
+app.get('/yonetim/gorsel/istatistik', requireAdmin, async (req, res) => {
+  const donem = Object.hasOwn(larpStats.PERIODS, req.query.donem) ? req.query.donem : 'hafta';
+  const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
+  const s = await larpStats.compute(donem);
+  const rows = statRows(s).slice(0, { post: 5, story: 6, x: 4 }[format]);
+  const site = res.locals.baseUrl.replace(/^https?:\/\//, '');
+  const head = `${s.P.label === 'Tüm zamanlar' ? 'Şimdiye kadar' : s.P.label} Türkiye'de ${s.larps} kez larplandı, ${s.caught} kişi yakalandı.`;
+  const text = s.larps ? `${s.P.of} larp raporu 📊\n\n${head}\n${rows.map((r) => `• ${r.label}: ${r.value}`).join('\n')}\n\nTüm istatistikler: ${site}/istatistik` : '';
+  res.render('gorsel-stats', { title: 'Görsel oluştur · Larp raporu', s, rows, donem, format, text, quips: STAT_QUIPS,
+    PERIODS: larpStats.PERIODS, tweetUrl: text ? tweetIntent(text) : null });
 });
 
 // Herkese açık görsel sayfası: ziyaretçi açtığı rehberin görselini indirip paylaşabilir
@@ -1163,10 +1205,12 @@ app.get('/test', (req, res) => res.render('test', {
   questions: quiz.QUESTIONS,
 }));
 
-app.get('/test/sonuc', (req, res) => {
+app.get('/test/sonuc', async (req, res) => {
   const answers = quiz.QUESTIONS.map((_, i) => Number(req.query[`s${i + 1}`]));
   if (answers.some((a) => !(a >= 0 && a <= 3))) return res.redirect('/test');
-  res.redirect(`/test/sonuc/${quiz.score(answers)}`);
+  const key = quiz.score(answers);
+  await db.run('INSERT INTO quiz_results (key) VALUES (?)', [key]);
+  res.redirect(`/test/sonuc/${key}`);
 });
 
 app.get('/test/sonuc/:key', async (req, res) => {
@@ -1225,7 +1269,7 @@ app.get('/sitemap.xml', async (req, res) => {
   const rows = await db.all(`SELECT g.slug, g.updated_at FROM guides g JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} ORDER BY g.created_at DESC LIMIT 5000`);
   const base = res.locals.baseUrl;
-  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/larp-ne-demek</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`, `<url><loc>${base}/istekler</loc></url>`,
+  const urls = [`<url><loc>${base}/</loc></url>`, `<url><loc>${base}/larp-ne-demek</loc></url>`, `<url><loc>${base}/kurallar</loc></url>`, `<url><loc>${base}/test</loc></url>`, `<url><loc>${base}/istatistik</loc></url>`, `<url><loc>${base}/istekler</loc></url>`,
     ...Object.values(CATEGORY_INFO).map((c) => `<url><loc>${base}/kategori/${c.slug}</loc></url>`),
     ...rows.map((r) => `<url><loc>${base}/rehber/${r.slug}</loc><lastmod>${String(r.updated_at).slice(0, 10)}</lastmod></url>`)];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`);

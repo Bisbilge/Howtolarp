@@ -124,6 +124,11 @@ const SCHEMA = [
     guide_id INTEGER NOT NULL REFERENCES guides(id) ON DELETE CASCADE,
     PRIMARY KEY (visitor, guide_id)
   )`,
+  // "Hangi larpsın?" testinde çıkan sonuçlar (istatistik sayfası için; kim çözdüğü tutulmaz)
+  `CREATE TABLE IF NOT EXISTS quiz_results (
+    key TEXT NOT NULL,
+    at  TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
   // Hesabı olmayan ziyaretçilerin beğenileri (tarayıcı çereziyle)
   `CREATE TABLE IF NOT EXISTS anon_likes (
     visitor  TEXT NOT NULL,
@@ -158,6 +163,11 @@ const MIGRATIONS = [
   ['anon_likes', 'at', 'TEXT'],
   ['caught', 'at', 'TEXT'],
   ['anon_caught', 'at', 'TEXT'],
+  // Larplamanın yapıldığı şehir (sadece Türkiye, Vercel'in IP'den tahmini; IP saklanmaz)
+  ['likes', 'city', 'TEXT'],
+  ['anon_likes', 'city', 'TEXT'],
+  ['caught', 'city', 'TEXT'],
+  ['anon_caught', 'city', 'TEXT'],
 ];
 
 // ---- Şifreler (scrypt, ek bağımlılık yok) ----

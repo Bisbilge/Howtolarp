@@ -1,0 +1,95 @@
+<%- include('partials/head') %>
+<% const P = s.P; const g = (x) => '/rehber/' + x.slug; %>
+<section class="st-hero">
+  <p class="kicker">Larp nabzı · <%= P.label %><%= auto ? ' · canlı' : '' %></p>
+  <% if (s.larps) { %>
+    <h1 class="page-h st-h">Türkiye <%= P.lower %> <mark><%= s.larps.toLocaleString('tr-TR') %></mark> kez larpladı.</h1>
+    <p class="st-sub"><b><%= s.caught.toLocaleString('tr-TR') %></b> kişi yakalandı. İfşa oranı <b>%<%= s.caughtPct %></b>. <%= quips.caught(s.caughtPct) %></p>
+  <% } else { %>
+    <h1 class="page-h st-h">Henüz kimse larplamadı. <mark>İlk sen ol.</mark></h1>
+    <p class="st-sub">Bir rehber aç, sahneye çık, sonra "Ben de larpladım"a bas.</p>
+  <% } %>
+  <nav class="seg st-seg" aria-label="Dönem">
+    <% Object.entries(PERIODS).forEach(([k, p]) => { %>
+      <a class="<%= s.period === k ? 'on' : '' %>" href="/istatistik?donem=<%= k %>"><%= p.label %></a>
+    <% }) %>
+  </nav>
+</section>
+
+<div class="st-grid">
+  <% if (s.topGuide) { %>
+  <article class="st-card st-lime">
+    <p class="st-l">En çok larplanan rol</p>
+    <p class="st-v"><a href="<%= g(s.topGuide) %>"><%- markEn(s.topGuide.name) %></a></p>
+    <p class="st-n"><%= P.label %> <%= s.topGuide.n %> kez larplandı.</p>
+  </article>
+  <% } %>
+  <% if (s.risky) { %>
+  <article class="st-card st-pink">
+    <p class="st-l">En riskli larp 🚨</p>
+    <p class="st-v"><a href="<%= g(s.risky) %>"><%- markEn(s.risky.name) %></a></p>
+    <p class="st-n">Larplayanların %<%= s.risky.pct %><%= ek(s.risky.pct) %> yakalandı. Denemeden önce iki kez düşün.</p>
+  </article>
+  <% } %>
+  <% if (s.peakHour) { %>
+  <article class="st-card st-dark">
+    <p class="st-l">Larp saati</p>
+    <p class="st-v st-big"><%= hourLabel(s.peakHour.hour) %></p>
+    <p class="st-n">Larpların %<%= s.peakHour.pct %><%= ek(s.peakHour.pct) %> bu saatte yapılıyor. <%= quips.hour(s.peakHour.hour) %></p>
+  </article>
+  <% } %>
+  <% if (s.safe) { %>
+  <article class="st-card">
+    <p class="st-l">En güvenli larp 🛡️</p>
+    <p class="st-v"><a href="<%= g(s.safe) %>"><%- markEn(s.safe.name) %></a></p>
+    <p class="st-n"><%= s.safe.l %> kez larplandı, <%= s.safe.pct ? `sadece %${s.safe.pct}${ek(s.safe.pct)} yakalandı.` : 'kimse yakalanmadı. Şimdilik.' %></p>
+  </article>
+  <% } %>
+  <% if (s.cities) { %>
+  <article class="st-card st-wide">
+    <p class="st-l">En larpçı şehirler</p>
+    <ol class="st-cities">
+      <% s.cities.forEach((c) => { %>
+        <li><b><%= c.city %></b><span><%= c.n %> larp<% if (c.fav) { %> · favorisi <%- markEn(c.fav) %><% } %></span></li>
+      <% }) %>
+    </ol>
+  </article>
+  <% } %>
+  <% if (s.night) { %>
+  <article class="st-card st-dark">
+    <p class="st-l">Gece yarısı larpı 🌙</p>
+    <p class="st-v"><a href="<%= g(s.night) %>"><%- markEn(s.night.name) %></a></p>
+    <p class="st-n">Gece 00.00 ile 05.00 arasında en çok bu larplandı. <%= s.night.n %> kez. Uyuyun artık.</p>
+  </article>
+  <% } %>
+  <% if (s.quiz) { %>
+  <article class="st-card st-lime">
+    <p class="st-l">Testte en çok çıkan</p>
+    <p class="st-v"><a href="/test"><%- markEn(s.quiz.name) %></a></p>
+    <p class="st-n">Testi çözen <%= s.quiz.total %> kişinin %<%= s.quiz.pct %><%= ek(s.quiz.pct) %> bu çıktı. <a href="/test">Sen hangisisin?</a></p>
+  </article>
+  <% } %>
+  <% if (s.topCategory) { %>
+  <article class="st-card">
+    <p class="st-l">En gözde kategori</p>
+    <p class="st-v"><%= s.topCategory.name %></p>
+    <p class="st-n">Larpların %<%= s.topCategory.pct %><%= ek(s.topCategory.pct) %> bu kategoriden.</p>
+  </article>
+  <% } %>
+  <% if (s.request) { %>
+  <article class="st-card st-pink">
+    <p class="st-l">Sıradaki rol?</p>
+    <p class="st-v"><a href="/istekler"><%= s.request.text %></a></p>
+    <p class="st-n"><%= s.request.n %> kişi bu rehberi bekliyor. <a href="/istekler">Yazmak ister misin?</a></p>
+  </article>
+  <% } %>
+</div>
+
+<section class="st-totals">
+  <div><b><%= s.totals.guides %></b><span>rehber</span></div>
+  <% if (s.totals.authors) { %><div><b><%= s.totals.authors %></b><span>üye yazar</span></div><% } %>
+  <% if (s.totals.members >= 10) { %><div><b><%= s.totals.members %></b><span>üye</span></div><% } %>
+</section>
+
+<p class="st-foot">Sayılar gerçek: "Ben de larpladım" ve "Yakalandım" düğmelerine basanlardan, testi çözenlerden ve rehber isteklerinden geliyor. Veri az olan kutular gösterilmiyor. Şehir, bağlantının geldiği yerden tahmin ediliyor; her zaman doğru olmayabilir. Kimin larpladığını tutmuyoruz, sadece toplamları.</p>
+<%- include('partials/foot') %>

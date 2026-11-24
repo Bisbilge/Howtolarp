@@ -723,3 +723,60 @@ button.bubble:active { transform: scale(.97); }
 .ig-author .ig-handle { max-width: none; }
 .ig-author .ig-line { margin-top: 30px; }
 .ig-post.ig-author .ig-rank-sm { margin-top: auto; margin-bottom: 50px; }
+
+/* ---------- Larp istatistikleri ---------- */
+.st-hero { padding: clamp(32px, 6vw, 72px) var(--gut) 28px; border-bottom: 3px solid var(--rule); }
+.st-h { font-size: clamp(44px, 8vw, 112px); line-height: 1.1; max-width: 15ch; margin: 8px 0 0; }
+.st-h mark { display: inline-block; line-height: 1; background: var(--lime); color: var(--on-acc); padding: .06em .1em 0; }
+.st-sub { font-size: clamp(17px, 2.2vw, 22px); max-width: 56ch; margin: 18px 0 22px; }
+.st-seg { margin-top: 4px; }
+.st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 0; border-bottom: 3px solid var(--rule); }
+.st-card { padding: 26px var(--gut) 28px; border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); display: flex; flex-direction: column; gap: 10px; min-height: 230px; }
+.st-wide { grid-column: span 2; }
+@media (max-width: 680px) { .st-wide { grid-column: auto; } }
+.st-l { margin: 0; font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.st-v { margin: 0; font: 400 clamp(30px, 4vw, 44px)/1.08 var(--display); text-transform: uppercase; }
+.st-v a { color: inherit; text-decoration: none; }
+.st-v a:hover { text-decoration: underline; text-decoration-color: var(--pink); }
+.st-big { font-size: clamp(64px, 9vw, 104px); line-height: 1; }
+.st-n { margin: auto 0 0; font-size: 15px; line-height: 1.45; }
+.st-n a { color: inherit; }
+.st-lime { background: var(--lime); color: var(--on-acc); }
+.st-pink { background: var(--pink); color: #0b0b0b; }
+.st-dark { background: var(--night); color: var(--night-fg); }
+.st-cities { list-style: none; margin: 4px 0 0; padding: 0; counter-reset: c; display: grid; gap: 10px; }
+.st-cities li { counter-increment: c; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.st-cities li::before { content: counter(c); font: 400 30px var(--display); color: var(--pink); min-width: 22px; }
+.st-cities b { font: 400 clamp(28px, 3.6vw, 40px)/1.1 var(--display); text-transform: uppercase; font-weight: 400; }
+.st-cities span { font-size: 15px; color: var(--mute); }
+.st-totals { display: flex; flex-wrap: wrap; gap: 18px 56px; padding: 30px var(--gut); border-bottom: 3px solid var(--rule); }
+.st-totals div { display: flex; align-items: baseline; gap: 10px; }
+.st-totals b { font: 400 clamp(44px, 6vw, 72px)/1 var(--display); }
+.st-totals span { font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.st-foot { padding: 18px var(--gut) 48px; margin: 0; max-width: 80ch; font-size: 13px; color: var(--mute); }
+
+/* Larp raporu görseli (yönetim) */
+.ig-report .ig-persona { font-size: 120px; max-width: none; line-height: 1.12; }
+.ig-report .ig-persona mark { background: var(--i-lime); color: var(--i-ink); padding: 0 12px; }
+.ig-report .ig-sub { font: 700 28px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .04em; margin: 22px 0 0; }
+.ig-report .ig-sub b { background: var(--i-pink); padding: 0 8px; }
+.ig-stats { margin: 44px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-top: 4px solid var(--i-ink); }
+.ig-stats li { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 4px 28px; align-items: baseline; padding: 20px 0; border-bottom: 2px solid #c9c8c1; }
+.ig-stats .k { font: 700 24px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--i-pink); }
+.ig-stats .v { font: 400 58px/1.08 var(--display); text-transform: uppercase; }
+.ig-stats .n { grid-column: 2; font-size: 26px; color: var(--i-mute); }
+.ig-story.ig-report .ig-body { padding-top: 120px; }
+.ig-story.ig-report .ig-stats { margin-top: 70px; }
+.ig-story.ig-report .ig-stats li { padding: 28px 0; }
+.ig-story.ig-report .ig-stats li { grid-template-columns: 1fr; }
+.ig-story.ig-report .ig-stats .n { grid-column: 1; }
+.ig-x.ig-report .ig-body { grid-template-columns: 560px minmax(0, 1fr); }
+.ig-x.ig-report .ig-persona { font-size: 100px; }
+.ig-x.ig-report .ig-stats { margin-top: 0; }
+.ig-x.ig-report .ig-stats li { grid-template-columns: 230px minmax(0, 1fr); padding: 14px 0; }
+.ig-x.ig-report .ig-stats .k { font-size: 20px; }
+.ig-x.ig-report .ig-stats .v { font-size: 48px; }
+.ig-x.ig-report .ig-stats .n { font-size: 22px; }
+.ig-report .ig-persona mark { display: inline-block; line-height: 1; padding: .06em 12px 0; }
+.ig-x.ig-report .ig-sub { font-size: 22px; }
+@media (max-width: 680px) { .st-card { min-height: 0; } .st-n { margin-top: 6px; } }
