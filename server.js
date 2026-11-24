@@ -1159,6 +1159,9 @@ app.get('/larp-ne-demek', (req, res) => {
 });
 
 
+// Küçük bir sürpriz sayfa
+app.get('/kedi', (req, res) => res.render('kedi', { title: 'Üzülme, kedilerin var', description: 'Üzülme, kedilerin var.', noindex: true }));
+
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nDisallow: /yonetim\nDisallow: /yaz\nDisallow: /hesap\nDisallow: /rehberlerim\nSitemap: ${res.locals.baseUrl}/sitemap.xml\n`);
 });

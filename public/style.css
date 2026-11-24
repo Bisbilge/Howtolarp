@@ -651,3 +651,9 @@ button.bubble:active { transform: scale(.97); }
 .members li > div { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .page-h small { font: 400 .4em var(--mono); vertical-align: middle; }
 .ig-intro { color: var(--mute); margin: 0 0 8px; max-width: 360px; }
+
+/* ---------- /kedi ---------- */
+.kedi { padding: clamp(24px, 5vw, 56px) var(--gut) 72px; display: flex; justify-content: center; }
+.kedi figure { margin: 0; max-width: 760px; width: 100%; }
+.kedi img { display: block; width: 100%; height: auto; border: 3px solid var(--ink); box-shadow: 10px 10px 0 var(--ink); transform: rotate(-1.5deg); }
+.kedi figcaption { margin-top: 36px; text-align: center; font: 400 clamp(36px, 7vw, 72px)/1.05 var(--display); text-transform: uppercase; }
