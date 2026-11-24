@@ -1077,4 +1077,36 @@ module.exports = [
       'Bir lise öğrencisinin sana matematik ödevini sorması.',
     ],
   },
+  {
+    title: 'Parfüm Uzmanı Nasıl Larplanır?',
+    category: 'Yaşam Tarzı',
+    difficulty: 3,
+    summary: '"Hepsi aynı kokuyor" diyenlere acıyarak bak. Parfüm larpında burnun değil, kelime dağarcığın konuşur: nota, sillage, kalıcılık.',
+    kit: [
+      'Cüzdanında taşıdığın üç koku test kâğıdı',
+      'Ezberlenmiş birkaç kelime: üst nota, kalp nota, dip nota, sillage, kalıcılık',
+      'Bir niş parfüm markasının adı (hiç koklamamış olman sorun değil)',
+      'Telefonunda açık bir parfüm forumu sekmesi',
+    ],
+    steps: [
+      'Biri yanından geçince hafifçe kokla ve gözlerini kıs, parfümünü tahmin ediyormuş gibi. Adını söyleme, sadece "Güzel seçim" de.',
+      'Parfümcüde kokuyu hemen koklama. Kâğıda sık, havada salla, on saniye bekle. Beklemenin bir anlamı yok ama çok profesyonel görünür.',
+      'Her parfümde bir dip nota bul: amber, vanilya ya da odunsu. Hangisini söylersen söyle, kimse itiraz edemez.',
+      'Popüler bir parfüm sorulursa "Güzel ama biraz fazla mainstream oldu" de ve bir niş marka öner.',
+      'Bileğine parfüm sıkan birini görürsen "Ovma, notaları bozuyorsun" diye uyar.',
+    ],
+    phrases: [
+      'Üst notası biraz sert ama dip notası çok güzel oturmuş.',
+      'Kalıcılığı iyi ama sillage\'ı zayıf.',
+      'Ben artık designer kullanmıyorum, sadece niş.',
+      'Bu tam bir sonbahar kokusu.',
+      'Blind buy almıştım, pişman değilim.',
+    ],
+    risks: [
+      'Kör testte iki parfümü ayırt etmenin istenmesi.',
+      'Kullandığın parfümün aslında bir dupe olduğunun ortaya çıkması.',
+      'Gerçek bir parfüm tutkununun "Hangi batch?" sorusu.',
+      'Kendi parfümünü artık koklayamadığın için yarım şişe sıktığının söylenmesi.',
+    ],
+  },
 ];
