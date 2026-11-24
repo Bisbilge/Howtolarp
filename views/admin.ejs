@@ -40,7 +40,7 @@
     <p><a class="ghost-btn" href="/yonetim">Aramayı temizle</a></p>
   <% } %>
   <p class="adm-tools">
-    <a class="ghost-btn" href="/yonetim/gorsel">Görsel oluştur (Instagram, Twitter) ↗</a>
+    <a class="ghost-btn" href="/yonetim/gorsel">Görsel oluştur (Instagram, <span lang="en">Twitter</span>) ↗</a>
     <a class="ghost-btn" href="/yonetim/gorsel/enler">En çok larplananlar / Günün larperi ↗</a>
     <% if (user.isSuper) { %><a class="ghost-btn" href="/yonetim/yedek" download>Yedek indir ↓</a><% } %>
   </p>
@@ -62,7 +62,7 @@
       </header>
       <div class="share-rows">
         <div class="share-row">
-          <span class="share-pf">Twitter / X</span>
+          <span class="share-pf"><span lang="en">Twitter</span> / X</span>
           <% if (s.x_at) { %><span class="share-done">✓ Paylaşıldı</span><% } else { %>
             <a class="adm-btn adm-btn-ok" href="<%= s.tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
             <form method="post" action="/yonetim/paylasim/<%= s.guide_id %>/x" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="">Paylaşıldı ✓</button></form>

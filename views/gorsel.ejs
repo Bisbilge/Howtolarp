@@ -60,7 +60,7 @@
         <form method="post" action="/yonetim/paylasim/<%= guide.id %>/<%= pf %>" class="inline">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <input type="hidden" name="sonra" value="/yonetim#paylasilacaklar">
-          <button class="ghost-btn" type="submit"><%= pf === 'x' ? 'Twitter' : 'Instagram' %>'da paylaştım ✓</button>
+          <button class="ghost-btn" type="submit"><%- pf === 'x' ? '<span lang="en">Twitter</span>' : 'Instagram' %>'da paylaştım ✓</button>
         </form>
       <% } %>
       <p class="ig-caption-h f-l"><%= format === 'x' ? 'Önerilen tweet' : 'Önerilen açıklama' %></p>
