@@ -646,3 +646,7 @@ button.bubble:active { transform: scale(.97); }
 .faq summary:hover { color: var(--pink); }
 .faq p { margin: 10px 0 0; }
 .about-cta { margin-top: 32px; }
+.stats-members { margin-top: 0 !important; border-top: 0 !important; }
+.member-meta { font: 400 12px var(--mono); }
+.members li > div { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.page-h small { font: 400 .4em var(--mono); vertical-align: middle; }

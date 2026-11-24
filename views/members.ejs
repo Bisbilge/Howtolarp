@@ -1,0 +1,38 @@
+<%- include('partials/head') %>
+<section class="admin">
+  <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
+  <h1 class="page-h">Üyeler <small class="muted"><%= total %></small></h1>
+  <form class="search adm-search" method="get" action="/yonetim/uyeler">
+    <input type="search" name="q" value="<%= q %>" placeholder="Kullanıcı adı ara" aria-label="Üye ara">
+    <button type="submit">Ara</button>
+  </form>
+  <% if (!members.length) { %><p class="adm-empty"><%= q ? 'Eşleşen üye yok.' : 'Henüz üye yok.' %></p><% } %>
+  <ul class="adm-list members">
+    <% members.forEach(u => { %>
+      <li>
+        <div>
+          <b class="handle">@<%= u.username %></b>
+          <% if (isAdminName(u.username)) { %><span class="flag flag-wait">Baş yönetici</span><% } else if (u.role === 'editor') { %><span class="flag flag-wait">Editör</span><% } %>
+          <% if (u.banned) { %><span class="flag">Engelli</span><% } %>
+          <span class="muted member-meta"><%= formatDate(u.created_at) %> · <%= u.guide_count %> rehber<% if (u.guide_count > u.approved_count) { %> (<%= u.guide_count - u.approved_count %> onay bekliyor)<% } %><% if (!u.role || u.role === 'user') { %> · <%= u.approved_count >= TRUST_AFTER ? 'güvenilir' : 'yeni üye' %><% } %></span>
+        </div>
+        <span class="adm-list-actions">
+          <% if (u.guide_count > 0) { %><a class="adm-btn" href="/yonetim?q=<%= encodeURIComponent(u.username) %>">Rehberleri</a><% } %>
+          <% if (u.banned) { %>
+            <form method="post" action="/yonetim/kullanici/<%= u.id %>/kaldir" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/yonetim/uyeler"><button>Engeli kaldır</button></form>
+          <% } else if (canBan(u)) { %>
+            <form method="post" action="/yonetim/kullanici/<%= u.id %>/engelle" class="inline" onsubmit="return confirm('@<%= u.username %> engellensin mi? Bekleyen rehberleri silinir, oturumu kapanır.')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="sonra" value="/yonetim/uyeler"><button class="danger">Engelle</button></form>
+          <% } %>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+  <% if (sayfa > 1 || hasMore) { %>
+    <nav class="pager" aria-label="Sayfalar">
+      <% if (sayfa > 1) { %><a href="/yonetim/uyeler?<%= new URLSearchParams({ q, sayfa: sayfa - 1 }) %>">← Önceki</a><% } else { %><span></span><% } %>
+      <span class="pager-no">Sayfa <%= sayfa %></span>
+      <% if (hasMore) { %><a href="/yonetim/uyeler?<%= new URLSearchParams({ q, sayfa: sayfa + 1 }) %>">Sonraki →</a><% } else { %><span></span><% } %>
+    </nav>
+  <% } %>
+</section>
+<%- include('partials/foot') %>

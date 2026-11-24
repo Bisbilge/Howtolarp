@@ -437,7 +437,7 @@ async function renderList(req, res, kategori) {
     listQuery,
     db.get(`SELECT
       (SELECT COUNT(*) FROM guides g JOIN users u ON u.id = g.user_id WHERE ${VISIBLE}) AS guides,
-      (SELECT COUNT(*) FROM users WHERE banned = 0) AS users`),
+      (SELECT COUNT(*) FROM users WHERE banned = 0 AND username != 'editor') AS users`),
     db.all(`${GUIDE_SELECT} WHERE ${VISIBLE} ORDER BY like_count DESC, g.created_at DESC LIMIT 8`),
     topRequests(6),
   ]);
@@ -652,8 +652,13 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
     WHERE g.hidden = 1 AND g.id NOT IN (SELECT guide_id FROM reports WHERE resolved_at IS NULL)
     ORDER BY g.updated_at DESC`);
   const banned = await db.all('SELECT id, username, created_at FROM users WHERE banned = 1 ORDER BY username');
-  const totals = await db.get(`SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM guides) AS guides,
+  const totals = await db.get(`SELECT
+    (SELECT COUNT(*) FROM users WHERE username != 'editor') AS users,
+    (SELECT COUNT(*) FROM users WHERE username != 'editor' AND created_at > datetime('now', '-1 day')) AS users_today,
+    (SELECT COUNT(*) FROM users WHERE username != 'editor' AND created_at > datetime('now', '-7 day')) AS users_week,
+    (SELECT COUNT(*) FROM guides) AS guides,
     (SELECT COUNT(*) FROM likes) + (SELECT COUNT(*) FROM anon_likes) AS likes`);
+  const newestUsers = await db.all(`${MEMBER_SELECT} WHERE u.username != 'editor' ORDER BY u.created_at DESC, u.id DESC LIMIT 10`);
 
   const pending = await db.all(`SELECT g.id, g.slug, g.title, g.summary, g.category, g.created_at, g.user_id, u.username, u.role,
       (SELECT COUNT(*) FROM guides x WHERE x.user_id = g.user_id AND x.approved = 1) AS author_approved
@@ -679,7 +684,7 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
   });
 
   const tg = { token: !!TG_TOKEN, chat: !!TG_CHAT, msg: String(req.query.tg || '').slice(0, 500) };
-  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found, shares, tg });
+  res.render('admin', { title: 'Yönetim', reported, hidden, banned, totals, pending, editors, canBan, isAdminName, TRUST_AFTER, q, found, shares, tg, newestUsers });
 });
 
 // ---------- Yedek (sadece baş yönetici) ----------
@@ -723,6 +728,22 @@ app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const share = guide ? await db.get('SELECT x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?', [guide.id]) : null;
   res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share,
     tweetUrl: texts ? tweetIntent(texts.x) : null });
+});
+
+// ---------- Üyeler ----------
+const MEMBER_SELECT = `SELECT u.id, u.username, u.role, u.banned, u.created_at,
+  (SELECT COUNT(*) FROM guides g WHERE g.user_id = u.id) AS guide_count,
+  (SELECT COUNT(*) FROM guides g WHERE g.user_id = u.id AND g.approved = 1) AS approved_count
+  FROM users u`;
+app.get('/yonetim/uyeler', requireAdmin, async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 40);
+  const sayfa = Math.min(Math.max(parseInt(req.query.sayfa, 10) || 1, 1), 1000);
+  const per = 50;
+  const all = await db.all(`${MEMBER_SELECT} WHERE u.username != 'editor' ORDER BY u.created_at DESC, u.id DESC LIMIT 5000`);
+  const filtered = q ? all.filter((u) => matches(q, u.username)) : all;
+  const members = filtered.slice((sayfa - 1) * per, sayfa * per);
+  res.render('members', { title: 'Üyeler', members, q, sayfa, total: filtered.length, hasMore: filtered.length > sayfa * per,
+    canBan: (u) => !isAdminName(u.username) && (req.user.isSuper || u.role !== 'editor'), isAdminName, TRUST_AFTER });
 });
 
 // Telegram kurulumu (sadece baş yönetici)
@@ -831,7 +852,7 @@ app.post('/yonetim/kullanici/:id/:action', requireAdmin, async (req, res) => {
   } else {
     return notFound(req, res);
   }
-  res.redirect('/yonetim');
+  res.redirect(safeNext(req.body.sonra) === '/' ? '/yonetim' : safeNext(req.body.sonra));
 });
 
 // ---------- Üyelik ----------

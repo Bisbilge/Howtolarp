@@ -6,6 +6,11 @@
     <div><dt>Onay bekleyen</dt><dd><%= pending.length %></dd></div>
     <div><dt>Açık bildirim</dt><dd><%= reported.length %></dd></div>
     <div><dt>Rehber</dt><dd><%= totals.guides %></dd></div>
+  </dl>
+  <dl class="stats stats-members">
+    <div><dt>Üye</dt><dd><%= totals.users %></dd></div>
+    <div><dt>Bu hafta yeni</dt><dd><%= totals.users_week %></dd></div>
+    <div><dt>Bugün yeni</dt><dd><%= totals.users_today %></dd></div>
 
   </dl>
 
@@ -163,6 +168,19 @@
       </div>
     <% } %>
   <% } %>
+
+  <h2 class="adm-h">Son üyeler <small class="muted"><a href="/yonetim/uyeler">Tüm üyeler (<%= totals.users %>) →</a></small></h2>
+  <% if (!newestUsers.length) { %><p class="adm-empty">Henüz üye yok.</p><% } %>
+  <ul class="adm-list members">
+    <% newestUsers.forEach(u => { %>
+      <li><div>
+        <b class="handle">@<%= u.username %></b>
+        <% if (isAdminName(u.username)) { %><span class="flag flag-wait">Baş yönetici</span><% } else if (u.role === 'editor') { %><span class="flag flag-wait">Editör</span><% } %>
+        <% if (u.banned) { %><span class="flag">Engelli</span><% } %>
+        <span class="muted member-meta"><%= formatDate(u.created_at) %> · <%= u.guide_count %> rehber</span>
+      </div></li>
+    <% }) %>
+  </ul>
 
   <h2 class="adm-h">Editörler</h2>
   <% if (!editors.length) { %><p class="adm-empty">Henüz editör yok. Vercel'de ADMIN_SIGNUP_CODE tanımlayıp kodu editörlerine ver; kodla üye olan editör olur.</p><% } %>
