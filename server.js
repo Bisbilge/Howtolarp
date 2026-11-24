@@ -626,7 +626,7 @@ app.post(['/rehber/:slug/larpladim', '/rehber/:slug/yakalandim'], async (req, re
   const [userTable, anonTable] = REACTIONS[req.path.endsWith('/yakalandim') ? 'yakalandim' : 'larpladim'];
   const [table, col, who] = req.user ? [userTable, 'user_id', req.user.id] : [anonTable, 'visitor', req.visitor];
   const del = await db.run(`DELETE FROM ${table} WHERE ${col} = ? AND guide_id = ?`, [who, guide.id]);
-  if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id) VALUES (?, ?)`, [who, guide.id]);
+  if (del.rowsAffected === 0) await db.run(`INSERT INTO ${table} (${col}, guide_id, at) VALUES (?, ?, datetime('now'))`, [who, guide.id]);
   res.redirect(`/rehber/${guide.slug}#larpladim`);
 });
 
@@ -749,6 +749,40 @@ app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const share = guide ? await db.get('SELECT x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?', [guide.id]) : null;
   res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share, publicMode: false,
     tweetUrl: texts ? tweetIntent(texts.x) : null });
+});
+
+// "En çok larplananlar" ve "Günün larperi" görselleri
+const TOP_PERIODS = {
+  gun: { since: '-1 day', label: 'Bugün', of: 'Günün' },
+  hafta: { since: '-7 days', label: 'Bu hafta', of: 'Haftanın' },
+  ay: { since: '-30 days', label: 'Bu ay', of: 'Ayın' },
+  tum: { since: null, label: 'Tüm zamanlar', of: 'Tüm zamanların' },
+};
+async function topGuides(period, limit) {
+  const { since } = TOP_PERIODS[period];
+  const where = since ? `WHERE at > datetime('now', '${since}')` : '';
+  return db.all(`SELECT g.id, g.slug, g.title, g.category, g.difficulty, g.summary, COUNT(*) AS n
+    FROM (SELECT guide_id FROM likes ${where} UNION ALL SELECT guide_id FROM anon_likes ${where}) l
+    JOIN guides g ON g.id = l.guide_id JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} GROUP BY g.id ORDER BY n DESC, g.id DESC LIMIT ?`, [limit]);
+}
+app.get('/yonetim/gorsel/enler', requireAdmin, async (req, res) => {
+  const tur = req.query.tur === 'larper' ? 'larper' : 'liste';
+  const donem = Object.hasOwn(TOP_PERIODS, req.query.donem) ? req.query.donem : 'gun';
+  const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
+  const P = TOP_PERIODS[donem];
+  const top = await topGuides(donem, tur === 'larper' ? 1 : 5);
+  const base = res.locals.baseUrl;
+  const site = base.replace(/^https?:\/\//, '');
+  let text = '';
+  if (top.length && tur === 'liste') {
+    text = `${P.label} en çok larplanan rehberler 🏆\n\n${top.map((g, i) => `${i + 1}. ${persona(g.title)}`).join('\n')}\n\nSen hangisini larpladın? 👀\n${site}`;
+  } else if (top.length) {
+    const g = top[0];
+    text = `${P.of} larperi: ${persona(g.title)} 🏆\n${P.label === 'Tüm zamanlar' ? 'Şimdiye kadar' : P.label} ${g.n} kişi bu rehberle larpladı. Sıra sende.\n\n${base}/rehber/${g.slug}`;
+  }
+  res.render('gorsel-top', { title: 'Görsel oluştur · En çoklar', tur, donem, format, P, top, text, TOP_PERIODS,
+    tweetUrl: text ? tweetIntent(text) : null });
 });
 
 // Herkese açık görsel sayfası: ziyaretçi açtığı rehberin görselini indirip paylaşabilir

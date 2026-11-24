@@ -153,6 +153,11 @@ const MIGRATIONS = [
   ['guides', 'approved', 'INTEGER NOT NULL DEFAULT 1'],
   ['seeded', 'guide_id', 'INTEGER'],
   ['seeded', 'hash', 'TEXT'],
+  // Larplama/yakalanma zamanı (günün/haftanın en çokları için). Eski kayıtlarda boş kalır.
+  ['likes', 'at', 'TEXT'],
+  ['anon_likes', 'at', 'TEXT'],
+  ['caught', 'at', 'TEXT'],
+  ['anon_caught', 'at', 'TEXT'],
 ];
 
 // ---- Şifreler (scrypt, ek bağımlılık yok) ----

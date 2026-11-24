@@ -1,0 +1,176 @@
+<%- include('partials/head') %>
+<% const link = (o) => { const q = Object.assign({ tur, donem, format }, o); return '/yonetim/gorsel/enler?tur=' + q.tur + '&donem=' + q.donem + '&format=' + q.format; };
+   const g1 = top[0]; %>
+<section class="ig-page">
+  <div class="ig-controls">
+    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a> · <a href="/yonetim/gorsel">Rehber görseli</a></p>
+    <h1 class="page-h">En çoklar</h1>
+    <div class="form ig-form">
+      <div class="f">
+        <span class="f-l">Görsel</span>
+        <div class="seg">
+          <a class="<%= tur === 'liste' ? 'on' : '' %>" href="<%= link({ tur: 'liste' }) %>">En çok larplananlar (ilk 5)</a>
+          <a class="<%= tur === 'larper' ? 'on' : '' %>" href="<%= link({ tur: 'larper' }) %>"><%= P.of %> larperi</a>
+        </div>
+      </div>
+      <div class="f">
+        <span class="f-l">Dönem</span>
+        <div class="seg">
+          <% Object.entries(TOP_PERIODS).forEach(([k, p]) => { %>
+            <a class="<%= donem === k ? 'on' : '' %>" href="<%= link({ donem: k }) %>"><%= p.label %></a>
+          <% }) %>
+        </div>
+      </div>
+      <div class="f">
+        <span class="f-l">Boyut</span>
+        <div class="seg">
+          <a class="<%= format === 'post' ? 'on' : '' %>" href="<%= link({ format: 'post' }) %>">Instagram gönderi</a>
+          <a class="<%= format === 'story' ? 'on' : '' %>" href="<%= link({ format: 'story' }) %>">Instagram hikaye</a>
+          <a class="<%= format === 'x' ? 'on' : '' %>" href="<%= link({ format: 'x' }) %>"><span lang="en">Twitter</span> / X</a>
+        </div>
+      </div>
+    </div>
+    <p class="ig-hint">Bugün, bu hafta ve bu ay sayımları bu özellik eklendiğinden beri tutuluyor; daha eski larplamalar sadece "Tüm zamanlar"da sayılır. "Bugün" son 24 saat, "bu ay" son 30 gün demek.</p>
+
+    <% if (top.length) { %>
+      <div class="f-actions ig-actions">
+        <% if (format === 'x') { %>
+          <a class="big-btn" href="<%= tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
+        <% } else { %>
+          <button class="big-btn" type="button" id="ig-share" hidden>Instagram'da paylaş ↗</button>
+        <% } %>
+        <button class="<%= format === 'x' ? 'ghost-btn' : 'big-btn' %>" type="button" id="ig-download">PNG indir ↓</button>
+      </div>
+      <p class="ig-hint" id="ig-share-hint" hidden>Görsel paylaşım menüsünde açılır, açıklama panoya kopyalanır.</p>
+      <p class="ig-caption-h f-l"><%= format === 'x' ? 'Önerilen tweet' : 'Önerilen açıklama' %></p>
+      <textarea class="ig-caption" id="ig-caption" rows="8" readonly><%= text %></textarea>
+      <button class="ghost-btn" type="button" id="ig-copy">Metni kopyala</button>
+    <% } %>
+  </div>
+
+  <% if (!top.length) { %>
+    <div class="ig-empty">
+      <p class="page-h">Henüz kimse larplamamış.</p>
+      <p><%= P.label %> içinde "Ben de larpladım"a basan olmadı. <a href="<%= link({ donem: 'tum' }) %>">Tüm zamanlara bak →</a></p>
+    </div>
+  <% } else { %>
+  <div class="ig-stage" data-format="<%= format %>">
+    <div class="ig-scale">
+      <% if (tur === 'liste') { %>
+      <div class="ig ig-<%= format %> ig-top5" id="ig-card">
+        <div class="ig-top"><b><%= P.label %></b><span>EN ÇOK LARPLANANLAR ✕ EN ÇOK LARPLANANLAR ✕ EN ÇOK LARPLANANLAR</span></div>
+        <div class="ig-body">
+          <div class="ig-main">
+            <p class="ig-kicker">How to LARP sıralaması · <%= P.label %></p>
+            <h2 class="ig-persona ig-fit"><%= P.label %> en çok <mark>larplananlar</mark></h2>
+          </div>
+          <ol class="ig-rank">
+            <% top.forEach((g, i) => { %>
+              <li><span class="ig-rank-n"><%= i + 1 %></span><span class="ig-rank-t"><b class="ig-fit2"><%- markEn(persona(g.title)) %></b><small><%= g.n %> kişi larpladı</small></span></li>
+            <% }) %>
+          </ol>
+        </div>
+        <div class="ig-foot">
+          <div class="ig-cta">Sen hangisini larpladın?<br><b>howtolarp.org</b></div>
+          <div class="ig-mark">HOW TO <span>LARP</span></div>
+        </div>
+      </div>
+      <% } else { %>
+      <div class="ig ig-<%= format %> ig-larper" id="ig-card">
+        <div class="ig-top"><b><%= P.of %> larperi</b><span>🏆 HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
+        <div class="ig-body">
+          <div class="ig-main">
+            <p class="ig-kicker"><%= P.of %> larperi · <%= g1.category %></p>
+            <h2 class="ig-persona ig-fit"><%- markEn(persona(g1.title)) %></h2>
+            <p class="ig-line"><%= donem === 'tum' ? 'Şimdiye kadar' : P.label %> <mark><%= g1.n %> kişi</mark> larpladı.</p>
+            <p class="ig-sum"><%= g1.summary %></p>
+          </div>
+          <div class="ig-bubbles"><p class="ig-bubble">Sıra sende.</p></div>
+        </div>
+        <div class="ig-foot">
+          <div class="ig-cta">Rehberin tamamı<br><b>howtolarp.org</b></div>
+          <div class="ig-mark">HOW TO <span>LARP</span></div>
+        </div>
+        <div class="ig-sticker"><span>#1</span></div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+</section>
+<script src="/vendor/html-to-image.js"></script>
+<script>
+  (function () {
+    var card = document.getElementById('ig-card');
+    if (!card) return;
+    var stage = document.querySelector('.ig-stage'), scaleEl = document.querySelector('.ig-scale');
+    var W = card.offsetWidth, H = card.offsetHeight;
+    function fit() {
+      var s = Math.min(1, stage.clientWidth / W);
+      scaleEl.style.transform = 'scale(' + s + ')';
+      stage.style.height = (H * s) + 'px';
+    }
+    // Taşarsa: önce başlığı, sonra sıralamadaki adları küçült
+    function fitText() {
+      var body = card.querySelector('.ig-body');
+      function over() { return body.scrollHeight > body.clientHeight + 1; }
+      function shrink(els, min) {
+        els.forEach(function (el) {
+          var size = parseFloat(getComputedStyle(el).fontSize);
+          while ((el.scrollWidth > el.clientWidth + 1 || over()) && size > min) { size -= 4; el.style.fontSize = size + 'px'; }
+        });
+      }
+      shrink(Array.prototype.slice.call(card.querySelectorAll('.ig-fit')), 80);
+      var names = Array.prototype.slice.call(card.querySelectorAll('.ig-fit2'));
+      var size = names.length ? parseFloat(getComputedStyle(names[0]).fontSize) : 0;
+      while (names.length && over() && size > 34) { size -= 3; names.forEach(function (n) { n.style.fontSize = size + 'px'; }); }
+      if (over()) { var b = card.querySelector('.ig-bubbles'); if (b) b.remove(); }
+    }
+    document.fonts.ready.then(function () { fitText(); H = card.offsetHeight; fit(); });
+    window.addEventListener('resize', fit); fit();
+
+    var fileName = 'howtolarp-<%= tur %>-<%= donem %>-<%= format %>.png', blobP = null;
+    function makeBlob() {
+      blobP = blobP || document.fonts.ready.then(function () {
+        return htmlToImage.toBlob(card, { pixelRatio: 1, width: W, height: card.offsetHeight, cacheBust: true });
+      });
+      blobP.catch(function () { blobP = null; });
+      return blobP;
+    }
+    var shareBtn = document.getElementById('ig-share');
+    if (shareBtn && navigator.canShare) {
+      try {
+        if (navigator.canShare({ files: [new File([new Blob(['x'])], 'a.png', { type: 'image/png' })] })) {
+          shareBtn.hidden = false; document.getElementById('ig-share-hint').hidden = false;
+          setTimeout(makeBlob, 800);
+        }
+      } catch (e) {}
+    }
+    if (shareBtn) shareBtn.addEventListener('click', function () {
+      var text = document.getElementById('ig-caption').value;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+      makeBlob().then(function (blob) {
+        return navigator.share({ files: [new File([blob], fileName, { type: 'image/png' })], text: text });
+      }).catch(function (e) {
+        if (e && e.name === 'AbortError') return;
+        alert('Paylaşım menüsü açılamadı. PNG indir düğmesiyle indirip paylaşabilirsin.');
+      });
+    });
+    document.getElementById('ig-download').addEventListener('click', function () {
+      var btn = this; btn.disabled = true; btn.textContent = 'Hazırlanıyor…';
+      makeBlob().then(function (blob) {
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      }).catch(function () { alert('Görsel oluşturulamadı. Sayfayı yenileyip tekrar dene.'); })
+        .finally(function () { btn.disabled = false; btn.textContent = 'PNG indir ↓'; });
+    });
+    var copyBtn = document.getElementById('ig-copy');
+    copyBtn.addEventListener('click', function () {
+      var t = document.getElementById('ig-caption').value;
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+        function () { copyBtn.textContent = 'Kopyalandı ✓'; },
+        function () { document.getElementById('ig-caption').select(); });
+    });
+  })();
+</script>
+<%- include('partials/foot') %>

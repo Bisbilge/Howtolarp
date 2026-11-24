@@ -675,3 +675,37 @@ button.bubble:active { transform: scale(.97); }
 .ig-quiz .ig-you mark { background: var(--i-lime); color: var(--i-ink); padding: 0 16px; }
 .ig-quiz .ig-sum { font-size: 46px; margin: 60px 0 48px; }
 .ig-quiz .ig-ask { margin-top: auto; margin-bottom: 50px; align-self: flex-start; background: var(--i-pink); font: 400 76px/1.1 var(--display); text-transform: uppercase; padding: 22px 30px; transform: rotate(-2deg); }
+
+/* "En çoklar" görselleri (yönetim) */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg a { font: 700 12px var(--mono); text-transform: uppercase; letter-spacing: .04em; text-decoration: none; border: 2px solid var(--ink); padding: 7px 10px; color: var(--ink); }
+.seg a.on { background: var(--ink); color: var(--bg); }
+.seg a:not(.on):hover { background: var(--lime); color: var(--on-acc); border-color: var(--lime); }
+.ig-empty { border: 2px dashed var(--hair); padding: 40px 28px; }
+.ig-empty .page-h { font-size: clamp(28px, 4vw, 44px); margin: 0 0 8px; }
+.ig-top5 .ig-persona { font-size: 150px; max-width: none; }
+.ig-top5 .ig-persona mark, .ig-larper .ig-line mark { background: var(--i-lime); color: var(--i-ink); padding: 0 14px; }
+.ig-rank { list-style: none; margin: 56px 0 0; padding: 0; display: flex; flex-direction: column; gap: 26px; }
+.ig-rank li { display: flex; align-items: center; gap: 30px; }
+.ig-rank-n { flex: 0 0 auto; width: 116px; height: 116px; display: grid; place-items: center; background: var(--i-ink); color: var(--i-bg); font: 400 80px/1 var(--display); }
+.ig-rank li:first-child .ig-rank-n { background: var(--i-pink); color: var(--i-ink); }
+.ig-rank-t { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ig-rank-t b { font: 400 64px/1.12 var(--display); text-transform: uppercase; font-weight: 400; }
+.ig-rank-t small { font: 700 24px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--i-mute); }
+.ig-story.ig-top5 .ig-body, .ig-story.ig-larper .ig-body { padding-top: 120px; }
+.ig-story.ig-top5 .ig-rank { margin-top: 90px; gap: 40px; }
+.ig-story.ig-top5 .ig-rank-t b { font-size: 74px; }
+.ig-x.ig-top5 .ig-body { grid-template-columns: 560px minmax(0, 1fr); }
+.ig-x.ig-top5 .ig-persona { font-size: 130px; }
+.ig-x.ig-top5 .ig-rank { margin-top: 0; gap: 18px; }
+.ig-x.ig-top5 .ig-rank-n { width: 92px; height: 92px; font-size: 62px; }
+.ig-x.ig-top5 .ig-rank-t b { font-size: 52px; }
+.ig-x.ig-top5 .ig-rank-t small { font-size: 20px; }
+.ig-larper .ig-bubbles { margin-top: 48px; }
+.ig-x.ig-larper .ig-bubbles { margin-top: 300px; }
+.ig-story.ig-larper .ig-body { padding-top: 200px; }
+.ig-story.ig-larper .ig-bubbles { margin-top: auto; margin-bottom: 110px; }
+.ig-story.ig-larper .ig-bubble { font-size: 80px; padding: 28px 36px; }
+.ig-x.ig-larper .ig-persona { font-size: 190px; }
+.ig-x.ig-larper .ig-line { font-size: 64px; }
+.ig-x.ig-larper .ig-sum { font-size: 28px; margin-top: 22px; }

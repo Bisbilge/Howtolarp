@@ -10,6 +10,7 @@
     <% } else { %>
       <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
       <h1 class="page-h">Görsel oluştur</h1>
+      <p class="ig-intro"><a href="/yonetim/gorsel/enler">En çok larplananlar ve günün larperi görselleri →</a></p>
     <% } %>
     <form method="get" action="<%= publicMode ? '/rehber/' + guide.slug + '/gorsel' : '/yonetim/gorsel' %>" class="form ig-form">
       <% if (guide && !publicMode) { %><input type="hidden" name="rehber" value="<%= guide.slug %>"><% } %>
