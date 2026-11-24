@@ -31,6 +31,7 @@ fit product-market mrr stealth startup founder founders
 fine dining umami signature
 it's i i'm
 acidity director distribution community-led smoothie
+riemann
 `.trim().split(/\s+/));
 
 const TR_ONLY = /[çğıöşüÇĞİÖŞÜ]/;

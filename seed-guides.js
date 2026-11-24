@@ -1045,4 +1045,36 @@ module.exports = [
       'Lastik değiştirmenin istenmesi.',
     ],
   },
+  {
+    title: 'Matematikçi Nasıl Larplanır?',
+    category: 'Zeka & Kültür',
+    difficulty: 5,
+    summary: 'Riemann hipotezini çözmene gerek yok. Matematikçi larpında önemli olan problemi çözmek değil, ne kadar "zarif" olduğundan bahsetmek.',
+    kit: [
+      'Tebeşir tozlu bir kazak (tebeşir tozu şart, kazak isteğe bağlı)',
+      'Kenarlarına anlamsız semboller çizilmiş bir defter',
+      'Ezberlenmiş üç kelime: zarif, simetri, genelleştirmek',
+      'Riemann hipotezi hakkında tek cümlelik bir fikir',
+    ],
+    steps: [
+      'Biri bir problem anlatırken kâğıda hiçbir şey yazma. Tavana bak, biraz bekle ve "Burada güzel bir simetri var" de.',
+      'Restoranda hesap gelince telefonu çıkarma. Peçeteye bir integral işareti çiz, sonra arkadaşına uzatıp "Sen bir bak" de.',
+      'Her güzel şeye "zarif" de: bir ispata, bir binaya, bir kahvaltıya.',
+      'Gündemde bir matematik haberi varsa makaleyi açma. Özetin ilk cümlesini oku ve "Yaklaşım ilginç ama asıl mesele detaylarda" de.',
+      'Sohbet tıkanınca cama ya da bir kâğıda bir şey yaz, uzun uzun bak, sonra silip "Yok, bu olmaz" de.',
+    ],
+    phrases: [
+      'Burada güzel bir simetri var.',
+      'Sezgisel olarak açık, ama kesin değil.',
+      'Bunu genelleştirebiliriz.',
+      'İspatı okudum, şaşırtıcı derecede sade.',
+      'Riemann hipotezi mi? Ben zaten doğru olduğunu düşünüyordum.',
+    ],
+    risks: [
+      'Birinin "Peki Riemann hipotezi tam olarak ne diyor?" diye sorması. (Kurtarma cümlesi: "Asal sayıların dağılımıyla ilgili, gerisi biraz teknik.")',
+      'Gerçek bir matematikçinin sohbete katılması. Belirtisi: senden daha az konuşan ve sık sık "hmm" diyen biri.',
+      'Hesabı bölüşürken bahşişi senin hesaplamanın istenmesi.',
+      'Bir lise öğrencisinin sana matematik ödevini sorması.',
+    ],
+  },
 ];
