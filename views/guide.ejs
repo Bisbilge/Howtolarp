@@ -134,6 +134,13 @@
     <% } %>
   </div>
 
+  <% if (!guide.hidden && !guide.banned && guide.approved) { %>
+  <div class="friend-box">
+    <p class="friend-q"><span class="hl-mark">Bu tam sensin.</span> Aklına biri mi geldi?</p>
+    <a class="big-btn big-btn-ink" href="https://wa.me/?text=<%= encodeURIComponent(friendText + ' ' + friendUrl) %>" target="_blank" rel="noopener" data-friend data-text="<%= friendText %>" data-url="<%= friendUrl %>">Ona gönder 😏</a>
+  </div>
+  <% } %>
+
   <% if (!isOwner && !guide.hidden && guide.approved && (user || signupsOpen)) { %>
   <section class="report" id="bildir">
     <% if (justReported || reported) { %>
@@ -182,6 +189,12 @@
     }
     document.querySelectorAll('[data-copy]').forEach(function (b) {
       b.addEventListener('click', function () { copy(b.textContent.trim(), 'Replik kopyalandı. Sahneye hazırsın.'); });
+    });
+    // "Bu tam sensin": telefonda paylaşım menüsü (WhatsApp, DM...), yoksa WhatsApp bağlantısı
+    var friend = document.querySelector('[data-friend]');
+    if (friend && navigator.share) friend.addEventListener('click', function (e) {
+      e.preventDefault();
+      navigator.share({ text: friend.dataset.text, url: friend.dataset.url }).catch(function () {});
     });
     var share = document.querySelector('[data-share]');
     if (share) share.addEventListener('click', function () {

@@ -17,9 +17,30 @@
       <a class="adm-btn" href="<%= tweetUrl %>" target="_blank" rel="noopener">Twitter / X ↗</a>
       <a class="adm-btn" href="<%= waUrl %>" target="_blank" rel="noopener">WhatsApp ↗</a>
       <button class="adm-btn" type="button" id="copy-link" data-url="<%= shareUrl %>">Linki kopyala</button>
+      <button class="adm-btn" type="button" id="story-btn">Story'de paylaş ↗</button>
     </div>
   </div>
 </section>
+
+<%# Story görseli: 1080x1920, ekran dışında çizilir, tıklayınca PNG yapılır %>
+<div class="story-off" aria-hidden="true">
+  <div class="ig ig-story ig-quiz" id="story-card">
+    <div class="ig-top"><b>How to LARP</b><span>Hangi larpsın? · Test sonucu</span></div>
+    <div class="ig-body">
+      <p class="ig-kicker">Testi çözdüm, sonuç:</p>
+      <p class="ig-you">Ben bir</p>
+      <p class="ig-persona" id="story-persona"><%- markEn(result.name) %></p>
+      <p class="ig-you"><mark>larpçısıyım.</mark></p>
+      <p class="ig-sum"><%= result.line %></p>
+      <p class="ig-ask">Sen hangisisin? 👀</p>
+    </div>
+    <div class="ig-foot">
+      <div class="ig-cta">Testi çöz:<br><b>howtolarp.org/test</b></div>
+      <div class="ig-mark"><span>LARP</span></div>
+    </div>
+  </div>
+</div>
+<script src="/vendor/html-to-image.js"></script>
 <script>
   (function () {
     var b = document.getElementById('copy-link');
@@ -28,6 +49,39 @@
       if (navigator.share) { navigator.share({ title: document.title, url: url }).catch(function () {}); return; }
       (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(
         function () { b.textContent = 'Kopyalandı ✓'; }, function () { prompt('Linki kopyala:', url); });
+    });
+
+    // Story görseli: uzun sonuç adlarını sığdır, telefonda paylaşım menüsüne dosya olarak ver, yoksa indir
+    var card = document.getElementById('story-card'), sb = document.getElementById('story-btn'), blobP = null;
+    var fileName = 'howtolarp-test-<%= key %>.png';
+    function fitName() {
+      var p = document.getElementById('story-persona'), body = card.querySelector('.ig-body'), size = 200;
+      p.style.fontSize = size + 'px';
+      while ((p.scrollWidth > p.clientWidth || body.scrollHeight > body.clientHeight + 1) && size > 90) { size -= 6; p.style.fontSize = size + 'px'; }
+    }
+    function makeBlob() {
+      blobP = blobP || document.fonts.ready.then(function () {
+        fitName();
+        return htmlToImage.toBlob(card, { pixelRatio: 1, width: 1080, height: 1920, cacheBust: true });
+      });
+      blobP.catch(function () { blobP = null; });
+      return blobP;
+    }
+    var canFiles = false;
+    try { canFiles = !!(navigator.canShare && navigator.canShare({ files: [new File([new Blob(['x'])], 'a.png', { type: 'image/png' })] })); } catch (e) {}
+    if (canFiles) setTimeout(makeBlob, 800); // önceden hazırla: menü anında açılsın
+    sb.addEventListener('click', function () {
+      var label = sb.textContent;
+      sb.disabled = true; sb.textContent = 'Hazırlanıyor…';
+      makeBlob().then(function (blob) {
+        var file = new File([blob], fileName, { type: 'image/png' });
+        if (canFiles) return navigator.share({ files: [file] });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      }).catch(function (e) {
+        if (e && e.name === 'AbortError') return;
+        alert('Görsel oluşturulamadı. Sayfayı yenileyip tekrar dene.');
+      }).finally(function () { sb.disabled = false; sb.textContent = label; });
     });
   })();
 </script>

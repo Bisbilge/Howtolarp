@@ -533,6 +533,8 @@ app.get('/rehber/:slug', async (req, res) => {
     ogImage: !guide.hidden && guide.approved && !guide.banned
       ? `${res.locals.baseUrl}/og/rehber/${guide.slug}.png?v=${ogVersion(guide)}` : null,
     guide, liked: !!likedRow, caught: !!caughtRow, reported: !!reportedRow, more, isOwner,
+    friendText: `Bunu görünce aklıma sen geldin 😂 "${guide.title}"`,
+    friendUrl: `${res.locals.baseUrl}/rehber/${guide.slug}`,
     guideReports: reportCount ? reportCount.n : 0,
     inShareQueue: reportCount ? Number(reportCount.queued) > 0 : false,
     justReported: req.query.bildirildi === '1',
