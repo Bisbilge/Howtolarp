@@ -11,6 +11,7 @@
         <div class="seg">
           <a class="<%= tur === 'liste' ? 'on' : '' %>" href="<%= link({ tur: 'liste' }) %>">En çok larplananlar (ilk 5)</a>
           <a class="<%= tur === 'larper' ? 'on' : '' %>" href="<%= link({ tur: 'larper' }) %>"><%= P.of %> larperi</a>
+          <a class="<%= tur === 'yazar' ? 'on' : '' %>" href="<%= link({ tur: 'yazar' }) %>"><%= P.of %> yazarı</a>
         </div>
       </div>
       <div class="f">
@@ -50,8 +51,13 @@
 
   <% if (!top.length) { %>
     <div class="ig-empty">
+      <% if (tur === 'yazar') { %>
+      <p class="page-h">Henüz aday yok.</p>
+      <p><%= P.label %> içinde üyelerin yazdığı rehberlerden hiçbiri larplanmamış (sitenin kendi rehberleri bu yarışa girmez). <a href="<%= link({ donem: 'tum' }) %>">Tüm zamanlara bak →</a></p>
+      <% } else { %>
       <p class="page-h">Henüz kimse larplamamış.</p>
       <p><%= P.label %> içinde "Ben de larpladım"a basan olmadı. <a href="<%= link({ donem: 'tum' }) %>">Tüm zamanlara bak →</a></p>
+      <% } %>
     </div>
   <% } else { %>
   <div class="ig-stage" data-format="<%= format %>">
@@ -74,6 +80,27 @@
           <div class="ig-cta">Sen hangisini larpladın?<br><b>howtolarp.org</b></div>
           <div class="ig-mark">HOW TO <span>LARP</span></div>
         </div>
+      </div>
+      <% } else if (tur === 'yazar') { %>
+      <div class="ig ig-<%= format %> ig-larper ig-author" id="ig-card">
+        <div class="ig-top"><b><%= P.of %> yazarı</b><span>✍️ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
+        <div class="ig-body">
+          <div class="ig-main">
+            <p class="ig-kicker"><%= P.of %> yazarı · How to LARP</p>
+            <h2 class="ig-persona ig-fit ig-handle" lang="en">@<%= author.username %></h2>
+            <p class="ig-line">Rehberleri <%= donem === 'tum' ? 'şimdiye kadar' : P.label.toLocaleLowerCase('tr') %> <mark><%= author.n %> kez</mark> larplandı.</p>
+          </div>
+          <ol class="ig-rank ig-rank-sm">
+            <% author.top.forEach((g, i) => { %>
+              <li><span class="ig-rank-n"><%= i + 1 %></span><span class="ig-rank-t"><b class="ig-fit2"><%- markEn(persona(g.title)) %></b><small><%= g.n %> kez larplandı</small></span></li>
+            <% }) %>
+          </ol>
+        </div>
+        <div class="ig-foot">
+          <div class="ig-cta">Sıradaki sen ol<br><b>howtolarp.org/yaz</b></div>
+          <div class="ig-mark">HOW TO <span>LARP</span></div>
+        </div>
+        <div class="ig-sticker"><span>✍️</span></div>
       </div>
       <% } else { %>
       <div class="ig ig-<%= format %> ig-larper" id="ig-card">
@@ -120,7 +147,7 @@
           while ((el.scrollWidth > el.clientWidth + 1 || over()) && size > min) { size -= 4; el.style.fontSize = size + 'px'; }
         });
       }
-      shrink(Array.prototype.slice.call(card.querySelectorAll('.ig-fit')), 80);
+      shrink(Array.prototype.slice.call(card.querySelectorAll('.ig-fit')), 56);
       var names = Array.prototype.slice.call(card.querySelectorAll('.ig-fit2'));
       var size = names.length ? parseFloat(getComputedStyle(names[0]).fontSize) : 0;
       while (names.length && over() && size > 34) { size -= 3; names.forEach(function (n) { n.style.fontSize = size + 'px'; }); }

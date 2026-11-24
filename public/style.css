@@ -709,3 +709,17 @@ button.bubble:active { transform: scale(.97); }
 .ig-x.ig-larper .ig-persona { font-size: 190px; }
 .ig-x.ig-larper .ig-line { font-size: 64px; }
 .ig-x.ig-larper .ig-sum { font-size: 28px; margin-top: 22px; }
+.ig-author .ig-handle { text-transform: none; font-size: 170px; max-width: 740px; white-space: nowrap; overflow-wrap: normal; }
+.ig-author .ig-line mark { white-space: nowrap; }
+.ig-x.ig-author .ig-sticker { display: none; }
+.ig-author .ig-rank-sm { margin-top: 56px; gap: 22px; }
+.ig-author .ig-rank-sm .ig-rank-n { width: 96px; height: 96px; font-size: 64px; }
+.ig-author .ig-rank-sm .ig-rank-t b { font-size: 56px; }
+.ig-x.ig-author .ig-handle { font-size: 140px; max-width: none; }
+.ig-x.ig-author .ig-rank-sm { margin-top: 0; }
+.ig-x.ig-author .ig-body { grid-template-columns: minmax(0, 1fr) 640px; }
+.ig-story.ig-author .ig-rank-sm { margin-top: auto; margin-bottom: 110px; gap: 34px; }
+.ig-author .ig-sticker { display: none; }
+.ig-author .ig-handle { max-width: none; }
+.ig-author .ig-line { margin-top: 30px; }
+.ig-post.ig-author .ig-rank-sm { margin-top: auto; margin-bottom: 50px; }

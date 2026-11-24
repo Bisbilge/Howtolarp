@@ -766,22 +766,41 @@ async function topGuides(period, limit) {
     JOIN guides g ON g.id = l.guide_id JOIN users u ON u.id = g.user_id
     WHERE ${VISIBLE} GROUP BY g.id ORDER BY n DESC, g.id DESC LIMIT ?`, [limit]);
 }
+// Seçilen dönemde rehberleri en çok larplanan üye (sitenin kendi "editor" hesabı yarışmaz)
+async function topAuthor(period) {
+  const { since } = TOP_PERIODS[period];
+  const where = since ? `WHERE at > datetime('now', '${since}')` : '';
+  const a = await db.get(`SELECT u.id, u.username, COUNT(*) AS n, COUNT(DISTINCT g.id) AS guides
+    FROM (SELECT guide_id FROM likes ${where} UNION ALL SELECT guide_id FROM anon_likes ${where}) l
+    JOIN guides g ON g.id = l.guide_id JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} AND u.username != 'editor' GROUP BY u.id ORDER BY n DESC, u.id LIMIT 1`);
+  if (!a) return null;
+  a.top = await db.all(`SELECT g.slug, g.title, COUNT(*) AS n
+    FROM (SELECT guide_id FROM likes ${where} UNION ALL SELECT guide_id FROM anon_likes ${where}) l
+    JOIN guides g ON g.id = l.guide_id JOIN users u ON u.id = g.user_id
+    WHERE ${VISIBLE} AND g.user_id = ? GROUP BY g.id ORDER BY n DESC, g.id DESC LIMIT 3`, [a.id]);
+  return a;
+}
 app.get('/yonetim/gorsel/enler', requireAdmin, async (req, res) => {
-  const tur = req.query.tur === 'larper' ? 'larper' : 'liste';
+  const tur = ['larper', 'yazar'].includes(req.query.tur) ? req.query.tur : 'liste';
   const donem = Object.hasOwn(TOP_PERIODS, req.query.donem) ? req.query.donem : 'gun';
   const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
   const P = TOP_PERIODS[donem];
-  const top = await topGuides(donem, tur === 'larper' ? 1 : 5);
+  const author = tur === 'yazar' ? await topAuthor(donem) : null;
+  const top = tur === 'yazar' ? (author ? [author] : []) : await topGuides(donem, tur === 'larper' ? 1 : 5);
   const base = res.locals.baseUrl;
   const site = base.replace(/^https?:\/\//, '');
   let text = '';
-  if (top.length && tur === 'liste') {
+  if (author) {
+    const when = donem === 'tum' ? 'şimdiye kadar' : P.label.toLocaleLowerCase('tr');
+    text = `${P.of} yazarı: @${author.username} 🏆\nYazdığı rehberler ${when} ${author.n} kez larplandı.\n\n${author.top.map((g) => `• ${persona(g.title)}`).join('\n')}\n\nSen de bir rehber yaz, sıradaki sen ol: ${site}/yaz`;
+  } else if (top.length && tur === 'liste') {
     text = `${P.label} en çok larplanan rehberler 🏆\n\n${top.map((g, i) => `${i + 1}. ${persona(g.title)}`).join('\n')}\n\nSen hangisini larpladın? 👀\n${site}`;
   } else if (top.length) {
     const g = top[0];
     text = `${P.of} larperi: ${persona(g.title)} 🏆\n${P.label === 'Tüm zamanlar' ? 'Şimdiye kadar' : P.label} ${g.n} kişi bu rehberle larpladı. Sıra sende.\n\n${base}/rehber/${g.slug}`;
   }
-  res.render('gorsel-top', { title: 'Görsel oluştur · En çoklar', tur, donem, format, P, top, text, TOP_PERIODS,
+  res.render('gorsel-top', { title: 'Görsel oluştur · En çoklar', tur, donem, format, P, top, author, text, TOP_PERIODS,
     tweetUrl: text ? tweetIntent(text) : null });
 });
 
