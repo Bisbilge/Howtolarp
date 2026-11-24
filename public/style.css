@@ -650,3 +650,4 @@ button.bubble:active { transform: scale(.97); }
 .member-meta { font: 400 12px var(--mono); }
 .members li > div { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .page-h small { font: 400 .4em var(--mono); vertical-align: middle; }
+.ig-intro { color: var(--mute); margin: 0 0 8px; max-width: 360px; }

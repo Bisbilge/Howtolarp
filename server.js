@@ -355,6 +355,15 @@ function shareTexts(guide, baseUrl) {
     ig: `Yeni rehber: ${guide.title}\n\n${guide.summary}\n\nRehberin tamamı ve daha fazlası: howtolarp.org (link profilde)\n\n#howtolarp #larp #mizah`,
   };
 }
+function publicShareTexts(guide, baseUrl) {
+  const link = `${baseUrl}/rehber/${guide.slug}`;
+  const short = guide.summary.length > 150 ? guide.summary.slice(0, 147).trim() + '…' : guide.summary;
+  return {
+    link,
+    x: `${guide.title}\n\n${short}\n\n${link}`,
+    ig: `${guide.title}\n\n${guide.summary}\n\nRehberin tamamı: howtolarp.org`,
+  };
+}
 const tweetIntent = (text) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 
 async function deleteGuide(id) {
@@ -736,8 +745,20 @@ app.get('/yonetim/gorsel', requireAdmin, async (req, res) => {
   const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
   const texts = guide ? shareTexts(guide, res.locals.baseUrl) : null;
   const share = guide ? await db.get('SELECT x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?', [guide.id]) : null;
-  res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share,
+  res.render('gorsel', { title: 'Görsel oluştur', list, guide, format, q, texts, share, publicMode: false,
     tweetUrl: texts ? tweetIntent(texts.x) : null });
+});
+
+// Herkese açık görsel sayfası: ziyaretçi açtığı rehberin görselini indirip paylaşabilir
+app.get('/rehber/:slug/gorsel', async (req, res) => {
+  const guide = await findGuide(req.params.slug);
+  if (!guide || guide.hidden || guide.banned || !guide.approved) return notFound(req, res);
+  const format = IMAGE_FORMATS.includes(req.query.format) ? req.query.format : 'post';
+  const texts = publicShareTexts(guide, res.locals.baseUrl);
+  res.render('gorsel', {
+    title: `${guide.title} · Görsel olarak paylaş`, noindex: true, publicMode: true,
+    list: [], guide, format, q: '', texts, share: null, tweetUrl: tweetIntent(texts.x),
+  });
 });
 
 // ---------- Üyeler ----------

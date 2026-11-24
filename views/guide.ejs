@@ -45,6 +45,7 @@
         <p class="g-sum"><%= guide.summary %></p>
         <div class="g-tools">
           <button type="button" class="ghost-btn" data-share data-title="<%= guide.title %>">Paylaş ↗</button>
+          <% if (guide.approved && !guide.hidden && !guide.banned) { %><a class="ghost-btn" href="/rehber/<%= guide.slug %>/gorsel">Görsel olarak paylaş ↗</a><% } %>
           <a class="ghost-btn" href="/rastgele">Başka bir rol ↻</a>
         </div>
         <% if (isOwner) { %>

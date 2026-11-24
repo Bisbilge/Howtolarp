@@ -3,10 +3,17 @@
    const phrases = guide ? lines2(guide.phrases).slice(0, format === 'story' ? 3 : 2).map(l => l.replace(/^["“”']+|["“”']+$/g, '')) : []; %>
 <section class="ig-page">
   <div class="ig-controls">
-    <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
-    <h1 class="page-h">Görsel oluştur</h1>
-    <form method="get" action="/yonetim/gorsel" class="form ig-form">
-      <% if (guide) { %><input type="hidden" name="rehber" value="<%= guide.slug %>"><% } %>
+    <% if (publicMode) { %>
+      <p class="kicker"><a href="/rehber/<%= guide.slug %>">← Rehbere dön</a></p>
+      <h1 class="page-h">Görsel olarak paylaş</h1>
+      <p class="ig-intro">Bu rehberin görselini indir ya da doğrudan Instagram, Twitter veya WhatsApp'ta paylaş.</p>
+    <% } else { %>
+      <p class="kicker">Sahne arkası · <a href="/yonetim">Yönetim</a></p>
+      <h1 class="page-h">Görsel oluştur</h1>
+    <% } %>
+    <form method="get" action="<%= publicMode ? '/rehber/' + guide.slug + '/gorsel' : '/yonetim/gorsel' %>" class="form ig-form">
+      <% if (guide && !publicMode) { %><input type="hidden" name="rehber" value="<%= guide.slug %>"><% } %>
+      <% if (!publicMode) { %>
       <div class="f">
         <span class="f-l">Rehber <em><%= list.length %> rehber</em></span>
         <div class="search ig-search">
@@ -21,7 +28,8 @@
           <li class="ig-none" id="ig-none" <%- list.length ? 'hidden' : '' %>>Eşleşen rehber yok.</li>
         </ul>
       </div>
-      <% if (guide) { %><p class="ig-current">Seçili: <b><%= guide.title %></b> · <a href="/rehber/<%= guide.slug %>">Rehbere git</a></p><% } %>
+      <% } %>
+      <% if (guide) { %><p class="ig-current"><%= publicMode ? '' : 'Seçili: ' %><b><%= guide.title %></b><% if (!publicMode) { %> · <a href="/rehber/<%= guide.slug %>">Rehbere git</a><% } %></p><% } %>
       <div class="ig-formats">
         <label class="radio"><input type="radio" name="format" value="post" <%= format === 'post' ? 'checked' : '' %> onchange="this.form.submit()"><span>Instagram gönderi (1080×1350)</span></label>
         <label class="radio"><input type="radio" name="format" value="story" <%= format === 'story' ? 'checked' : '' %> onchange="this.form.submit()"><span>Instagram hikaye (1080×1920)</span></label>
@@ -34,17 +42,18 @@
           <a class="big-btn" href="<%= tweetUrl %>" target="_blank" rel="noopener">Tweet'i aç ↗</a>
           <button class="ghost-btn" type="button" id="ig-download">PNG indir ↓</button>
         <% } else { %>
-          <button class="big-btn" type="button" id="ig-share" hidden>Instagram'da paylaş ↗</button>
+          <button class="big-btn" type="button" id="ig-share" hidden><%= publicMode ? 'Paylaş ↗' : "Instagram'da paylaş ↗" %></button>
           <button class="big-btn" type="button" id="ig-download">PNG indir ↓</button>
         <% } %>
       </div>
       <% if (format === 'x') { %>
         <p class="ig-hint">Tweet'te rehberin linki var; Twitter önizleme görselini linkten kendisi ekler. Ayrıca görsel eklemek istersen PNG'yi indir.</p>
       <% } else { %>
-        <p class="ig-hint" id="ig-share-hint" hidden>Görsel paylaşım menüsünde açılır, açıklama panoya kopyalanır: Instagram'ı seç, açıklama alanına yapıştır.</p>
+        <p class="ig-hint" id="ig-share-hint" hidden>Görsel paylaşım menüsünde açılır, açıklama panoya kopyalanır: Instagram'ı (ya da istediğin uygulamayı) seç, açıklama alanına yapıştır.</p>
       <% } %>
       <% const pf = format === 'x' ? 'x' : 'ig'; const done = share && (pf === 'x' ? share.x_at : share.ig_at); %>
-      <% if (done) { %>
+      <% if (publicMode) { %>
+      <% } else if (done) { %>
         <p class="share-done">✓ <%= pf === 'x' ? 'Twitter' : 'Instagram' %>'da paylaşıldı olarak işaretli</p>
       <% } else { %>
         <form method="post" action="/yonetim/paylasim/<%= guide.id %>/<%= pf %>" class="inline">
@@ -64,7 +73,7 @@
   <div class="ig-stage" data-format="<%= format %>">
     <div class="ig-scale">
       <div class="ig ig-<%= format %>" id="ig-card">
-        <div class="ig-top"><b>Yeni rehber</b><span>HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
+        <div class="ig-top"><b><%= publicMode ? 'Larp rehberi' : 'Yeni rehber' %></b><span>HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP ✕ HOW TO LARP</span></div>
         <div class="ig-body">
           <div class="ig-main">
           <p class="ig-kicker"><%= guide.category %> · Zorluk <%= guide.difficulty %>/5 · <%= DIFFICULTY_LABELS[guide.difficulty] %></p>
@@ -91,6 +100,7 @@
   // Yazdıkça filtrele (Türkçe karakter duyarsız)
   (function () {
     var input = document.getElementById('ig-q'), items = document.querySelectorAll('#ig-list li[data-key]');
+    if (!input) return; // ziyaretçi sayfasında rehber listesi yok
     var none = document.getElementById('ig-none');
     var map = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' };
     function fold(t) { return t.toLocaleLowerCase('tr').replace(/[çğıöşü]/g, function (c) { return map[c]; }).normalize('NFKD').replace(/[\u0300-\u036f]/g, ''); }
