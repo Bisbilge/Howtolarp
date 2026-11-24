@@ -910,7 +910,7 @@ app.post('/kayit', async (req, res) => {
   const user = await db.get('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?) RETURNING id',
     [username, hashPassword(password), codeOk ? 'editor' : 'user']);
   await startSession(res, user.id);
-  if (codeOk) await notifyAdmins(`🎭 Yeni editör katıldı: @${username}`);
+  await notifyAdmins(codeOk ? `🎭 Yeni editör katıldı: @${username}` : `👤 Yeni üye: @${username}`);
   res.redirect(codeOk ? '/yonetim' : (sonra === '/' ? '/yaz' : sonra));
 });
 
