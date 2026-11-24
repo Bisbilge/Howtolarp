@@ -103,7 +103,12 @@
         try { if (same(now, initial)) drop(); else localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), data: now })); } catch (e) {}
       }, 400);
     });
-    form.addEventListener('submit', drop);
+    form.addEventListener('submit', function () {
+      drop();
+      // Çift basışta iki rehber açılmasın
+      var btn = form.querySelector('.f-actions button[type=submit]');
+      if (btn) setTimeout(function () { btn.disabled = true; btn.textContent = 'Gönderiliyor…'; }, 0);
+    });
   })();
 </script>
 <%- include('partials/foot') %>

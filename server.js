@@ -472,6 +472,11 @@ app.get('/rastgele', async (req, res) => {
 
 app.get('/rehber/:slug', async (req, res) => {
   const guide = await findGuide(req.params.slug);
+  if (!guide) {
+    // Birleştirilen kopyaların eski adresleri
+    const r = await db.get('SELECT new_slug FROM slug_redirects WHERE old_slug = ?', [req.params.slug]);
+    if (r) return res.redirect(301, `/rehber/${r.new_slug}`);
+  }
   const isOwner = !!guide && req.user?.id === guide.user_id;
   const isAdmin = !!req.user?.isAdmin;
   if (!guide || ((guide.hidden || guide.banned || !guide.approved) && !isOwner && !isAdmin)) return notFound(req, res);
@@ -549,6 +554,11 @@ app.post('/yaz', requireUser, async (req, res) => {
       return fail([`Onay bekleyen ${MAX_PENDING} rehberin var. Onlar incelenince yenilerini gönderebilirsin.`]);
     }
   }
+
+  // Çift gönderim: aynı kişi aynı başlıkla az önce rehber açtıysa yenisini açma
+  const recent = await db.get(`SELECT slug FROM guides WHERE user_id = ? AND title = ? AND created_at > datetime('now', '-10 minutes')`,
+    [req.user.id, g.title]);
+  if (recent) return res.redirect(`/rehber/${recent.slug}`);
 
   const slug = await slugify(g.title);
   await db.run(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks, approved)
@@ -690,7 +700,7 @@ app.get('/yonetim', requireAdmin, async (req, res) => {
 // ---------- Yedek (sadece baş yönetici) ----------
 // Oturumlar ve geçici sınır kayıtları hariç tüm tablolar tek JSON dosyası olarak iner.
 // Geri yükleme: node scripts/geri-yukle.js <dosya>  (README'ye bakın)
-const BACKUP_TABLES = ['users', 'guides', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes'];
+const BACKUP_TABLES = ['users', 'guides', 'slug_redirects', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'seeded', 'share_queue', 'requests', 'request_votes'];
 app.get('/yonetim/yedek', requireAdmin, async (req, res) => {
   if (!req.user.isSuper) return notFound(req, res);
   const tables = {};

@@ -86,6 +86,8 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS reports_open ON reports(resolved_at, guide_id)`,
   // Hangi örnek rehberlerin eklendiğini tutar: silinen örnekler geri gelmez
   `CREATE TABLE IF NOT EXISTS seeded (title TEXT PRIMARY KEY)`,
+  // Birleştirilen/kaldırılan rehberlerin eski adresleri (paylaşılmış linkler kırılmasın)
+  `CREATE TABLE IF NOT EXISTS slug_redirects (old_slug TEXT PRIMARY KEY, new_slug TEXT NOT NULL)`,
   // Paylaşım sırası: yayına giren rehberler sosyal medyada paylaşılmak üzere buraya düşer
   `CREATE TABLE IF NOT EXISTS share_queue (
     guide_id  INTEGER PRIMARY KEY REFERENCES guides(id) ON DELETE CASCADE,
@@ -197,6 +199,7 @@ async function setup() {
   await getClient().batch(INDEXES, 'write');
 
   await seedGuides();
+  await dedupeGuides();
 }
 
 // Örnek rehberler. seed-guides.js'te:
@@ -214,22 +217,27 @@ async function seedGuides() {
     .filter(({ key, hash }) => rows.get(key)?.hash !== hash);
   if (!work.length) return;
 
-  // Editör hesabı: rastgele şifre, giriş için kullanılmıyor.
-  let editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
-  if (!editor) {
-    editor = await db.get('INSERT INTO users (username, password_hash, bio) VALUES (?, ?, ?) RETURNING id',
-      ['editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.']);
-  }
+  // Editör hesabı: rastgele şifre, giriş için kullanılmıyor. (Aynı anda açılan kopyalar çakışmasın)
+  await db.run('INSERT OR IGNORE INTO users (username, password_hash, bio) VALUES (?, ?, ?)',
+    ['editor', hashPassword(crypto.randomBytes(24).toString('hex')), 'How to LARP yayın kurulu. İlk rehberleri biz yazdık, gerisi sizde.']);
+  const editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
   const fields = (g) => [g.title, g.category, g.difficulty, g.summary,
     g.kit.join('\n'), g.steps.join('\n'), g.phrases.join('\n'), g.risks.join('\n')];
   const findOld = async (key, g) => (await db.get(
     'SELECT id FROM guides WHERE user_id = ? AND title IN (?, ?) ORDER BY id LIMIT 1', [editor.id, key, g.title]))?.id;
+  const firstRun = rows.size === 0;
 
-  // Listedeki sıra korunsun: sondaki örnek en yeni görünsün
+  // Vercel'de birden çok sunucu kopyası aynı anda açılabilir. Her örnek için önce seeded tablosunda
+  // "sahiplen" (tek bir yazma, veritabanı sıralar); sahiplenemeyen kopya o örneği atlar. Böylece
+  // aynı rehber iki kez eklenmez ya da iki kez güncellenmez.
   for (const { g, key, hash } of work) {
     const row = rows.get(key);
-    let id = row ? (row.guide_id ?? await findOld(key, g)) : await findOld(key, g);
+    const claim = row
+      ? await db.run('UPDATE seeded SET hash = ? WHERE title = ? AND hash IS ?', [hash, key, row.hash ?? null])
+      : await db.run('INSERT OR IGNORE INTO seeded (title, hash) VALUES (?, ?)', [key, hash]);
+    if (claim.rowsAffected === 0) continue; // başka bir kopya bu örneği hallediyor
 
+    let id = row ? (row.guide_id ?? await findOld(key, g)) : await findOld(key, g);
     if (id) {
       // Var olan örneği güncelle (yalnızca hâlâ editörün rehberiyse)
       await db.run(`UPDATE guides SET title = ?, category = ?, difficulty = ?, summary = ?, kit = ?, steps = ?,
@@ -238,11 +246,60 @@ async function seedGuides() {
       // Hiç eklenmemiş: yeni rehber
       id = (await db.get(`INSERT INTO guides (slug, user_id, title, category, difficulty, summary, kit, steps, phrases, risks)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [await slugify(g.title), editor.id, ...fields(g)])).id;
-      if (rows.size > 0) await db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
+      if (!firstRun) await db.run('INSERT OR IGNORE INTO share_queue (guide_id) VALUES (?)', [id]);
     }
     // row var ama rehber bulunamadı: sitede silinmiş, geri getirme
-    await db.run(`INSERT INTO seeded (title, guide_id, hash) VALUES (?, ?, ?)
-      ON CONFLICT(title) DO UPDATE SET guide_id = excluded.guide_id, hash = excluded.hash`, [key, id ?? null, hash]);
+    await db.run('UPDATE seeded SET guide_id = ? WHERE title = ?', [id ?? null, key]);
+  }
+}
+
+// Kopya rehberleri teke indirir. Kalan rehbere, silinen kopyaya gelen beğeni, yakalandım,
+// bildirim ve paylaşım kayıtları taşınır; kopyanın eski adresi kalan rehbere yönlenir.
+async function mergeGuide(dup, keep) {
+  if (dup === keep) return;
+  const keepSlug = (await db.get('SELECT slug FROM guides WHERE id = ?', [keep]))?.slug;
+  const dupSlug = (await db.get('SELECT slug FROM guides WHERE id = ?', [dup]))?.slug;
+  if (!keepSlug || !dupSlug) return;
+  await db.batch([
+    { sql: 'INSERT OR IGNORE INTO likes (user_id, guide_id) SELECT user_id, ? FROM likes WHERE guide_id = ?', args: [keep, dup] },
+    { sql: 'INSERT OR IGNORE INTO anon_likes (visitor, guide_id) SELECT visitor, ? FROM anon_likes WHERE guide_id = ?', args: [keep, dup] },
+    { sql: 'INSERT OR IGNORE INTO caught (user_id, guide_id) SELECT user_id, ? FROM caught WHERE guide_id = ?', args: [keep, dup] },
+    { sql: 'INSERT OR IGNORE INTO anon_caught (visitor, guide_id) SELECT visitor, ? FROM anon_caught WHERE guide_id = ?', args: [keep, dup] },
+    { sql: `INSERT OR IGNORE INTO reports (guide_id, user_id, reason, note, created_at, resolved_at)
+            SELECT ?, user_id, reason, note, created_at, resolved_at FROM reports WHERE guide_id = ?`, args: [keep, dup] },
+    { sql: `INSERT OR IGNORE INTO share_queue (guide_id, queued_at, x_at, ig_at, skipped)
+            SELECT ?, queued_at, x_at, ig_at, skipped FROM share_queue WHERE guide_id = ?`, args: [keep, dup] },
+    { sql: 'UPDATE seeded SET guide_id = ? WHERE guide_id = ?', args: [keep, dup] },
+    { sql: 'UPDATE requests SET done_slug = ? WHERE done_slug = ?', args: [keepSlug, dupSlug] },
+    { sql: 'UPDATE slug_redirects SET new_slug = ? WHERE new_slug = ?', args: [keepSlug, dupSlug] },
+    { sql: 'INSERT OR REPLACE INTO slug_redirects (old_slug, new_slug) VALUES (?, ?)', args: [dupSlug, keepSlug] },
+    ...['likes', 'anon_likes', 'caught', 'anon_caught', 'reports', 'share_queue'].map((t) => ({ sql: `DELETE FROM ${t} WHERE guide_id = ?`, args: [dup] })),
+    { sql: 'DELETE FROM guides WHERE id = ?', args: [dup] },
+  ]);
+  console.log(`kopya rehber birleştirildi: ${dupSlug} -> ${keepSlug}`);
+}
+
+async function dedupeGuides() {
+  // 1) Örnek rehberler: aynı örneğe ait (eski ya da yeni başlıkla) birden çok editör rehberi varsa,
+  //    seeded tablosunun gösterdiği kalır, diğerleri birleştirilir.
+  const editor = await db.get('SELECT id FROM users WHERE username = ?', ['editor']);
+  if (editor) {
+    const seeded = new Map((await db.all('SELECT title, guide_id FROM seeded')).map((r) => [r.title, r.guide_id]));
+    const mine = await db.all('SELECT id, title FROM guides WHERE user_id = ?', [editor.id]);
+    for (const g of require('./seed-guides')) {
+      const key = g.key || g.title;
+      const keep = seeded.get(key);
+      if (!keep) continue; // örnek silinmiş ya da henüz eklenmemiş
+      for (const r of mine) {
+        if (Number(r.id) !== Number(keep) && (r.title === key || r.title === g.title)) await mergeGuide(Number(r.id), Number(keep));
+      }
+    }
+  }
+  // 2) Herhangi bir yazarın birebir aynı rehberleri (ör. "Yayınla"ya iki kez basılmış): en eskisi kalır
+  const groups = await db.all(`SELECT MIN(id) AS keep, GROUP_CONCAT(id) AS ids FROM guides
+    GROUP BY user_id, title, summary, steps HAVING COUNT(*) > 1`);
+  for (const gr of groups) {
+    for (const dup of String(gr.ids).split(',').map(Number)) await mergeGuide(dup, Number(gr.keep));
   }
 }
 
