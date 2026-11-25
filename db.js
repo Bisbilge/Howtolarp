@@ -225,6 +225,11 @@ const seedHash = (g) => crypto.createHash('sha1')
   .update(JSON.stringify([g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks]))
   .digest('hex');
 
+// İstek anahtarı: server.js'teki fold() ile aynı (Türkçe harfler sadeleşir, küçük harf)
+const TR_FOLD = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
+const foldKey = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[çğıöşü]/g, (c) => TR_FOLD[c])
+  .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim();
+
 async function seedGuides() {
   const seeds = require('./seed-guides');
   const rows = new Map((await db.all('SELECT title, guide_id, hash FROM seeded')).map((r) => [r.title, r]));
@@ -265,6 +270,13 @@ async function seedGuides() {
     }
     // row var ama rehber bulunamadı: sitede silinmiş, geri getirme
     await db.run('UPDATE seeded SET guide_id = ? WHERE title = ?', [id ?? null, key]);
+    // Bu rehberin karşıladığı rehber istekleri (seed-guides.js'te `requests: ['istek metni']`) "yazıldı" olsun
+    if (id && g.requests?.length) {
+      const slug = (await db.get('SELECT slug FROM guides WHERE id = ?', [id]))?.slug;
+      for (const text of g.requests) {
+        await db.run('UPDATE requests SET done_slug = ? WHERE key = ? AND done_slug IS NULL', [slug, foldKey(text)]);
+      }
+    }
   }
 }
 

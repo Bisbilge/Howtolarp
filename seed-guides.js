@@ -1109,4 +1109,37 @@ module.exports = [
       'Kendi parfümünü artık koklayamadığın için yarım şişe sıktığının söylenmesi.',
     ],
   },
+  {
+    title: 'Dünyanın En Zor Bölümünü Okuyan Biri Nasıl Larplanır?',
+    category: 'Zeka & Kültür',
+    difficulty: 2,
+    summary: 'Hangi bölümü okuduğun önemli değil; önemli olan onun dünyanın en zor bölümü olduğuna herkesi inandırmak. Bir sıralamada ilk beşte olduğunu duymuştun, o kadar.',
+    requests: ['Dünyanın en zor bölümünü okumak'],
+    kit: [
+      'Çantadan hep görünen, kalın ve hiç açılmamış bir ders kitabı',
+      'Göz altı torbaları (yoksa uykusuz biri gibi davran)',
+      'Hazırda bekleyen bir "sabah 8.30 dersi" hikayesi',
+      'Telefonda "dünyanın en zor bölümleri" listesinin ekran görüntüsü (kaynağı yok)',
+    ],
+    steps: [
+      'Bölümünü soran olursa adını söyle ve iki saniye bekle. Karşındaki "Ooo, zormuş" demezse kendin de.',
+      'Her sohbeti finallere bağla: "Bizde final haftası aslında üç ay sürüyor."',
+      'Başka bir bölüm konuşulduğunda gülümse: "Onlar da zorlanıyor tabii, kendi çaplarında."',
+      'Sınıfın yarısının dersten kaldığını söyle. Geçen yarının da hocayla arası iyi.',
+      'Bütünlemeni savaş anısı gibi anlat: tarihi, saati, kaç soru olduğunu unutma.',
+      'Bir yere çağrıldığında "Proje teslimim var" de. Projenin ne olduğunu kimse sormaz.',
+    ],
+    phrases: [
+      'Bizim bölüm dünyanın en zor ilk beş bölümünden biri, bir sıralamada görmüştüm.',
+      'Ben çan eğrisiyle ancak geçtim, düşün.',
+      'Siz hafta sonu dinleniyorsunuz herhalde.',
+      'Hoca ilk derste "Bu sınıftan üçünüz mezun olacak" dedi.',
+    ],
+    risks: [
+      'Aynı bölümden biri masaya oturup "Ya o kadar da değil" der.',
+      'Sıralamanın linkini isterler. Link hiçbir zaman gelmez.',
+      'Sohbet transkripte gelir.',
+      'Masadaki herkes aynı listeyi gösterir: listede herkesin bölümü ilk beşte.',
+    ],
+  },
 ];
