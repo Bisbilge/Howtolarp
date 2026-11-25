@@ -2,7 +2,7 @@
 <section class="page page-form">
   <aside class="page-side">
     <h1 class="page-h"><%= editing ? 'Rolü revize et' : 'Yeni rol yaz' %></h1>
-    <p>Her satır ayrı bir madde olur. Kısa yaz, net yaz: okuyan kişi bu metinle sahneye çıkacak.</p>
+    <p>Her kutu ayrı bir madde olur; yenisi için "+ Madde ekle"ye bas ya da Enter'a bas. Kısa yaz, net yaz: okuyan kişi bu metinle sahneye çıkacak.</p>
     <p class="tip">İpucu: Başlığı "<b>X Nasıl Larplanır?</b>" diye bitirirsen rol kartında sadece "X" görünür.</p>
     <% if (!trusted) { %>
       <p class="tip tip-pink"><b>Onay:</b> İlk rehberlerin yöneticiler onayladıktan sonra yayına girer. Birkaç rehberin onaylanınca bu adım kalkar.</p>
@@ -49,21 +49,21 @@
         <textarea name="summary" required minlength="20" maxlength="400" rows="3" placeholder="Bu rol kimin için, ana fikri ne?"><%= g.summary || '' %></textarea>
       </label>
 
-      <label class="f"><span class="f-l">05 / Hazırlık <em>isteğe bağlı · eşya, bilgi, tavır</em></span>
-        <textarea name="kit" rows="4" placeholder="Numarasız gözlük&#10;Kapağı yıpranmış bir kitap"><%= g.kit || '' %></textarea>
-      </label>
+      <div class="f"><span class="f-l" id="l-kit">05 / Hazırlık <em>isteğe bağlı · eşya, bilgi, tavır</em></span>
+        <textarea name="kit" rows="4" aria-labelledby="l-kit" data-items="1" data-hints="Numarasız gözlük|Kapağı yıpranmış bir kitap" placeholder="Numarasız gözlük&#10;Kapağı yıpranmış bir kitap"><%= g.kit || '' %></textarea>
+      </div>
 
-      <label class="f"><span class="f-l">06 / Sahne talimatı <em>en az 2 satır</em></span>
-        <textarea name="steps" required rows="7" placeholder="Bir soru sorulduğunda üç saniye bekle.&#10;Her konuyu 'sistem' kavramına bağla."><%= g.steps || '' %></textarea>
-      </label>
+      <div class="f"><span class="f-l" id="l-steps">06 / Sahne talimatı <em>en az 2 madde</em></span>
+        <textarea name="steps" required rows="7" aria-labelledby="l-steps" data-items="2" data-hints="Bir soru sorulduğunda üç saniye bekle.|Her konuyu 'sistem' kavramına bağla.|Bir sonraki adım…" placeholder="Bir soru sorulduğunda üç saniye bekle.&#10;Her konuyu 'sistem' kavramına bağla."><%= g.steps || '' %></textarea>
+      </div>
 
-      <label class="f"><span class="f-l">07 / Replikler <em>isteğe bağlı</em></span>
-        <textarea name="phrases" rows="4" placeholder="Aslında mesele bu değil."><%= g.phrases || '' %></textarea>
-      </label>
+      <div class="f"><span class="f-l" id="l-phrases">07 / Replikler <em>isteğe bağlı · söyleyeceğin cümleler</em></span>
+        <textarea name="phrases" rows="4" aria-labelledby="l-phrases" data-items="1" data-hints="Aslında mesele bu değil.|Bunu ilk kim söyledi, biliyor musun?" placeholder="Aslında mesele bu değil."><%= g.phrases || '' %></textarea>
+      </div>
 
-      <label class="f"><span class="f-l">08 / Nerede yakalanırsın <em>isteğe bağlı</em></span>
-        <textarea name="risks" rows="4" placeholder="Gerçek bir uzmanla aynı masaya düşmek."><%= g.risks || '' %></textarea>
-      </label>
+      <div class="f"><span class="f-l" id="l-risks">08 / Nerede yakalanırsın <em>isteğe bağlı</em></span>
+        <textarea name="risks" rows="4" aria-labelledby="l-risks" data-items="1" data-hints="Gerçek bir uzmanla aynı masaya düşmek." placeholder="Gerçek bir uzmanla aynı masaya düşmek."><%= g.risks || '' %></textarea>
+      </div>
 
       <div class="f-actions">
         <button class="big-btn" type="submit"><%= editing ? 'Kaydet →' : (trusted ? 'Yayınla →' : 'Onaya gönder →') %></button>
@@ -73,6 +73,79 @@
   </div>
 </section>
 <script>
+  // Madde madde alanlar: her madde ayrı kutu. Asıl veri gizli textarea'da satır satır durur (JS yoksa textarea görünür).
+  (function () {
+    document.querySelectorAll('textarea[data-items]').forEach(function (ta) {
+      var min = Number(ta.dataset.items) || 1, hints = (ta.dataset.hints || '').split('|');
+      var box = document.createElement('div'); box.className = 'items';
+      var list = document.createElement('ol'); list.className = 'items-list';
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'items-add'; add.textContent = '+ Madde ekle';
+      box.appendChild(list); box.appendChild(add);
+      ta.hidden = true; ta.required = false; ta.parentNode.insertBefore(box, ta.nextSibling);
+      var label = document.getElementById(ta.getAttribute('aria-labelledby'));
+
+      function grow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+      function sync() {
+        ta.value = Array.prototype.map.call(list.querySelectorAll('.items-in'), function (i) { return i.value.replace(/\s*\n\s*/g, ' ').trim(); })
+          .filter(Boolean).join('\n');
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      function renumber() {
+        Array.prototype.forEach.call(list.children, function (li, i) {
+          var inp = li.querySelector('.items-in');
+          inp.placeholder = hints[Math.min(i, hints.length - 1)] || '';
+          inp.setAttribute('aria-label', (label ? label.firstChild.textContent.trim() : 'Madde') + ' · madde ' + (i + 1));
+        });
+      }
+      function row(value, after) {
+        var li = document.createElement('li');
+        var inp = document.createElement('textarea'); inp.className = 'items-in'; inp.rows = 1; inp.maxLength = 300; inp.value = value || '';
+        var del = document.createElement('button'); del.type = 'button'; del.className = 'items-del'; del.textContent = '×'; del.title = 'Maddeyi sil'; del.setAttribute('aria-label', 'Maddeyi sil');
+        li.appendChild(inp); li.appendChild(del);
+        if (after && after.nextSibling) list.insertBefore(li, after.nextSibling); else list.appendChild(li);
+        inp.addEventListener('input', function () {
+          // Birden fazla satır yapıştırıldıysa her satırı ayrı maddeye böl
+          if (inp.value.indexOf('\n') !== -1) {
+            var parts = inp.value.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+            inp.value = parts.shift() || '';
+            var last = li;
+            parts.forEach(function (p) { last = row(p, last); });
+            renumber(); last.querySelector('.items-in').focus();
+          }
+          grow(inp); sync();
+        });
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            var n = row('', li); renumber(); n.querySelector('.items-in').focus();
+          } else if (e.key === 'Backspace' && !inp.value && list.children.length > min) {
+            e.preventDefault();
+            var prev = li.previousElementSibling; li.remove(); renumber(); sync();
+            if (prev) { var p = prev.querySelector('.items-in'); p.focus(); p.setSelectionRange(p.value.length, p.value.length); }
+          }
+        });
+        del.addEventListener('click', function () {
+          if (list.children.length > min) li.remove(); else inp.value = '';
+          renumber(); sync();
+        });
+        setTimeout(function () { grow(inp); }, 0);
+        return li;
+      }
+      function build() {
+        list.innerHTML = '';
+        var items = ta.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        while (items.length < min) items.push('');
+        items.forEach(function (v) { row(v); });
+        renumber();
+      }
+      add.addEventListener('click', function () {
+        var n = row(''); renumber(); n.querySelector('.items-in').focus();
+      });
+      ta.rebuildItems = build;
+      build();
+    });
+  })();
+
   // Taslak: form yazdıkça bu tarayıcıya kaydedilir; sayfa kapanırsa geri yüklenebilir.
   (function () {
     var form = document.querySelector('.form');
@@ -91,7 +164,7 @@
       document.getElementById('draft-time').textContent = new Date(saved.at).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
       note.hidden = false;
       document.getElementById('draft-restore').onclick = function () {
-        FIELDS.forEach(function (n) { var el = form.elements[n]; if (el && saved.data[n] != null) el.value = saved.data[n]; });
+        FIELDS.forEach(function (n) { var el = form.elements[n]; if (el && saved.data[n] != null) { el.value = saved.data[n]; if (el.rebuildItems) el.rebuildItems(); } });
         note.hidden = true;
       };
       document.getElementById('draft-drop').onclick = function () { drop(); note.hidden = true; };

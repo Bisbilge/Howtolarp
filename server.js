@@ -398,7 +398,7 @@ function validateGuide(body) {
   if (!CATEGORIES.includes(g.category)) errors.push('Bir kategori seç.');
   if (!(g.difficulty >= 1 && g.difficulty <= 5)) errors.push('Zorluk 1 ile 5 arasında olmalı.');
   if (g.summary.length < 20 || g.summary.length > 400) errors.push('Özet 20 ile 400 karakter arasında olmalı.');
-  if (g.steps.split('\n').filter((s) => s.trim()).length < 2) errors.push('En az iki adım yaz.');
+  if (g.steps.split('\n').filter((s) => s.trim()).length < 2) errors.push('Sahne talimatına en az iki madde yaz.');
   if (['kit', 'steps', 'phrases', 'risks'].some((k) => g[k].length > 6000)) {
     errors.push('Bölümlerden biri çok uzun (en fazla 6000 karakter).');
   }

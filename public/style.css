@@ -780,3 +780,16 @@ button.bubble:active { transform: scale(.97); }
 .ig-report .ig-persona mark { display: inline-block; line-height: 1; padding: .06em 12px 0; }
 .ig-x.ig-report .ig-sub { font-size: 22px; }
 @media (max-width: 680px) { .st-card { min-height: 0; } .st-n { margin-top: 6px; } }
+
+/* Madde madde form alanları */
+.items-list { list-style: none; margin: 6px 0 0; padding: 0; counter-reset: it; display: grid; gap: 8px; }
+.items-list li { counter-increment: it; display: grid; grid-template-columns: 34px minmax(0, 1fr) 40px; align-items: stretch; border: 2.5px solid var(--rule); background: var(--bg); }
+.items-list li::before { content: counter(it); display: grid; place-items: center; font: 400 22px var(--display); background: var(--ink); color: var(--bg); }
+.form .items-in { border: 0; padding: 10px 12px; font-size: 17px; line-height: 1.45; resize: none; overflow: hidden; min-height: 46px; }
+.form .items-in:focus { background: var(--bg-2); }
+.items-list li:focus-within { border-color: var(--pink); }
+.items-list li:focus-within::before { background: var(--pink); color: #0b0b0b; }
+.items-del { border: 0; border-left: 2px solid var(--hair); background: none; color: var(--mute); font: 400 24px/1 var(--sans); cursor: pointer; }
+.items-del:hover { color: var(--pink); }
+.items-add { margin-top: 10px; font: 700 13px var(--mono); text-transform: uppercase; letter-spacing: .04em; border: 2px dashed var(--ink); background: none; color: var(--ink); padding: 10px 14px; cursor: pointer; }
+.items-add:hover { border-style: solid; background: var(--lime); color: var(--on-acc); border-color: var(--lime); }
