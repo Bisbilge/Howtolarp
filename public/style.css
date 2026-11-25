@@ -547,7 +547,7 @@ button.bubble:active { transform: scale(.97); }
 .ig-x .ig-persona { max-width: 900px; }
 .ig-x .ig-line { font-size: 78px; margin-top: 16px; }
 .ig-x .ig-sum { font-size: 32px; margin-top: 30px; max-width: 900px; }
-.ig-x .ig-bubbles { margin-top: 250px; gap: 36px; }
+.ig-x .ig-bubbles { margin-top: 175px; gap: 32px; }
 .ig-x .ig-bubble { font-size: 44px; max-width: 540px; white-space: normal; }
 .ig-x .ig-bubble:nth-child(2) { margin-left: 30px; }
 .ig-x .ig-sticker { top: 120px; right: 72px; width: 180px; height: 180px; }

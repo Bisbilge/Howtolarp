@@ -32,7 +32,7 @@ fine dining umami signature
 it's i i'm
 acidity director distribution community-led smoothie
 riemann
-sillage designer twitter
+sillage designer twitter family
 `.trim().split(/\s+/));
 
 const TR_ONLY = /[çğıöşüÇĞİÖŞÜ]/;

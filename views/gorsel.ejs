@@ -137,6 +137,9 @@
       p.style.fontSize = size + 'px';
       while ((wide() || overflow()) && size > (card.classList.contains('ig-x') ? 100 : 120)) shrink();
       var bubbles = Array.prototype.slice.call(card.querySelectorAll('.ig-bubble'));
+      // Replik silmeden önce balon yazısını küçült
+      var bsize = bubbles.length ? parseFloat(getComputedStyle(bubbles[0]).fontSize) : 0, bmin = card.classList.contains('ig-x') ? 30 : 36;
+      while (overflow() && bubbles.length && bsize > bmin) { bsize -= 2; bubbles.forEach(function (b) { b.style.fontSize = bsize + 'px'; }); }
       while (overflow() && bubbles.length > 1) bubbles.pop().remove();
       while ((wide() || overflow()) && size > 80) shrink();
       while (overflow() && bubbles.length) bubbles.pop().remove();

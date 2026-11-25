@@ -152,8 +152,9 @@ app.get('/og/rehber/:file', async (req, res) => {
     FROM guides g JOIN users u ON u.id = g.user_id WHERE g.slug = ? AND ${VISIBLE}`, [slug]);
   if (!guide) return res.redirect(302, '/og.png');
   try {
-    const phrase = String(guide.phrases || '').split('\n').map((s) => s.trim().replace(/^["“”']+|["“”']+$/g, ''))
-      .filter((s) => s && s.length <= 60)[0] || '';
+    // Kısa bir replik (60 karaktere kadar) tercih edilir; yoksa en kısası (en fazla iki satır)
+    const all = String(guide.phrases || '').split('\n').map((s) => s.trim().replace(/^["“”']+|["“”']+$/g, '')).filter(Boolean);
+    const phrase = all.find((s) => s.length <= 60) || [...all].sort((a, b) => a.length - b.length).find((s) => s.length <= 110) || '';
     const png = await renderGuideImage({
       persona: persona(guide.title), category: guide.category, difficulty: guide.difficulty, number: guide.id, phrase,
     }, `${guide.slug}:${guide.updated_at}:${OG_RENDER}`);
@@ -180,7 +181,7 @@ app.get('/og/test/:file', async (req, res) => {
   }
 });
 // Görsel tasarımı değişince OG_RENDER artırılır: önbellekteki eski görseller kullanılmasın
-const OG_RENDER = 2;
+const OG_RENDER = 3;
 const ogVersion = (g) => crypto.createHash('sha1').update(`${OG_RENDER}:${g.updated_at}`).digest('hex').slice(0, 8);
 
 // ---------- Çerezler, oturum, CSRF ----------
