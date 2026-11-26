@@ -539,33 +539,8 @@ module.exports = [
       'Takımın kazanırken sistemi eleştirdiğin için arkadaş grubundan dışlanmak.',
     ],
   },
-  {
-    title: 'Felsefe Öğrencisi Nasıl Larplanır?',
-    category: 'Zeka & Kültür',
-    difficulty: 3,
-    summary: 'Her soruya bir soruyla cevap ver. Felsefe larpında cevap vermek yenilgidir; asıl başarı karşındakini şüpheye düşürmektir.',
-    kit: [
-      'Kenarları kıvrılmış bir cep kitabı (başlığında "varlık" ya da "hiçlik" geçsin)',
-      'Siyah bir defter',
-      'Bir kafede uzun süre tek bir çayla oturabilme yeteneği',
-    ],
-    steps: [
-      'Biri "Bu doğru mu?" diye sorduğunda "Doğru derken neyi kastediyorsun?" de.',
-      'Gündelik konuları büyük kavramlara bağla. Kuyruk bekleme bile "varoluşsal bir deneyim" olabilir.',
-      'Bir düşünürün adını söyle, sonra "Tabii ki onu yanlış okuyanlar çok" diye ekle.',
-      'Sohbet bittiğinde pencereden dışarı bak ve sessiz kal.',
-    ],
-    phrases: [
-      'Bu tamamen bir perspektif meselesi.',
-      'Peki ama neden?',
-      'Anlam dediğimiz şey zaten bir inşa.',
-      'Bunu sorgulamamız gerekmez mi?',
-    ],
-    risks: [
-      'Sınavda gerçekten bir metni açıklamanın istenmesi.',
-      'Ev arkadaşının "Bulaşığı sen mi yıkayacaksın?" sorusuna felsefi bir cevap verememek.',
-    ],
-  },
+  // Kaldırıldı: sitede de silinir (bkz. db.js seedGuides). Satırı silmeyin, yoksa silme yapılmaz.
+  { title: 'Felsefe Öğrencisi Nasıl Larplanır?', removed: true },
   {
     title: 'Gurme Nasıl Larplanır?',
     category: 'Yaşam Tarzı',

@@ -221,7 +221,7 @@ async function setup() {
 //  - yeni eklenen rehber bir sonraki yüklemede siteye eklenir,
 //  - metni değişen rehber sitede de güncellenir (başlığı değişirse eski başlık `key` olarak yazılır),
 //  - siteden silinen örnek geri gelmez.
-const seedHash = (g) => crypto.createHash('sha1')
+const seedHash = (g) => g.removed ? 'removed' : crypto.createHash('sha1')
   .update(JSON.stringify([g.title, g.category, g.difficulty, g.summary, g.kit, g.steps, g.phrases, g.risks]))
   .digest('hex');
 
@@ -229,6 +229,18 @@ const seedHash = (g) => crypto.createHash('sha1')
 const TR_FOLD = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
 const foldKey = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[çğıöşü]/g, (c) => TR_FOLD[c])
   .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim();
+
+// Bir rehberi ve ona bağlı kayıtları siler
+async function deleteGuideRows(id) {
+  const slug = (await db.get('SELECT slug FROM guides WHERE id = ?', [id]))?.slug;
+  await db.batch([
+    ...['share_queue', 'likes', 'anon_likes', 'caught', 'anon_caught', 'reports']
+      .map((t) => ({ sql: `DELETE FROM ${t} WHERE guide_id = ?`, args: [id] })),
+    { sql: 'UPDATE requests SET done_slug = NULL WHERE done_slug = ?', args: [slug ?? ''] },
+    { sql: 'DELETE FROM slug_redirects WHERE new_slug = ?', args: [slug ?? ''] },
+    { sql: 'DELETE FROM guides WHERE id = ?', args: [id] },
+  ]);
+}
 
 async function seedGuides() {
   const seeds = require('./seed-guides');
@@ -258,6 +270,12 @@ async function seedGuides() {
     if (claim.rowsAffected === 0) continue; // başka bir kopya bu örneği hallediyor
 
     let id = row ? (row.guide_id ?? await findOld(key, g)) : await findOld(key, g);
+    if (g.removed) {
+      // Kaldırılan örnek: sitede hâlâ editörün rehberiyse sil
+      if (id && await db.get('SELECT 1 FROM guides WHERE id = ? AND user_id = ?', [id, editor.id])) await deleteGuideRows(id);
+      await db.run('UPDATE seeded SET guide_id = NULL WHERE title = ?', [key]);
+      continue;
+    }
     if (id) {
       // Var olan örneği güncelle (yalnızca hâlâ editörün rehberiyse)
       await db.run(`UPDATE guides SET title = ?, category = ?, difficulty = ?, summary = ?, kit = ?, steps = ?,
