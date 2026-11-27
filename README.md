@@ -34,7 +34,7 @@ Olmadığın biri gibi davranmanın (internet argosundaki anlamıyla "larp") reh
   sıraya kendiliğinden düşer. Twitter için hazır metinli "Tweet'i aç" (önizleme görseli linkten gelir), Instagram için
   telefonda görseli paylaşım menüsüne veren "Instagram'da paylaş" düğmesi; paylaşılınca işaretlenir. Eski rehberler
   rehber sayfasındaki yönetici şeridinden sıraya eklenebilir.
-- **Hangi larpsın? testi** (`/test`): 6 soru, 8 dengeli sonuç; her sonucun paylaşılabilir sayfası ve görseli
+- **Hangi larpsın? testi** (`/test`): 8 soru, 16 dengeli sonuç; her sonucun paylaşılabilir sayfası ve görseli
 - **Yakalandım** butonu: rehberi deneyip ifşa olanların sayısı
 - **Rehber istekleri** (`/istekler`): rol önerisi ve oylama (hesapsız), "Bunu ben yazarım" ile başlığı hazır form;
   rol yayına girince istek kendiliğinden "yazıldı" olur. Var olan rol istenirse rehbere yönlendirir.

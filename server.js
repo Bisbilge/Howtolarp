@@ -1202,7 +1202,7 @@ app.post('/istekler/:id/gizle', requireAdmin, async (req, res) => {
 
 // ---------- "Hangi larpsın?" testi ----------
 app.get('/test', (req, res) => res.render('test', {
-  title: 'Hangi larpsın?', description: '6 soruda hangi rolü larpladığını bul. Sonucunu paylaş, arkadaşların da çözsün.',
+  title: 'Hangi larpsın?', description: '8 soruda hangi rolü larpladığını bul. Sonucunu paylaş, arkadaşların da çözsün.',
   questions: quiz.QUESTIONS,
 }));
 
