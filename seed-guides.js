@@ -1117,4 +1117,36 @@ module.exports = [
       'Masadaki herkes aynı listeyi gösterir: listede herkesin bölümü ilk beşte.',
     ],
   },
+  {
+    title: 'İndirim Avcısı Nasıl Larplanır?',
+    category: 'Diğer',
+    difficulty: 2,
+    summary: 'Sepeti doldur, fiyat grafiğine bak, "Bu indirim değil" diye iç çek. İndirim avcılığı para biriktirmek değil, ne kadar biriktirdiğini anlatmaktır.',
+    kit: [
+      'Üç ayrı uygulamada aynı ürünü bekleten bir wishlist',
+      'Fiyat geçmişini gösteren bir tarayıcı eklentisi (grafiğe bakıp kaşını çatmak için)',
+      'Kasım başında doldurulmuş, hiç boşaltılmamış bir sepet',
+      'Ana ekranda duran bir hesap makinesi',
+    ],
+    steps: [
+      'Black Friday\'den iki hafta önce sepetindeki her şeyin ekran görüntüsünü al. Hiç açmayacaksın ama "Elimde kanıt var" diyebilmek önemli.',
+      'Kampanyadan önce fiyatların sessizce artırıldığını herkese anlat. Hangi ürün olduğunu sorarlarsa "Hepsi" de.',
+      'Gece yarısı kampanya başlarken uyanık kal. Hiçbir şey almasan da sabah "00.01\'de oradaydım" de.',
+      'Her alışverişi kâr diye anlat: 800 liralık ürünü 600\'e aldıysan 200 lira kazanmışsındır. "İhtiyacım yoktu" kısmını atla.',
+      'Kargo bedava olsun diye sepete bir şey daha ekle. Bunu da tasarruf hanesine yaz.',
+      'Tam fiyata bir şey alan arkadaşına nazikçe "Geçen hafta yarı fiyatınaydı ama" de.',
+    ],
+    phrases: [
+      'Önce fiyatı şişirdiler, sonra indirim yaptılar. Ben yemem.',
+      'Ben bunu kampanyasız almam.',
+      'Kupon kodu girmeden ödeme yapan insanlar var hâlâ, inanabiliyor musun?',
+      'Kargo bedava olsun diye bir tane daha ekledim, yani aslında daha ucuza geldi.',
+    ],
+    risks: [
+      'Biri kredi kartı ekstrene göz atarsa.',
+      'Kapıya aynı gün gelen yedi kargo ve buna tanık olan bir komşu.',
+      'İade süresinin dün dolduğunu fark etmek.',
+      'Ocak ayında aynı ürünü daha ucuza bulan arkadaşının ekran görüntüsü atması.',
+    ],
+  },
 ];
