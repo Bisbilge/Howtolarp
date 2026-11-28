@@ -1149,4 +1149,37 @@ module.exports = [
       'Ocak ayında aynı ürünü daha ucuza bulan arkadaşının ekran görüntüsü atması.',
     ],
   },
+  {
+    title: 'Kayakçı Nasıl Larplanır?',
+    category: 'Spor & Sağlık',
+    difficulty: 3,
+    summary: 'Sezon açılınca bir kez dağa çık, gerisini şömine başında anlat. Kayakçı larpında asıl pist, kafenin terasıdır.',
+    kit: [
+      'Gözlüğü kaskın üstüne itilmiş bir fotoğraf (yüzün güneşten hafif yanık çıksın)',
+      'Kiralık olduğunu söylemeyeceğin kiralık bir takım',
+      'Montun fermuarında sallanan bir skipass (sezon bitse de çıkarma)',
+      'Ezberlenmiş üç kelime: carving, powder, off-piste',
+    ],
+    steps: [
+      'Kasım sonunda "Bu sene kar erken geldi" de. Gelmediyse "Yukarıda var" de.',
+      'Dağa vardığında önce kafeye otur ve "Biraz ısınıyorum" de. Isınma iki saat sürebilir.',
+      'Piste bir kez çık ve en yavaş indiğin yerde fotoğraf çektir. Fotoğrafta hız görünmez.',
+      'Başlangıç pistinde kayan çocukları izle ve "Erken başlamak çok önemli" diye iç çek. Senin de orada olduğunu bilmelerine gerek yok.',
+      'Düştüğünde hemen kalkma. Bağlamalarını kontrol ediyormuş gibi eğil, sonra kalk.',
+      'Dönüşte her sohbete "Kar bu sene biraz ağırdı" diye gir. Kimse karın neden ağır olduğunu sormaz.',
+    ],
+    phrases: [
+      'Ben aslında off-piste severim.',
+      'Sabahın ilk karı bambaşka.',
+      'Snowboard da denedim ama kayak başka.',
+      'Après-ski de işin bir parçası.',
+      'Kırmızı pist artık bana biraz kolay geliyor.',
+    ],
+    risks: [
+      'Arkadaşlarının seni siyah pistin başına götürmesi.',
+      'Telesiyejden inerken herkesin önünde dengeni kaybetmek.',
+      'Kayak hocasının kafede yanından geçerken "Yarın dersimiz aynı saatte" demesi.',
+      'Gerçek bir kayakçının "Kayakların kaç santim?" sorusu.',
+    ],
+  },
 ];

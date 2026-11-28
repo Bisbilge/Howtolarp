@@ -33,6 +33,7 @@ it's i i'm
 acidity director distribution community-led smoothie
 riemann
 sillage designer twitter family wishlist friday
+carving off-piste après-ski skipass
 `.trim().split(/\s+/));
 
 const TR_ONLY = /[çğıöşüÇĞİÖŞÜ]/;
